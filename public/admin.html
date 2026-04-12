@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ניהול · טורניר פאדל חדרה</title>
+<link rel="stylesheet" href="/styles.css" />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  body { background: #0b1411; color: #e8efe9; }
+  .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px; }
+  .admin-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 22px; }
+  .admin-head h1 { margin:0; font-size: 26px; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-weight:700; font-size:13px; }
+  .pill-ok { background: rgba(43,182,115,0.2); color: #7fe3a8; }
+  .pill-warn { background: rgba(255,200,50,0.2); color: #ffd968; }
+  .pill-err  { background: rgba(255,100,100,0.18); color: #ffb3b3; }
+  .pill-muted { background: rgba(255,255,255,0.08); color: #b5c8bf; }
+  .capbar { display:flex; gap:24px; padding: 14px 18px; background: #16241e; border:1px solid #223128; border-radius: 12px; margin-bottom: 22px; font-size: 15px; flex-wrap: wrap; }
+  .capbar b { color: var(--lime); }
+  table { width: 100%; border-collapse: collapse; background: #12201a; border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 14px; vertical-align: top; }
+  th { background: #1a2a23; font-weight: 700; color: #b5c8bf; font-size: 12px; letter-spacing: .3px; text-transform: uppercase; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .name { font-weight: 700; color: #fff; }
+  .sub { color: #9fb1a8; font-size: 12px; }
+  select.status {
+    background: #0b1411; color: #e8efe9; border: 1px solid #2c3f36;
+    padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 13px;
+  }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mini-btn {
+    background: #1c2c25; color: #d8e5dd; border: 1px solid #2c3f36;
+    padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none;
+  }
+  .mini-btn:hover { background: #253b33; }
+  .login-card {
+    max-width: 380px; margin: 80px auto; background: #12201a; padding: 28px;
+    border-radius: 16px; border: 1px solid #223128; text-align: center;
+  }
+  .login-card input { width: 100%; padding: 12px; background: #0b1411; color:#fff; border:1px solid #2c3f36; border-radius:10px; margin: 12px 0; font-family: inherit; font-size: 15px; }
+  .login-card .btn { width: 100%; }
+  .empty { text-align:center; color: #9fb1a8; padding: 40px; }
+  .muted { color: #9fb1a8; font-size: 13px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green-800); color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 100; }
+  .toast.err { background: #a33; }
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login-card">
+  <h2 style="margin-top:0">🔒 ניהול הטורניר</h2>
+  <p class="muted">הקלד/י את מפתח האדמין (ADMIN_TOKEN)</p>
+  <input id="tokenInput" type="password" placeholder="admin token" autocomplete="off" />
+  <button class="btn btn-primary" id="loginBtn">כניסה</button>
+  <p id="loginErr" class="muted" style="color:#ffb3b3; display:none; margin-top:10px"></p>
+</div>
+
+<div id="appView" class="admin-wrap" hidden>
+  <div class="admin-head">
+    <h1>🎾 ניהול · טורניר פאדל חדרה</h1>
+    <div>
+      <button class="mini-btn" id="refreshBtn">🔄 רענון</button>
+      <button class="mini-btn" id="logoutBtn">יציאה</button>
+    </div>
+  </div>
+  <div class="capbar" id="capbar"></div>
+  <div id="tableWrap"></div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const STATUS_HE = {
+  submitted: 'נקלטה', awaiting_payment: 'ממתין לתשלום',
+  payment_under_review: 'תשלום בבדיקה', paid_confirmed: 'תשלום אושר',
+  approved: 'אושר', waitlist: 'רשימת המתנה',
+  cancelled: 'בוטל', refund_pending: 'ממתין להחזר', refunded: 'הוחזר'
+};
+const PILL_CLASS = {
+  approved: 'pill-ok', paid_confirmed: 'pill-ok',
+  awaiting_payment: 'pill-warn', payment_under_review: 'pill-warn',
+  waitlist: 'pill-muted', cancelled: 'pill-err',
+  refund_pending: 'pill-warn', refunded: 'pill-muted',
+  submitted: 'pill-muted'
+};
+
+let TOKEN = localStorage.getItem('padel_admin_token') || '';
+
+document.getElementById('loginBtn').addEventListener('click', tryLogin);
+document.getElementById('tokenInput').addEventListener('keyup', e => { if (e.key === 'Enter') tryLogin(); });
+document.getElementById('refreshBtn').addEventListener('click', loadList);
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('padel_admin_token'); TOKEN=''; showLogin();
+});
+
+if (TOKEN) { enterApp(); } else { showLogin(); }
+
+async function tryLogin() {
+  const v = document.getElementById('tokenInput').value.trim();
+  if (!v) return;
+  TOKEN = v;
+  const ok = await pingAdmin();
+  if (!ok) {
+    document.getElementById('loginErr').textContent = 'מפתח לא תקין';
+    document.getElementById('loginErr').style.display = 'block';
+    TOKEN = '';
+    return;
+  }
+  localStorage.setItem('padel_admin_token', TOKEN);
+  enterApp();
+}
+
+async function pingAdmin() {
+  try {
+    const r = await fetch('/api/admin/list', { headers: { 'x-admin-token': TOKEN } });
+    return r.ok;
+  } catch { return false; }
+}
+
+function showLogin() {
+  document.getElementById('loginView').hidden = false;
+  document.getElementById('appView').hidden = true;
+}
+function enterApp() {
+  document.getElementById('loginView').hidden = true;
+  document.getElementById('appView').hidden = false;
+  loadList();
+}
+
+async function loadList() {
+  const wrap = document.getElementById('tableWrap');
+  wrap.innerHTML = '<div class="empty">טוען…</div>';
+  try {
+    const r = await fetch('/api/admin/list', { headers: { 'x-admin-token': TOKEN } });
+    if (!r.ok) { if (r.status === 401) { showLogin(); } return; }
+    const j = await r.json();
+    renderCap(j.capacity);
+    renderTable(j.registrations);
+  } catch { wrap.innerHTML = '<div class="empty">שגיאת רשת</div>'; }
+}
+
+function renderCap(c) {
+  document.getElementById('capbar').innerHTML =
+    `<div>קיבולת: <b>${c.max}</b> זוגות</div>` +
+    `<div>תופסים מקום: <b>${c.reserved}</b></div>` +
+    `<div>מאושרים: <b>${c.approved}</b></div>` +
+    `<div>פנוי: <b>${Math.max(0, c.max - c.reserved)}</b></div>`;
+}
+
+function renderTable(rows) {
+  const wrap = document.getElementById('tableWrap');
+  if (!rows || !rows.length) { wrap.innerHTML = '<div class="empty">אין הרשמות עדיין</div>'; return; }
+  const headers = ['זמן','נרשם/ת','רמה','שותף/ה','סטטוס','קבצים','פעולות'];
+  const html = ['<table><thead><tr>', ...headers.map(h => `<th>${h}</th>`), '</tr></thead><tbody>'];
+  for (const r of rows) {
+    const d = new Date(r.createdAt);
+    const dStr = d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    const pill = PILL_CLASS[r.status] || 'pill-muted';
+    const statusOpts = Object.keys(STATUS_HE).map(s =>
+      `<option value="${s}" ${s===r.status?'selected':''}>${STATUS_HE[s]}</option>`).join('');
+    const files =
+      `<a class="mini-btn" href="/api/admin/file/${r.id}/health?token=${encodeURIComponent(TOKEN)}" target="_blank">📄 בריאות</a>` +
+      (r.paymentProof ? ` <a class="mini-btn" href="/api/admin/file/${r.id}/payment?token=${encodeURIComponent(TOKEN)}" target="_blank">💳 תשלום</a>` : '');
+    html.push(`<tr>
+      <td><div class="sub">${dStr}</div><div class="sub" style="font-family:monospace">${r.id}</div></td>
+      <td>
+        <div class="name">${esc(r.fullName)}</div>
+        <div class="sub">${esc(r.phone)} · ${esc(r.email)}</div>
+        ${r.notes?`<div class="sub">📝 ${esc(r.notes)}</div>`:''}
+      </td>
+      <td><b>${r.level}</b></td>
+      <td>
+        <div>${esc(r.partnerName)}</div>
+        <div class="sub">${esc(r.partnerPhone)}</div>
+      </td>
+      <td>
+        <span class="pill ${pill}">${STATUS_HE[r.status]||r.status}</span>
+        <br/>
+        <select class="status" data-id="${r.id}">${statusOpts}</select>
+      </td>
+      <td>${files}</td>
+      <td class="actions">
+        ${r.status==='payment_under_review' ? `<button class="mini-btn" data-quick="approved" data-id="${r.id}">✓ אישור מהיר</button>`:''}
+        ${r.status==='awaiting_payment' ? `<button class="mini-btn" data-quick="cancelled" data-id="${r.id}">✗ ביטול</button>`:''}
+      </td>
+    </tr>`);
+  }
+  html.push('</tbody></table>');
+  wrap.innerHTML = html.join('');
+
+  wrap.querySelectorAll('select.status').forEach(s =>
+    s.addEventListener('change', () => updateStatus(s.dataset.id, s.value)));
+  wrap.querySelectorAll('button[data-quick]').forEach(b =>
+    b.addEventListener('click', () => updateStatus(b.dataset.id, b.dataset.quick)));
+}
+
+async function updateStatus(id, status) {
+  try {
+    const r = await fetch('/api/admin/status/' + id, {
+      method: 'POST',
+      headers: { 'x-admin-token': TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
+    toast('עודכן בהצלחה');
+    loadList();
+  } catch { toast('שגיאת רשת', true); }
+}
+
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.className = 'toast' + (err ? ' err' : '');
+  t.textContent = msg;
+  t.hidden = false;
+  setTimeout(() => t.hidden = true, 2200);
+}
+
+function esc(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>

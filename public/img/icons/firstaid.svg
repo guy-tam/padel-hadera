@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0a3d2a"/><stop offset="1" stop-color="#062a1c"/></linearGradient></defs>
+  <rect width="120" height="120" fill="url(#bg)"/>
+  <g stroke="#d4ff3a" stroke-width="2.8" stroke-linejoin="round" fill="none">
+    <!-- ידית -->
+    <path d="M44 24 L76 24 Q80 24 80 28 L80 36 L40 36 L40 28 Q40 24 44 24 Z"/>
+    <!-- גוף הערכה -->
+    <rect x="22" y="36" width="76" height="64" rx="6"/>
+    <line x1="22" y1="52" x2="98" y2="52" opacity=".4"/>
+  </g>
+  <rect x="22" y="36" width="76" height="64" rx="6" fill="#d4ff3a" opacity=".12"/>
+  <!-- פלוס רפואי -->
+  <g fill="#d4ff3a">
+    <rect x="54" y="58" width="12" height="34" rx="2"/>
+    <rect x="43" y="69" width="34" height="12" rx="2"/>
+  </g>
+</svg>

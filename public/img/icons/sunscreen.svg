@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0a3d2a"/><stop offset="1" stop-color="#062a1c"/></linearGradient></defs>
+  <rect width="120" height="120" fill="url(#bg)"/>
+  <!-- שמש -->
+  <g stroke="#d4ff3a" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".7">
+    <circle cx="30" cy="30" r="10"/>
+    <line x1="30" y1="10" x2="30" y2="16"/>
+    <line x1="30" y1="44" x2="30" y2="50"/>
+    <line x1="10" y1="30" x2="16" y2="30"/>
+    <line x1="44" y1="30" x2="50" y2="30"/>
+    <line x1="16" y1="16" x2="20" y2="20"/>
+    <line x1="44" y1="16" x2="40" y2="20"/>
+  </g>
+  <!-- שפופרת קרם -->
+  <g stroke="#d4ff3a" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" fill="none">
+    <rect x="48" y="36" width="38" height="14" rx="2"/>
+    <path d="M52 50 L52 100 Q52 106 58 106 L76 106 Q82 106 82 100 L82 50"/>
+    <line x1="52" y1="66" x2="82" y2="66" opacity=".6"/>
+  </g>
+  <rect x="54" y="52" width="24" height="50" rx="2" fill="#d4ff3a" opacity=".2"/>
+  <text x="67" y="86" text-anchor="middle" font-size="14" font-weight="900" fill="#062a1c" font-family="Arial">SPF</text>
+</svg>

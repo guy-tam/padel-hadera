@@ -789,19 +789,19 @@ h2 { color: #fff; }
 }
 .bring-img {
   height: 140px;
-  background-size: cover;
-  background-position: center;
-  background-color: rgba(10,61,42,0.8);
-  position: relative;
-}
-.bring-img.bring-icon {
   display: flex; align-items: center; justify-content: center;
-  font-size: 64px;
-  background: linear-gradient(135deg, rgba(10,61,42,0.9), rgba(6,42,28,0.95));
+  background: linear-gradient(135deg, rgba(10,61,42,0.5), rgba(6,42,28,0.7));
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(212,255,58,0.15);
 }
-.bring-img:not(.bring-icon)::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(6,42,28,0.75));
+.bring-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bring-img::before {
+  content: ""; position: absolute; top: -40%; left: -40%;
+  width: 180%; height: 60%;
+  background: radial-gradient(ellipse at center, rgba(212,255,58,0.12), transparent 60%);
+  transform: rotate(-12deg);
+  pointer-events: none;
 }
 .bring-body {
   padding: 18px 20px 20px;
@@ -924,9 +924,112 @@ h2 { color: #fff; }
 }
 
 /* ============ RESPONSIVE ============ */
-@media (max-width: 540px) {
-  .hero { padding: 60px 0 50px; }
-  .section { padding: 56px 0; }
-  .hero-meta { gap: 18px; }
-  .price-big { font-size: 44px; }
+
+/* Tablet — בין מובייל לדסקטופ */
+@media (min-width: 721px) and (max-width: 1024px) {
+  .wrap { padding: 0 24px; }
+  .hero h1 { font-size: clamp(56px, 9vw, 80px); }
+  .section { padding: 72px 0; }
+  .cards, .steps, .cats, .health-box, .bring-grid, .contact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gallery-inner { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* מובייל */
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .wrap { padding: 0 16px; }
+  .nav-inner { padding: 10px 14px; }
+  .logo-text { font-size: 16px; }
+  .nav-links { gap: 10px; }
+  .nav-links a:not(.cta-mini):not(.nav-admin) { display: none; }
+  .nav-admin { font-size: 12px; }
+
+  .hero { padding: 60px 0 50px; min-height: 86vh; }
+  .hero h1 { font-size: clamp(40px, 12vw, 64px); letter-spacing: -1px; }
+  .hero-sub { font-size: 16px; margin-bottom: 24px; }
+  .hero-ctas { margin-bottom: 30px; }
+  .hero-ctas .btn { padding: 12px 20px; font-size: 15px; flex: 1; min-width: 140px; }
+  .hero-meta { gap: 12px; padding-top: 16px; }
+  .hero-meta li { font-size: 13px; }
+  .hero-meta span { font-size: 14px; }
+  .capacity-badge { font-size: 12px; padding: 6px 12px; margin-top: 16px; }
+
+  .section { padding: 56px 0; }
+  h2 { font-size: clamp(26px, 7vw, 36px) !important; }
+  .lead { font-size: 16px; margin-bottom: 28px; }
+  .eyebrow { font-size: 12px; }
+
+  .cards, .steps, .cats, .health-box, .bring-grid, .contact-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+  .card, .cat, .health-step, .contact-card { padding: 22px; }
+  .steps li { padding: 20px; }
+
+  .bring-img { height: 120px; }
+  .bring-body { padding: 14px 16px 16px; }
+  .bring-body h3 { font-size: 16px; }
+  .bring-body p { font-size: 13px; }
+
+  .price-card { padding: 30px 22px; }
+  .price-big { font-size: 44px; }
+  .price-list li { font-size: 14px; }
+
+  .form { max-width: 100%; }
+  .grid-2 { grid-template-columns: 1fr !important; gap: 10px; }
+  .field input, .field select, .field textarea { font-size: 16px; padding: 11px 12px; } /* 16px למנוע zoom ב-iOS */
+  .upload-block { padding: 14px; }
+  .upload-drop { padding: 22px 12px; }
+  .check { font-size: 14px; }
+
+  /* Thank you / pay box */
+  .thankyou { padding: 32px 18px; margin: 22px -8px; border-radius: 18px; }
+  .thankyou h2 { font-size: 24px; }
+  .pay-box { padding: 16px; }
+  .pay-row { font-size: 13px; padding: 8px 10px; }
+  .ty-actions .btn { font-size: 14px; padding: 12px 18px; }
+
+  /* Gallery */
+  .gallery-inner { grid-template-columns: 1fr; }
+  .gphoto { height: 200px; }
+  .gtag { font-size: 12px; padding: 6px 12px; bottom: 12px; right: 12px; }
+
+  /* Footer */
+  .footer { padding: 28px 0; }
+  .footer-inner { flex-direction: column; align-items: flex-start; gap: 14px; text-align: right; }
+  .footer-links { flex-wrap: wrap; gap: 12px; }
+
+  /* כדורים פחות ברקע בטלפון */
+  .ball { display: none; }
+  .ball.b1, .ball.b3 { display: block; }
+
+  /* וידאו hero: אופטימיזציה לטלפון — פחות opacity, קצת יותר כהה */
+  .hero-video iframe { opacity: 0.5; }
+
+  /* Admin mobile */
+  .admin-wrap { padding: 16px 10px 40px; }
+  .admin-head h1 { font-size: 20px; }
+  table { font-size: 12px; }
+  th, td { padding: 7px 6px; }
+  .stats { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .stat { padding: 14px; }
+  .stat .n { font-size: 26px; }
+}
+
+@media (max-width: 400px) {
+  .hero h1 { font-size: clamp(34px, 11vw, 48px); }
+  .price-big { font-size: 38px; }
+  .stats { grid-template-columns: 1fr !important; }
+}
+
+/* iOS fix: vh */
+@supports (-webkit-touch-callout: none) {
+  .hero { min-height: -webkit-fill-available; }
+}
+
+/* מניעת zoom בהקלקה על input ב-iOS (גופן 16 מינימום כבר מוגדר לעיל) */
+
+/* הסתרת scrollbar אופקי אם יש */
+html, body { overflow-x: hidden; }

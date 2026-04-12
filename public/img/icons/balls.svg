@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0a3d2a"/><stop offset="1" stop-color="#062a1c"/></linearGradient>
+  <radialGradient id="ball" cx=".3" cy=".3"><stop offset="0" stop-color="#f2ffab"/><stop offset=".7" stop-color="#d4ff3a"/><stop offset="1" stop-color="#9eb800"/></radialGradient></defs>
+  <rect width="120" height="120" fill="url(#bg)"/>
+  <!-- כדור קדמי גדול -->
+  <circle cx="46" cy="68" r="26" fill="url(#ball)"/>
+  <path d="M28 58 Q46 78 66 58" stroke="#fff" stroke-width="1.4" fill="none" opacity=".8"/>
+  <path d="M28 78 Q46 58 66 78" stroke="#fff" stroke-width="1.4" fill="none" opacity=".8"/>
+  <!-- כדור אחורי קטן -->
+  <circle cx="80" cy="44" r="18" fill="url(#ball)"/>
+  <path d="M68 38 Q80 52 92 38" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/>
+  <path d="M68 50 Q80 36 92 50" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/>
+</svg>

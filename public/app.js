@@ -2,6 +2,44 @@
 
 document.getElementById('yr').textContent = new Date().getFullYear();
 
+// ==== reveal on scroll ====
+(function setupReveal() {
+  const targets = document.querySelectorAll('.section, .reveal, .card, .cat, .steps li, .health-step, .price-card, .gphoto, .contact-card');
+  targets.forEach(t => { if (!t.classList.contains('reveal')) t.classList.add('reveal'); });
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(t => t.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  targets.forEach(t => io.observe(t));
+})();
+
+// ==== parallax קטן על hero ====
+(function setupParallax() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < window.innerHeight) {
+          hero.style.backgroundPosition = `center ${y * 0.3}px`;
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+})();
+
 const cfg = window.PADEL_CONFIG || {};
 
 // קישורים להצהרת הבריאות

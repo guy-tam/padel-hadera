@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: padel-hadera
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: SMTP_USER
+        value: xrptam2@gmail.com
+      - key: SMTP_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        value: xrptam2@gmail.com

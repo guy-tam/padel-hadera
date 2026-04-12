@@ -2,6 +2,59 @@
 
 document.getElementById('yr').textContent = new Date().getFullYear();
 
+// ==== YouTube background player עם לופ חכם (חותך 5 שניות לפני הסוף) ====
+(function setupHeroVideo() {
+  if (!document.getElementById('ytPlayer')) return;
+
+  const VIDEO_ID = 'ThHNRDhXfmw';
+  const START   = 3;   // מתחילים כאן
+  const TAIL    = 5;   // חותכים 5ש' לפני סיום כדי להימנע מ-endscreen של YouTube
+
+  // טעינת YouTube IFrame API
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+
+  let player = null;
+  window.onYouTubeIframeAPIReady = function() {
+    player = new YT.Player('ytPlayer', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: VIDEO_ID,
+      playerVars: {
+        autoplay: 1, mute: 1, controls: 0, showinfo: 0, rel: 0,
+        modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1,
+        fs: 0, start: START
+      },
+      events: {
+        onReady: (e) => {
+          e.target.mute();
+          e.target.playVideo();
+          e.target.setPlaybackQuality('hd720');
+        },
+        onStateChange: (e) => {
+          // אם הסתיים — נחזור להתחלה
+          if (e.data === YT.PlayerState.ENDED) {
+            e.target.seekTo(START, true);
+            e.target.playVideo();
+          }
+        }
+      }
+    });
+  };
+
+  // בודק כל חצי שניה אם הגענו 5ש' לפני הסוף → חוזר להתחלה
+  setInterval(() => {
+    if (!player || !player.getDuration) return;
+    try {
+      const dur = player.getDuration();
+      const cur = player.getCurrentTime();
+      if (dur > 0 && cur > 0 && cur >= dur - TAIL) {
+        player.seekTo(START, true);
+      }
+    } catch {}
+  }, 500);
+})();
+
 // ==== reveal on scroll ====
 (function setupReveal() {
   const targets = document.querySelectorAll('.section, .reveal, .card, .cat, .steps li, .health-step, .price-card, .gphoto, .contact-card');

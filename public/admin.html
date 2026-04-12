@@ -165,6 +165,13 @@ const PILL_CLASS = {
 };
 
 let TOKEN = localStorage.getItem('padel_admin_token') || '';
+
+// כניסה פתוחה עם ?open=1 (מסיר צורך בסיסמה)
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('open') === '1' && !TOKEN) {
+  TOKEN = 'padel-admin-2026';
+  localStorage.setItem('padel_admin_token', TOKEN);
+}
 let LAST_DATA = { capacity: {max:8,reserved:0,approved:0}, registrations: [] };
 let AUTO_REFRESH = null;
 

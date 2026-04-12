@@ -1,0 +1,27 @@
+[
+  {
+    "id": "HDR-MNWD339N-5B6D",
+    "createdAt": "2026-04-12T22:55:00.684Z",
+    "status": "awaiting_payment",
+    "fullName": "Xrp Tam2",
+    "phone": "0548344577",
+    "email": "xrptam2@gmail.com",
+    "level": "3",
+    "partnerName": "גיא",
+    "partnerPhone": "0548344577",
+    "notes": "מה אומר ",
+    "healthFile": {
+      "original": "×××× ×××.jpg",
+      "stored": "1776034500680-0637c5d3-________ ______.jpg",
+      "size": 10563
+    },
+    "paymentProof": null,
+    "history": [
+      {
+        "at": "2026-04-12T22:55:00.684Z",
+        "status": "awaiting_payment",
+        "by": "system"
+      }
+    ]
+  }
+]

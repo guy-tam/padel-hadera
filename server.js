@@ -71,6 +71,23 @@ const upload = multer({
   }
 });
 
+// --- התראת WhatsApp אוטומטית למארגן (CallMeBot) ---
+// דורש הגדרת CALLMEBOT_API_KEY + ORGANIZER_WA_NUMBER ב-.env
+// הרשמת ה-API החינמית: https://www.callmebot.com/blog/free-api-whatsapp-messages/
+async function notifyOrganizerWhatsApp(text) {
+  const key = process.env.CALLMEBOT_API_KEY;
+  const num = (process.env.ORGANIZER_WA_NUMBER || '').replace(/[^\d]/g, '');
+  if (!key || !num) return;
+  try {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${num}`
+      + `&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(key)}`;
+    const res = await fetch(url);
+    if (!res.ok) console.error('callmebot status', res.status);
+  } catch (e) {
+    console.error('callmebot err', e.message);
+  }
+}
+
 // --- Mailer ---
 function buildTransport() {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
@@ -176,8 +193,17 @@ app.post('/api/register', (req, res) => {
     db.push(record);
     saveDB(db);
 
-    // מייל למארגן + משתתף (אם מוגדר)
+    // התראה אוטומטית למארגן: מייל + WhatsApp
     sendRegistrationEmails(record).catch(e => console.error('mail err', e.message));
+    notifyOrganizerWhatsApp(
+      `🎾 הרשמה חדשה - טורניר פאדל חדרה\n` +
+      `שם: ${record.fullName}\n` +
+      `טלפון: ${record.phone}\n` +
+      `רמה: ${record.level}\n` +
+      `שותף/ה: ${record.partnerName} (${record.partnerPhone})\n` +
+      `סטטוס: ${statusHe(record.status)}\n` +
+      `מזהה: ${record.id}`
+    ).catch(() => {});
 
     res.json({
       ok: true,
@@ -219,6 +245,11 @@ app.post('/api/payment-proof/:id', (req, res) => {
     saveDB(db);
 
     sendPaymentProofEmail(r).catch(e => console.error('mail err', e.message));
+    notifyOrganizerWhatsApp(
+      `💳 אסמכתת תשלום - טורניר פאדל חדרה\n` +
+      `${r.fullName} העלה/תה אסמכתא.\n` +
+      `מזהה: ${r.id}\nיש לאשר במערכת האדמין.`
+    ).catch(() => {});
 
     res.json({ ok: true, status: r.status });
   });

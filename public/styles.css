@@ -455,6 +455,36 @@ h2 {
   text-align: center; font-weight: 600;
 }
 
+/* ============ CONTACT ============ */
+.contact-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.contact-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,255,58,0.18);
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  color: #fff;
+  transition: transform .2s, border-color .2s, background .2s;
+  display: block;
+}
+.contact-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--lime);
+  background: rgba(212,255,58,0.06);
+}
+.contact-icon { font-size: 32px; margin-bottom: 10px; }
+.contact-card h3 { margin: 0 0 6px; font-size: 19px; color: #fff; }
+.contact-card p { margin: 0 0 14px; color: #b5c8bf; font-size: 14px; }
+.contact-val {
+  display: inline-block;
+  color: var(--lime);
+  font-weight: 700;
+  font-size: 16px;
+  direction: ltr;
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 540px) {
   .hero { padding: 60px 0 50px; }

@@ -8,32 +8,83 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 <style>
   body { background: #0b1411; color: #e8efe9; }
-  .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px; }
+  a { color: #7fe3a8; }
+  .admin-wrap { max-width: 1280px; margin: 0 auto; padding: 22px 18px 60px; }
   .admin-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 22px; }
   .admin-head h1 { margin:0; font-size: 26px; }
-  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-weight:700; font-size:13px; }
-  .pill-ok { background: rgba(43,182,115,0.2); color: #7fe3a8; }
-  .pill-warn { background: rgba(255,200,50,0.2); color: #ffd968; }
-  .pill-err  { background: rgba(255,100,100,0.18); color: #ffb3b3; }
-  .pill-muted { background: rgba(255,255,255,0.08); color: #b5c8bf; }
-  .capbar { display:flex; gap:24px; padding: 14px 18px; background: #16241e; border:1px solid #223128; border-radius: 12px; margin-bottom: 22px; font-size: 15px; flex-wrap: wrap; }
-  .capbar b { color: var(--lime); }
+  .live-dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:#2bb673; margin-left:6px; box-shadow:0 0 8px #2bb673; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+
+  /* סטטיסטיקה */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat { background: #12201a; border:1px solid #223128; border-radius: 14px; padding: 18px; }
+  .stat .n { font-size: 34px; font-weight: 900; color: #fff; line-height: 1; }
+  .stat .n.lime { color: var(--lime); }
+  .stat .n.warn { color: #ffd968; }
+  .stat .n.err  { color: #ffb3b3; }
+  .stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 6px; }
+
+  /* שורת קיבולת */
+  .capbar { background:#12201a; border:1px solid #223128; border-radius:12px; padding: 14px 18px; margin-bottom: 22px; }
+  .capbar .fill-track { background:#0b1411; height:10px; border-radius:999px; overflow:hidden; margin-top:10px; }
+  .capbar .fill { background: linear-gradient(90deg, var(--green-400), var(--lime)); height:100%; transition: width .4s ease; }
+  .cap-row { display:flex; justify-content:space-between; gap: 16px; font-size:14px; flex-wrap:wrap; }
+  .cap-row b { color: var(--lime); font-size: 16px; }
+
+  /* טאבים */
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid #223128; padding-bottom: 0; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
+  .tab:hover { color: #fff; }
+
+  /* טבלה */
   table { width: 100%; border-collapse: collapse; background: #12201a; border-radius: 12px; overflow: hidden; }
-  th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 14px; vertical-align: top; }
-  th { background: #1a2a23; font-weight: 700; color: #b5c8bf; font-size: 12px; letter-spacing: .3px; text-transform: uppercase; }
+  th, td { padding: 11px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 14px; vertical-align: top; }
+  th { background: #1a2a23; font-weight: 700; color: #b5c8bf; font-size: 11.5px; letter-spacing: .3px; text-transform: uppercase; }
   tr:hover td { background: rgba(255,255,255,0.02); }
   .name { font-weight: 700; color: #fff; }
-  .sub { color: #9fb1a8; font-size: 12px; }
+  .sub { color: #9fb1a8; font-size: 12.5px; }
+  .sub a { color: #9fb1a8; }
+
+  .pill { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+  .pill-ok   { background: rgba(43,182,115,0.2); color: #7fe3a8; }
+  .pill-warn { background: rgba(255,200,50,0.2); color: #ffd968; }
+  .pill-err  { background: rgba(255,100,100,0.18); color: #ffb3b3; }
+  .pill-muted{ background: rgba(255,255,255,0.08); color: #b5c8bf; }
+
   select.status {
     background: #0b1411; color: #e8efe9; border: 1px solid #2c3f36;
-    padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 13px; margin-top: 6px;
   }
   .actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .mini-btn {
     background: #1c2c25; color: #d8e5dd; border: 1px solid #2c3f36;
-    padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none;
+    padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap;
   }
   .mini-btn:hover { background: #253b33; }
+  .mini-btn.ok { border-color: #3e7a5a; color: #a3ecc1; }
+  .mini-btn.ok:hover { background: #1f3a2a; }
+  .mini-btn.err { border-color: #6b3a3a; color: #ffb3b3; }
+  .mini-btn.err:hover { background: #3a1f1f; }
+  .mini-btn.wa { border-color: #2c6b45; color: #7fe3a8; }
+
+  /* timeline */
+  .timeline { background: #12201a; border:1px solid #223128; border-radius: 12px; padding: 18px; }
+  .tl-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1a2a23; }
+  .tl-item:last-child { border-bottom: 0; }
+  .tl-time { color: #9fb1a8; font-size: 12px; min-width: 120px; font-family: monospace; }
+  .tl-what { flex: 1; }
+  .tl-what b { color: #fff; }
+
+  /* תצוגה מקדימה */
+  .preview-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .preview-overlay.open { display: flex; }
+  .preview-box { background: #12201a; border-radius: 14px; max-width: 900px; width: 100%; max-height: 90vh; overflow: auto; padding: 18px; position: relative; }
+  .preview-box img, .preview-box embed { max-width: 100%; border-radius: 10px; }
+  .preview-close { position: absolute; top: 10px; left: 10px; background: #1c2c25; color: #fff; border: 0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+  .preview-meta { color: #9fb1a8; font-size: 14px; margin-bottom: 10px; }
+
+  /* login */
   .login-card {
     max-width: 380px; margin: 80px auto; background: #12201a; padding: 28px;
     border-radius: 16px; border: 1px solid #223128; text-align: center;
@@ -42,15 +93,20 @@
   .login-card .btn { width: 100%; }
   .empty { text-align:center; color: #9fb1a8; padding: 40px; }
   .muted { color: #9fb1a8; font-size: 13px; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green-800); color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 100; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green-800); color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 300; }
   .toast.err { background: #a33; }
+
+  @media (max-width: 720px) {
+    th, td { padding: 8px; font-size: 12.5px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
 
 <div id="loginView" class="login-card">
   <h2 style="margin-top:0">🔒 ניהול הטורניר</h2>
-  <p class="muted">הקלד/י את מפתח האדמין (ADMIN_TOKEN)</p>
+  <p class="muted">הזינ/י את מפתח הגישה (ADMIN_TOKEN)</p>
   <input id="tokenInput" type="password" placeholder="admin token" autocomplete="off" />
   <button class="btn btn-primary" id="loginBtn">כניסה</button>
   <p id="loginErr" class="muted" style="color:#ffb3b3; display:none; margin-top:10px"></p>
@@ -58,14 +114,37 @@
 
 <div id="appView" class="admin-wrap" hidden>
   <div class="admin-head">
-    <h1>🎾 ניהול · טורניר פאדל חדרה</h1>
     <div>
+      <h1>🎾 ניהול · טורניר פאדל חדרה <span class="live-dot" title="נתונים חיים"></span></h1>
+      <div class="muted" id="lastUpdate">—</div>
+    </div>
+    <div class="actions">
       <button class="mini-btn" id="refreshBtn">🔄 רענון</button>
-      <button class="mini-btn" id="logoutBtn">יציאה</button>
+      <a class="mini-btn" href="/" target="_blank">🌐 האתר</a>
+      <button class="mini-btn err" id="logoutBtn">יציאה</button>
     </div>
   </div>
+
+  <div class="stats" id="stats"></div>
   <div class="capbar" id="capbar"></div>
-  <div id="tableWrap"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="list">הרשמות</button>
+    <button class="tab" data-tab="pending">ממתינים לאישור</button>
+    <button class="tab" data-tab="timeline">פעילות אחרונה</button>
+  </div>
+
+  <div id="viewList"></div>
+  <div id="viewPending" hidden></div>
+  <div id="viewTimeline" hidden></div>
+</div>
+
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-box">
+    <button class="preview-close" id="previewClose">✕</button>
+    <div class="preview-meta" id="previewMeta"></div>
+    <div id="previewContent"></div>
+  </div>
 </div>
 
 <div id="toast" class="toast" hidden></div>
@@ -74,7 +153,7 @@
 const STATUS_HE = {
   submitted: 'נקלטה', awaiting_payment: 'ממתין לתשלום',
   payment_under_review: 'תשלום בבדיקה', paid_confirmed: 'תשלום אושר',
-  approved: 'אושר', waitlist: 'רשימת המתנה',
+  approved: 'אושר סופית', waitlist: 'רשימת המתנה',
   cancelled: 'בוטל', refund_pending: 'ממתין להחזר', refunded: 'הוחזר'
 };
 const PILL_CLASS = {
@@ -86,15 +165,24 @@ const PILL_CLASS = {
 };
 
 let TOKEN = localStorage.getItem('padel_admin_token') || '';
+let LAST_DATA = { capacity: {max:8,reserved:0,approved:0}, registrations: [] };
+let AUTO_REFRESH = null;
 
+// עברים login
 document.getElementById('loginBtn').addEventListener('click', tryLogin);
 document.getElementById('tokenInput').addEventListener('keyup', e => { if (e.key === 'Enter') tryLogin(); });
 document.getElementById('refreshBtn').addEventListener('click', loadList);
 document.getElementById('logoutBtn').addEventListener('click', () => {
   localStorage.removeItem('padel_admin_token'); TOKEN=''; showLogin();
+  if (AUTO_REFRESH) { clearInterval(AUTO_REFRESH); AUTO_REFRESH=null; }
+});
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+document.getElementById('previewClose').addEventListener('click', closePreview);
+document.getElementById('previewOverlay').addEventListener('click', e => {
+  if (e.target.id === 'previewOverlay') closePreview();
 });
 
-if (TOKEN) { enterApp(); } else { showLogin(); }
+if (TOKEN) enterApp(); else showLogin();
 
 async function tryLogin() {
   const v = document.getElementById('tokenInput').value.trim();
@@ -126,32 +214,105 @@ function enterApp() {
   document.getElementById('loginView').hidden = true;
   document.getElementById('appView').hidden = false;
   loadList();
+  if (AUTO_REFRESH) clearInterval(AUTO_REFRESH);
+  AUTO_REFRESH = setInterval(loadList, 15000); // רענון אוטומטי כל 15ש'
 }
 
 async function loadList() {
-  const wrap = document.getElementById('tableWrap');
-  wrap.innerHTML = '<div class="empty">טוען…</div>';
   try {
     const r = await fetch('/api/admin/list', { headers: { 'x-admin-token': TOKEN } });
-    if (!r.ok) { if (r.status === 401) { showLogin(); } return; }
+    if (!r.ok) { if (r.status === 401) showLogin(); return; }
     const j = await r.json();
-    renderCap(j.capacity);
-    renderTable(j.registrations);
-  } catch { wrap.innerHTML = '<div class="empty">שגיאת רשת</div>'; }
+    LAST_DATA = j;
+    render();
+    document.getElementById('lastUpdate').textContent = 'עדכון אחרון: ' + new Date().toLocaleTimeString('he-IL');
+  } catch {}
 }
 
-function renderCap(c) {
-  document.getElementById('capbar').innerHTML =
-    `<div>קיבולת: <b>${c.max}</b> זוגות</div>` +
-    `<div>תופסים מקום: <b>${c.reserved}</b></div>` +
-    `<div>מאושרים: <b>${c.approved}</b></div>` +
-    `<div>פנוי: <b>${Math.max(0, c.max - c.reserved)}</b></div>`;
+function render() {
+  renderStats();
+  renderCap();
+  renderList();
+  renderPending();
+  renderTimeline();
 }
 
-function renderTable(rows) {
-  const wrap = document.getElementById('tableWrap');
-  if (!rows || !rows.length) { wrap.innerHTML = '<div class="empty">אין הרשמות עדיין</div>'; return; }
-  const headers = ['זמן','נרשם/ת','רמה','שותף/ה','סטטוס','קבצים','פעולות'];
+function renderStats() {
+  const rows = LAST_DATA.registrations || [];
+  const by = s => rows.filter(r => r.status === s).length;
+  const today = new Date().toDateString();
+  const todayCount = rows.filter(r => new Date(r.createdAt).toDateString() === today).length;
+  const withPayment = rows.filter(r => r.paymentProof).length;
+  const needsReview = by('payment_under_review');
+
+  const stats = [
+    { n: rows.length, lbl: 'סה"כ הרשמות', cls: 'lime' },
+    { n: todayCount, lbl: 'נרשמו היום', cls: '' },
+    { n: needsReview, lbl: 'ממתין לאישור', cls: needsReview ? 'warn' : '' },
+    { n: by('approved') + by('paid_confirmed'), lbl: 'מאושרים', cls: 'lime' },
+    { n: withPayment, lbl: 'שלחו אסמכתא', cls: '' },
+    { n: by('waitlist'), lbl: 'רשימת המתנה', cls: '' }
+  ];
+  document.getElementById('stats').innerHTML = stats.map(s =>
+    `<div class="stat"><div class="n ${s.cls||''}">${s.n}</div><div class="lbl">${s.lbl}</div></div>`
+  ).join('');
+}
+
+function renderCap() {
+  const c = LAST_DATA.capacity || {max:8,reserved:0,approved:0};
+  const pct = Math.min(100, (c.reserved / c.max) * 100);
+  document.getElementById('capbar').innerHTML = `
+    <div class="cap-row">
+      <div>תופסים מקום: <b>${c.reserved}</b> / ${c.max} זוגות</div>
+      <div>מאושרים סופית: <b>${c.approved}</b></div>
+      <div>פנוי: <b>${Math.max(0, c.max - c.reserved)}</b></div>
+    </div>
+    <div class="fill-track"><div class="fill" style="width:${pct}%"></div></div>
+  `;
+}
+
+function renderList() {
+  document.getElementById('viewList').innerHTML = buildTable(LAST_DATA.registrations);
+  wireRowActions(document.getElementById('viewList'));
+}
+
+function renderPending() {
+  const rows = (LAST_DATA.registrations || []).filter(r =>
+    ['payment_under_review','awaiting_payment'].includes(r.status));
+  const v = document.getElementById('viewPending');
+  v.innerHTML = rows.length ? buildTable(rows) : '<div class="empty">אין ממתינים לאישור</div>';
+  wireRowActions(v);
+}
+
+function renderTimeline() {
+  const events = [];
+  for (const r of (LAST_DATA.registrations || [])) {
+    for (const h of (r.history || [])) {
+      events.push({ at: h.at, who: r.fullName, id: r.id, status: h.status, by: h.by, note: h.note });
+    }
+    if (r.paymentProof) {
+      events.push({ at: r.paymentProof.at, who: r.fullName, id: r.id, status: 'העלה אסמכתת תשלום', by: 'user' });
+    }
+  }
+  events.sort((a,b) => b.at.localeCompare(a.at));
+  const top = events.slice(0, 40);
+  const html = top.map(e => {
+    const d = new Date(e.at);
+    const ts = d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    const label = STATUS_HE[e.status] || e.status;
+    return `<div class="tl-item">
+      <div class="tl-time">${ts}</div>
+      <div class="tl-what"><b>${esc(e.who)}</b> · ${esc(label)} <span class="sub">(${e.by}${e.note?' · '+esc(e.note):''})</span>
+        <div class="sub" style="font-family:monospace">${e.id}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">אין פעילות עדיין</div>';
+  document.getElementById('viewTimeline').innerHTML = `<div class="timeline">${html}</div>`;
+}
+
+function buildTable(rows) {
+  if (!rows || !rows.length) return '<div class="empty">אין הרשמות עדיין</div>';
+  const headers = ['זמן / מזהה','נרשם/ת','רמה','שותף/ה','סטטוס','מסמכים','פעולות'];
   const html = ['<table><thead><tr>', ...headers.map(h => `<th>${h}</th>`), '</tr></thead><tbody>'];
   for (const r of rows) {
     const d = new Date(r.createdAt);
@@ -159,20 +320,27 @@ function renderTable(rows) {
     const pill = PILL_CLASS[r.status] || 'pill-muted';
     const statusOpts = Object.keys(STATUS_HE).map(s =>
       `<option value="${s}" ${s===r.status?'selected':''}>${STATUS_HE[s]}</option>`).join('');
+
+    const waNum = (r.phone || '').replace(/\D/g,'').replace(/^0/, '972');
     const files =
-      `<a class="mini-btn" href="/api/admin/file/${r.id}/health?token=${encodeURIComponent(TOKEN)}" target="_blank">📄 בריאות</a>` +
-      (r.paymentProof ? ` <a class="mini-btn" href="/api/admin/file/${r.id}/payment?token=${encodeURIComponent(TOKEN)}" target="_blank">💳 תשלום</a>` : '');
+      `<button class="mini-btn" data-preview="${r.id}:health">📄 בריאות</button>` +
+      (r.paymentProof ? ` <button class="mini-btn ok" data-preview="${r.id}:payment">💳 אסמכתא</button>` : ' <span class="sub">— לא נשלחה</span>');
+
     html.push(`<tr>
       <td><div class="sub">${dStr}</div><div class="sub" style="font-family:monospace">${r.id}</div></td>
       <td>
         <div class="name">${esc(r.fullName)}</div>
-        <div class="sub">${esc(r.phone)} · ${esc(r.email)}</div>
+        <div class="sub">
+          <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a> ·
+          <a href="https://wa.me/${waNum}" target="_blank">WA</a> ·
+          <a href="mailto:${esc(r.email)}">${esc(r.email)}</a>
+        </div>
         ${r.notes?`<div class="sub">📝 ${esc(r.notes)}</div>`:''}
       </td>
       <td><b>${r.level}</b></td>
       <td>
         <div>${esc(r.partnerName)}</div>
-        <div class="sub">${esc(r.partnerPhone)}</div>
+        <div class="sub"><a href="tel:${esc(r.partnerPhone)}">${esc(r.partnerPhone)}</a></div>
       </td>
       <td>
         <span class="pill ${pill}">${STATUS_HE[r.status]||r.status}</span>
@@ -181,18 +349,23 @@ function renderTable(rows) {
       </td>
       <td>${files}</td>
       <td class="actions">
-        ${r.status==='payment_under_review' ? `<button class="mini-btn" data-quick="approved" data-id="${r.id}">✓ אישור מהיר</button>`:''}
-        ${r.status==='awaiting_payment' ? `<button class="mini-btn" data-quick="cancelled" data-id="${r.id}">✗ ביטול</button>`:''}
+        ${r.status==='payment_under_review' ? `<button class="mini-btn ok" data-quick="approved" data-id="${r.id}">✓ אשר</button>`:''}
+        ${r.status==='awaiting_payment' ? `<button class="mini-btn err" data-quick="cancelled" data-id="${r.id}">✗ בטל</button>`:''}
+        ${r.status==='approved' ? `<button class="mini-btn" data-quick="paid_confirmed" data-id="${r.id}">↶</button>`:''}
       </td>
     </tr>`);
   }
   html.push('</tbody></table>');
-  wrap.innerHTML = html.join('');
+  return html.join('');
+}
 
-  wrap.querySelectorAll('select.status').forEach(s =>
+function wireRowActions(root) {
+  root.querySelectorAll('select.status').forEach(s =>
     s.addEventListener('change', () => updateStatus(s.dataset.id, s.value)));
-  wrap.querySelectorAll('button[data-quick]').forEach(b =>
+  root.querySelectorAll('button[data-quick]').forEach(b =>
     b.addEventListener('click', () => updateStatus(b.dataset.id, b.dataset.quick)));
+  root.querySelectorAll('button[data-preview]').forEach(b =>
+    b.addEventListener('click', () => openPreview(b.dataset.preview)));
 }
 
 async function updateStatus(id, status) {
@@ -204,9 +377,42 @@ async function updateStatus(id, status) {
     });
     const j = await r.json();
     if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
-    toast('עודכן בהצלחה');
+    toast('עודכן בהצלחה · ' + STATUS_HE[status]);
     loadList();
   } catch { toast('שגיאת רשת', true); }
+}
+
+function openPreview(key) {
+  const [id, kind] = key.split(':');
+  const reg = LAST_DATA.registrations.find(r => r.id === id);
+  if (!reg) return;
+  const f = kind === 'health' ? reg.healthFile : reg.paymentProof;
+  if (!f) return toast('אין קובץ', true);
+
+  const url = `/api/admin/file/${id}/${kind}?token=${encodeURIComponent(TOKEN)}`;
+  const ext = (f.original || '').split('.').pop().toLowerCase();
+  const meta = document.getElementById('previewMeta');
+  const content = document.getElementById('previewContent');
+  meta.textContent = `${reg.fullName} · ${kind==='health'?'הצהרת בריאות':'אסמכתת תשלום'} · ${f.original} · ${Math.round(f.size/1024)}KB`;
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
+    content.innerHTML = `<img src="${url}" alt="preview" /><p style="margin-top:10px"><a href="${url}" download>⬇ הורדה</a></p>`;
+  } else if (ext === 'pdf') {
+    content.innerHTML = `<embed src="${url}" type="application/pdf" style="width:100%;height:80vh" /><p><a href="${url}" download>⬇ הורדה</a></p>`;
+  } else {
+    content.innerHTML = `<p><a href="${url}" download class="mini-btn ok">⬇ הורדת ${esc(f.original)}</a></p>`;
+  }
+  document.getElementById('previewOverlay').classList.add('open');
+}
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('open');
+  document.getElementById('previewContent').innerHTML = '';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('viewList').hidden = name !== 'list';
+  document.getElementById('viewPending').hidden = name !== 'pending';
+  document.getElementById('viewTimeline').hidden = name !== 'timeline';
 }
 
 function toast(msg, err) {
@@ -214,7 +420,7 @@ function toast(msg, err) {
   t.className = 'toast' + (err ? ' err' : '');
   t.textContent = msg;
   t.hidden = false;
-  setTimeout(() => t.hidden = true, 2200);
+  setTimeout(() => t.hidden = true, 2400);
 }
 
 function esc(s) {

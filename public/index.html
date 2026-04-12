@@ -34,6 +34,24 @@
 <!-- HERO -->
 <section id="top" class="hero">
   <div class="court-lines" aria-hidden="true"></div>
+  <!-- SVG מגרש פאדל ויזואלי -->
+  <svg class="hero-court" viewBox="0 0 400 300" aria-hidden="true">
+    <defs>
+      <linearGradient id="courtG" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stop-color="#2bb673" stop-opacity=".8"/>
+        <stop offset="1" stop-color="#0a3d2a" stop-opacity=".4"/>
+      </linearGradient>
+    </defs>
+    <rect x="10" y="10" width="380" height="280" rx="6" fill="url(#courtG)" stroke="#d4ff3a" stroke-width="2"/>
+    <rect x="10" y="10" width="380" height="280" rx="6" fill="none" stroke="#d4ff3a" stroke-width="1.5" stroke-dasharray="3 6" opacity=".5"/>
+    <line x1="200" y1="10" x2="200" y2="290" stroke="#d4ff3a" stroke-width="2" opacity=".9"/>
+    <line x1="10" y1="150" x2="390" y2="150" stroke="#d4ff3a" stroke-width="1.5" opacity=".7"/>
+    <line x1="100" y1="90" x2="300" y2="90" stroke="#d4ff3a" stroke-width="1.2" opacity=".6"/>
+    <line x1="100" y1="210" x2="300" y2="210" stroke="#d4ff3a" stroke-width="1.2" opacity=".6"/>
+    <line x1="100" y1="90" x2="100" y2="210" stroke="#d4ff3a" stroke-width="1.2" opacity=".6"/>
+    <line x1="300" y1="90" x2="300" y2="210" stroke="#d4ff3a" stroke-width="1.2" opacity=".6"/>
+    <circle cx="200" cy="150" r="5" fill="#d4ff3a"/>
+  </svg>
   <div class="hero-inner">
     <span class="eyebrow">◆ טורניר הפאדל של חדרה ◆</span>
     <h1>חדרה<br/>עולה על המגרש.</h1>
@@ -85,6 +103,21 @@
         <h3>ארגון הוגן</h3>
         <p>לוח זמנים ברור, חלונות משחק מוגדרים, תזמון הוגן לכולם.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY STRIP -->
+<section class="gallery-strip" aria-label="תמונות פאדל">
+  <div class="gallery-inner">
+    <div class="gphoto gphoto-1">
+      <span class="gtag">⚡ אנרגיה</span>
+    </div>
+    <div class="gphoto gphoto-2">
+      <span class="gtag">🎾 משחקים צמודים</span>
+    </div>
+    <div class="gphoto gphoto-3">
+      <span class="gtag">🏆 תחרות אמיתית</span>
     </div>
   </div>
 </section>

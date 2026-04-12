@@ -74,15 +74,38 @@ a { color: inherit; text-decoration: none; }
 /* ============ HERO ============ */
 .hero {
   position: relative;
-  background: radial-gradient(ellipse at 20% 0%, #0f5135 0%, var(--green-900) 55%, #02150d 100%);
+  background:
+    linear-gradient(115deg, rgba(6,42,28,0.92) 0%, rgba(10,61,42,0.85) 45%, rgba(2,21,13,0.78) 100%),
+    url('/img/padel-hero.jpg') center/cover no-repeat;
   color: #fff;
   overflow: hidden;
-  padding: 90px 0 80px;
+  padding: 110px 0 110px;
+  min-height: 92vh;
+  display: flex; align-items: center;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 100% 100%, rgba(212,255,58,0.2), transparent 55%),
+    radial-gradient(ellipse at 0% 0%, rgba(43,182,115,0.25), transparent 60%);
+  pointer-events: none;
+  z-index: 1;
 }
 .hero-inner {
   max-width: 1100px; margin: 0 auto; padding: 0 20px;
-  position: relative; z-index: 2;
+  position: relative; z-index: 3;
+  width: 100%;
 }
+.hero-court {
+  position: absolute;
+  left: 3%; top: 50%;
+  transform: translateY(-50%);
+  width: 46%; max-width: 560px;
+  opacity: .35;
+  z-index: 2;
+  pointer-events: none;
+}
+@media (max-width: 860px) { .hero-court { display: none; } }
 .court-lines {
   position: absolute; inset: 0;
   background-image:
@@ -107,11 +130,12 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 18px;
 }
 .hero h1 {
-  font-size: clamp(44px, 7vw, 88px);
-  line-height: 1.02;
+  font-size: clamp(48px, 8vw, 104px);
+  line-height: 0.98;
   margin: 0 0 22px;
   font-weight: 900;
-  letter-spacing: -1px;
+  letter-spacing: -1.5px;
+  text-shadow: 0 4px 40px rgba(0,0,0,0.5);
 }
 .hero h1 br + * { color: var(--lime); }
 .hero-sub {
@@ -162,11 +186,42 @@ a { color: inherit; text-decoration: none; }
 .btn-block { display: flex; width: 100%; }
 
 /* ============ SECTIONS ============ */
-.section { padding: 80px 0; }
-.section-dark { background: var(--green-900); color: #fff; }
+.section { padding: 90px 0; position: relative; }
+.section-dark {
+  background:
+    linear-gradient(180deg, rgba(6,42,28,0.96), rgba(2,21,13,0.98)),
+    url('/img/padel-action.jpg') center/cover fixed no-repeat;
+  color: #fff;
+  position: relative;
+}
+.section-dark::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(212,255,58,0.04) 49.5%, rgba(212,255,58,0.04) 50.5%, transparent 50.5%),
+    linear-gradient(0deg,  transparent 49.5%, rgba(212,255,58,0.04) 49.5%, rgba(212,255,58,0.04) 50.5%, transparent 50.5%);
+  background-size: 120px 120px;
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+.section-dark > .wrap { position: relative; z-index: 2; }
 .section-dark h2, .section-dark h3 { color: #fff; }
 .section-accent {
-  background: linear-gradient(135deg, #f8fff0 0%, #f0fbe6 100%);
+  background:
+    linear-gradient(135deg, #f8fff0 0%, #f0fbe6 100%);
+  position: relative;
+}
+.section-accent::before {
+  content: ""; position: absolute; inset: 0;
+  background: url('/img/padel-court.jpg') center/cover no-repeat;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.section-accent > .wrap { position: relative; z-index: 2; }
+.section-divider {
+  height: 60px; margin-top: -30px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  position: relative; z-index: 3;
 }
 .section-form { background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .section-legal { background: var(--green-900); color: #d8e5dd; }
@@ -182,6 +237,40 @@ h2 {
 .lead { font-size: 18px; color: var(--muted); max-width: 720px; margin: 0 0 42px; }
 .section-dark .lead { color: #b5c8bf; }
 
+/* ============ GALLERY STRIP ============ */
+.gallery-strip { background: #020b07; padding: 0; }
+.gallery-inner {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.gphoto {
+  position: relative;
+  height: 320px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  transition: filter .3s;
+}
+.gphoto:hover { filter: brightness(1.1) saturate(1.2); }
+.gphoto::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(6,42,28,0.9) 100%);
+}
+.gphoto-1 { background-image: url('/img/padel-action.jpg'); }
+.gphoto-2 { background-image: url('/img/padel-court.jpg'); }
+.gphoto-3 { background-image: url('/img/padel-hero.jpg'); }
+.gtag {
+  position: absolute; bottom: 18px; right: 18px;
+  background: rgba(212,255,58,0.9); color: #062a1c;
+  padding: 8px 14px; border-radius: 999px;
+  font-weight: 800; font-size: 14px;
+  z-index: 2;
+}
+@media (max-width: 720px) {
+  .gallery-inner { grid-template-columns: 1fr; }
+  .gphoto { height: 220px; }
+}
+
 /* ============ CARDS ============ */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
 .card {
@@ -191,8 +280,22 @@ h2 {
   padding: 28px;
   transition: transform .2s ease, box-shadow .2s ease;
 }
-.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-.card-icon { font-size: 36px; margin-bottom: 14px; }
+.card { position: relative; overflow: hidden; }
+.card::before {
+  content: ""; position: absolute; top: 0; right: 0; width: 80px; height: 80px;
+  background: radial-gradient(circle at 100% 0%, rgba(212,255,58,0.25), transparent 70%);
+  pointer-events: none;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--green-400);
+}
+.card-icon {
+  font-size: 40px; margin-bottom: 14px;
+  display: inline-block;
+  filter: drop-shadow(0 4px 10px rgba(43,182,115,0.35));
+}
 .card h3 { margin: 0 0 8px; font-size: 20px; }
 .card p { margin: 0; color: var(--muted); }
 
@@ -243,13 +346,28 @@ h2 {
 /* ============ PRICE ============ */
 .price-card {
   max-width: 480px; margin: 0 auto;
-  background: var(--white);
+  background:
+    linear-gradient(135deg, #fff 60%, #f0fbe6 100%);
   border-radius: var(--radius-lg);
-  padding: 36px 30px;
+  padding: 40px 30px;
   text-align: center;
-  box-shadow: var(--shadow);
-  border: 2px solid var(--green-800);
+  box-shadow: 0 20px 60px rgba(6, 42, 28, 0.18), 0 0 0 1px rgba(10,61,42,0.1);
+  border: 3px solid var(--green-800);
   position: relative;
+  overflow: hidden;
+}
+.price-card::before {
+  content: "🎾"; position: absolute;
+  font-size: 120px; opacity: 0.06;
+  top: -20px; left: -20px;
+  transform: rotate(-15deg);
+}
+.price-card::after {
+  content: ""; position: absolute;
+  top: -30px; right: -30px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(212,255,58,0.4), transparent 65%);
+  pointer-events: none;
 }
 .price-top { margin-bottom: 24px; }
 .price-label { display: block; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; }

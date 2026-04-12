@@ -1,66 +1,82 @@
-// שרת Express לאתר ההרשמה של טורניר פאדל חדרה
-// אחראי על: הגשת דפי הסטטי, הפקת טופס הצהרת בריאות PDF,
-// קבלת הרשמות עם העלאת קובץ הצהרת בריאות, ושליחת מייל אישור למארגן + למשתתף.
+// טורניר פאדל חדרה — שרת Express
+// זרימה אמיתית: הרשמה -> העלאת הצהרת בריאות -> סטטוס ממתין לתשלום ->
+// העלאת אסמכתא bit -> בדיקה ידנית של המארגן -> אישור.
+// מגבלה: 8 זוגות מאושרים.
 
 require('dotenv').config();
 
 const express = require('express');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'padel-admin-2026';
+const MAX_PAIRS = 8;
 
-// תיקיית העלאות (נוצרת אם לא קיימת)
+// --- תיקיות ---
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const DATA_DIR = path.join(__dirname, 'data');
+const DB_PATH = path.join(DATA_DIR, 'registrations.json');
+for (const d of [UPLOAD_DIR, DATA_DIR]) if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, '[]', 'utf8');
 
-// --- הגדרת multer: שמירה לדיסק עם שם ייחודי + סינון סוגי קבצים ---
+// --- DB פשוט מבוסס קובץ JSON ---
+function loadDB() {
+  try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); }
+  catch { return []; }
+}
+function saveDB(list) {
+  fs.writeFileSync(DB_PATH, JSON.stringify(list, null, 2), 'utf8');
+}
+
+// סטטוסים חוקיים
+const STATUSES = [
+  'submitted', 'awaiting_payment', 'payment_under_review',
+  'paid_confirmed', 'approved', 'waitlist',
+  'cancelled', 'refund_pending', 'refunded'
+];
+
+// סטטוסים שתופסים מקום מתוך 8 הזוגות
+const RESERVING = new Set([
+  'awaiting_payment', 'payment_under_review', 'paid_confirmed', 'approved'
+]);
+
+function countReserved(db) {
+  return db.filter(r => RESERVING.has(r.status)).length;
+}
+function countApproved(db) {
+  return db.filter(r => r.status === 'approved' || r.status === 'paid_confirmed').length;
+}
+
+// --- Multer ---
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const safeBase = file.originalname
-      .replace(/[^\w.\-א-ת ]/g, '_')
-      .slice(0, 80);
-    const unique = crypto.randomBytes(6).toString('hex');
-    cb(null, `${Date.now()}-${unique}-${safeBase}`);
+    const safe = file.originalname.replace(/[^\w.\-א-ת ]/g, '_').slice(0, 80);
+    cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safe}`);
   }
 });
-
-const ALLOWED_MIMES = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/jpg',
-  'image/png'
-]);
-
+const ALLOWED_MIMES = new Set(['application/pdf','image/jpeg','image/jpg','image/png']);
 const upload = multer({
   storage,
-  limits: {
-    fileSize: 8 * 1024 * 1024, // עד 8MB
-    files: 1
-  },
+  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => {
-    if (!ALLOWED_MIMES.has(file.mimetype)) {
-      return cb(new Error('סוג קובץ לא חוקי. יש להעלות PDF / JPG / PNG בלבד.'));
-    }
+    if (!ALLOWED_MIMES.has(file.mimetype))
+      return cb(new Error('סוג קובץ לא חוקי. PDF / JPG / PNG בלבד.'));
     cb(null, true);
   }
 });
 
-// --- Nodemailer: טרנספורטר Gmail SMTP ---
+// --- Mailer ---
 function buildTransport() {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
   return nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
   });
 }
 
@@ -69,254 +85,302 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- נקודת קצה: הורדת טופס הצהרת בריאות כ-PDF (מופק בזמן אמת) ---
-app.get('/health-declaration.pdf', (_req, res) => {
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader(
-    'Content-Disposition',
-    'attachment; filename="health-declaration-hadera-padel.pdf"'
-  );
-
-  const doc = new PDFDocument({ size: 'A4', margin: 50 });
-  doc.pipe(res);
-
-  // PDFKit לא תומך בעברית מימין-לשמאל עם פונט ברירת מחדל.
-  // נייצר טופס דו-לשוני: כותרת באנגלית + שדות באנגלית ברורים.
-  doc.fontSize(22).text('Health Declaration', { align: 'center' });
-  doc.moveDown(0.3);
-  doc.fontSize(14).text('Tournament Padel Hadera', { align: 'center' });
-  doc.moveDown(1.5);
-
-  doc.fontSize(11).text(
-    'Please fill in, sign, and upload this form during registration. ' +
-      'Registration will not be completed without a signed declaration.',
-    { align: 'left' }
-  );
-  doc.moveDown(1);
-
-  const line = (label) => {
-    doc.fontSize(11).text(label, { continued: false });
-    doc.moveTo(doc.x, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown(1);
-  };
-
-  line('Full Name / שם מלא:');
-  line('ID Number / ת.ז:');
-  line('Date of Birth / תאריך לידה:');
-  line('Phone / טלפון:');
-  line('Emergency Contact / איש קשר לחירום:');
-
-  doc.moveDown(0.5);
-  doc
-    .fontSize(12)
-    .text('Declaration / הצהרה:', { underline: true });
-  doc.moveDown(0.3);
-  doc.fontSize(10).text(
-    '1. I declare that I am in good health and have no medical condition that prevents me from participating in a competitive padel tournament.\n' +
-      '2. I participate in the tournament at my own responsibility.\n' +
-      '3. I confirm that I have consulted a physician if required.\n' +
-      '4. I am aware of the physical effort involved in the event.',
-    { align: 'left', lineGap: 4 }
-  );
-
-  doc.moveDown(2);
-  line('Signature / חתימה:');
-  line('Date / תאריך:');
-
-  doc.moveDown(2);
-  doc
-    .fontSize(9)
-    .fillColor('#666')
-    .text(
-      'Tournament Padel Hadera — Official Health Declaration',
-      { align: 'center' }
-    );
-
-  doc.end();
-});
-
-// --- ולידציה צד-שרת להרשמה ---
-function validateRegistration(body) {
-  const errors = [];
-  const {
-    fullName,
-    phone,
-    email,
-    category,
-    partnerName,
-    partnerPhone,
-    consent,
-    healthConsent
-  } = body;
-
-  if (!fullName || fullName.trim().length < 2)
-    errors.push('שם מלא חסר או קצר מדי.');
-  if (!/^0\d{1,2}-?\d{7}$|^0\d{8,9}$|^\+972\d{8,9}$/.test((phone || '').replace(/\s/g, '')))
-    errors.push('מספר טלפון לא תקין.');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || ''))
-    errors.push('כתובת מייל לא תקינה.');
-  if (!category) errors.push('יש לבחור קטגוריה.');
-  if (!partnerName || partnerName.trim().length < 2)
-    errors.push('שם השותף/ה חסר.');
-  if (!partnerPhone) errors.push('טלפון השותף/ה חסר.');
-  if (consent !== 'on' && consent !== 'true' && consent !== true)
-    errors.push('יש לאשר את תנאי ההשתתפות.');
-  if (healthConsent !== 'on' && healthConsent !== 'true' && healthConsent !== true)
-    errors.push('יש לאשר את הצהרת הבריאות.');
-
-  return errors;
+// --- עזר ---
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function validPhone(p) {
+  return /^(0\d{8,9}|\+972\d{8,9})$/.test((p || '').replace(/[\s-]/g, ''));
+}
+function validEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
 }
 
-// ולידציה נוספת על הקובץ שהועלה - שם קובץ הגיוני
-function validateHealthFile(file) {
-  const errors = [];
-  if (!file) {
-    errors.push('חובה לצרף קובץ הצהרת בריאות חתום.');
-    return errors;
-  }
-  if (file.size < 10 * 1024) {
-    errors.push('הקובץ קטן מדי - נראה שאינו הצהרה תקינה.');
-  }
-  if (file.size > 8 * 1024 * 1024) {
-    errors.push('הקובץ גדול מדי (מעל 8MB).');
-  }
-  return errors;
-}
-
-// --- נקודת קצה: הרשמה ---
-app.post('/api/register', (req, res) => {
-  upload.single('healthFile')(req, res, async (uploadErr) => {
-    if (uploadErr) {
-      return res
-        .status(400)
-        .json({ ok: false, errors: [uploadErr.message] });
-    }
-
-    const fieldErrors = validateRegistration(req.body);
-    const fileErrors = validateHealthFile(req.file);
-    const allErrors = [...fieldErrors, ...fileErrors];
-
-    if (allErrors.length) {
-      // נקה קובץ שהועלה במידה וולידציה נכשלה
-      if (req.file) fs.unlink(req.file.path, () => {});
-      return res.status(400).json({ ok: false, errors: allErrors });
-    }
-
-    const {
-      fullName,
-      phone,
-      email,
-      category,
-      partnerName,
-      partnerPhone,
-      notes
-    } = req.body;
-
-    const registrationId =
-      'HDR-' + Date.now().toString(36).toUpperCase() +
-      '-' + crypto.randomBytes(2).toString('hex').toUpperCase();
-
-    // הכנת תוכן המייל למארגן
-    const adminHtml = `
-      <div dir="rtl" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6">
-        <h2 style="color:#0a3d2a">הרשמה חדשה - טורניר פאדל חדרה</h2>
-        <p><b>מזהה הרשמה:</b> ${registrationId}</p>
-        <hr>
-        <p><b>שם מלא:</b> ${escapeHtml(fullName)}</p>
-        <p><b>טלפון:</b> ${escapeHtml(phone)}</p>
-        <p><b>מייל:</b> ${escapeHtml(email)}</p>
-        <p><b>קטגוריה:</b> ${escapeHtml(category)}</p>
-        <p><b>שם שותף/ה:</b> ${escapeHtml(partnerName)}</p>
-        <p><b>טלפון שותף/ה:</b> ${escapeHtml(partnerPhone)}</p>
-        ${notes ? `<p><b>הערות:</b> ${escapeHtml(notes)}</p>` : ''}
-        <hr>
-        <p><b>קובץ הצהרת בריאות:</b> ${escapeHtml(req.file.originalname)} (${Math.round(req.file.size / 1024)}KB)</p>
-        <p style="color:#666;font-size:12px">התקבל ב- ${new Date().toLocaleString('he-IL')}</p>
-      </div>
-    `;
-
-    const userHtml = `
-      <div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7">
-        <h2 style="color:#0a3d2a">ההרשמה התקבלה! 🎾</h2>
-        <p>היי ${escapeHtml(fullName)},</p>
-        <p>קיבלנו את ההרשמה שלך לטורניר <b>פאדל חדרה</b>.</p>
-        <p><b>מזהה הרשמה:</b> ${registrationId}</p>
-        <p>הצוות שלנו יחזור אליך בימים הקרובים עם כל הפרטים הסופיים - שעות, מגרש, ולוח המשחקים.</p>
-        <p>מחכים לראות אותך על המגרש!</p>
-        <p style="color:#666;font-size:13px">במידה ולא נרשמת - אפשר להתעלם מהמייל.</p>
-      </div>
-    `;
-
-    const transport = buildTransport();
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const mailSkipped = !transport || !adminEmail || adminEmail === 'to_be_provided_by_user';
-
-    if (!mailSkipped) {
-      try {
-        await transport.sendMail({
-          from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
-          to: adminEmail,
-          subject: `הרשמה חדשה - ${fullName} (${category})`,
-          html: adminHtml,
-          attachments: [
-            {
-              filename: req.file.originalname,
-              path: req.file.path
-            }
-          ]
-        });
-
-        await transport.sendMail({
-          from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: 'אישור הרשמה - טורניר פאדל חדרה',
-          html: userHtml
-        });
-      } catch (mailErr) {
-        console.error('שגיאת שליחת מייל:', mailErr.message);
-        // ההרשמה נשמרה אך המייל נכשל - נודיע ללקוח בהצלחה חלקית
-        return res.json({
-          ok: true,
-          registrationId,
-          warning: 'ההרשמה נקלטה אך לא נשלח מייל אישור. הצוות יצור איתך קשר.'
-        });
-      }
-    } else {
-      console.log('[MAIL SKIPPED] SMTP/ADMIN_EMAIL לא מוגדר. הרשמה נשמרה:', registrationId);
-    }
-
-    // שומר לוג פשוט כגיבוי לוקאלי
-    const logLine = JSON.stringify({
-      id: registrationId,
-      at: new Date().toISOString(),
-      fullName, phone, email, category, partnerName, partnerPhone,
-      file: req.file.filename
-    }) + '\n';
-    fs.appendFile(path.join(__dirname, 'registrations.log'), logLine, () => {});
-
-    res.json({ ok: true, registrationId });
+// --- בקרת קיבולת (ציבורית) ---
+app.get('/api/capacity', (_req, res) => {
+  const db = loadDB();
+  const reserved = countReserved(db);
+  const approved = countApproved(db);
+  res.json({
+    maxPairs: MAX_PAIRS,
+    reserved,
+    approved,
+    remaining: Math.max(0, MAX_PAIRS - reserved),
+    full: reserved >= MAX_PAIRS
   });
 });
 
-// --- עוזר: הגנה מפני הזרקת HTML במיילים ---
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+// --- בדיקת סטטוס הרשמה ---
+app.get('/api/status/:id', (req, res) => {
+  const db = loadDB();
+  const r = db.find(x => x.id === req.params.id);
+  if (!r) return res.status(404).json({ ok: false, error: 'הרשמה לא נמצאה' });
+  res.json({
+    ok: true,
+    id: r.id,
+    status: r.status,
+    fullName: r.fullName,
+    hasPaymentProof: !!r.paymentProof
+  });
+});
+
+// --- הרשמה חדשה ---
+app.post('/api/register', (req, res) => {
+  upload.single('healthFile')(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, errors: [err.message] });
+
+    const errors = [];
+    const { fullName, phone, email, level, partnerName, partnerPhone,
+            notes, consent, healthConsent, paymentAck } = req.body;
+
+    if (!fullName || fullName.trim().length < 2) errors.push('שם מלא חסר.');
+    if (!validPhone(phone)) errors.push('טלפון לא תקין.');
+    if (!validEmail(email)) errors.push('מייל לא תקין.');
+    if (!['2.5', '3'].includes(level)) errors.push('רמה לא תקינה.');
+    if (!partnerName || partnerName.trim().length < 2) errors.push('שם שותף/ה חסר.');
+    if (!validPhone(partnerPhone)) errors.push('טלפון שותף/ה לא תקין.');
+    if (!['on','true',true].includes(consent)) errors.push('יש לאשר תנאי השתתפות.');
+    if (!['on','true',true].includes(healthConsent)) errors.push('יש לאשר את הצהרת הבריאות.');
+    if (!['on','true',true].includes(paymentAck)) errors.push('יש לאשר את מדיניות התשלום.');
+    if (!req.file) errors.push('חובה להעלות הצהרת בריאות חתומה.');
+    else if (req.file.size < 10 * 1024) errors.push('קובץ הצהרת בריאות קטן מדי.');
+
+    if (errors.length) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ ok: false, errors });
+    }
+
+    const db = loadDB();
+    const reserved = countReserved(db);
+    const initialStatus = reserved >= MAX_PAIRS ? 'waitlist' : 'awaiting_payment';
+
+    const id = 'HDR-' + Date.now().toString(36).toUpperCase()
+      + '-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+
+    const record = {
+      id,
+      createdAt: new Date().toISOString(),
+      status: initialStatus,
+      fullName, phone, email, level,
+      partnerName, partnerPhone,
+      notes: notes || '',
+      healthFile: {
+        original: req.file.originalname,
+        stored: req.file.filename,
+        size: req.file.size
+      },
+      paymentProof: null,
+      history: [{ at: new Date().toISOString(), status: initialStatus, by: 'system' }]
+    };
+    db.push(record);
+    saveDB(db);
+
+    // מייל למארגן + משתתף (אם מוגדר)
+    sendRegistrationEmails(record).catch(e => console.error('mail err', e.message));
+
+    res.json({
+      ok: true,
+      id,
+      status: initialStatus,
+      waitlist: initialStatus === 'waitlist'
+    });
+  });
+});
+
+// --- העלאת אסמכתא תשלום bit ---
+app.post('/api/payment-proof/:id', (req, res) => {
+  upload.single('paymentFile')(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, errors: [err.message] });
+
+    const db = loadDB();
+    const r = db.find(x => x.id === req.params.id);
+    if (!r) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(404).json({ ok: false, errors: ['הרשמה לא נמצאה.'] });
+    }
+    if (!req.file) return res.status(400).json({ ok: false, errors: ['חובה לצרף צילום מסך של התשלום.'] });
+    if (req.file.size < 5 * 1024) {
+      fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ ok: false, errors: ['הקובץ קטן מדי.'] });
+    }
+
+    r.paymentProof = {
+      original: req.file.originalname,
+      stored: req.file.filename,
+      size: req.file.size,
+      at: new Date().toISOString()
+    };
+    // אם היה ממתין לתשלום - עובר לבדיקה. ברשימת המתנה - נשאר (אבל נשמרת אסמכתא).
+    if (r.status === 'awaiting_payment') {
+      r.status = 'payment_under_review';
+      r.history.push({ at: new Date().toISOString(), status: 'payment_under_review', by: 'user' });
+    }
+    saveDB(db);
+
+    sendPaymentProofEmail(r).catch(e => console.error('mail err', e.message));
+
+    res.json({ ok: true, status: r.status });
+  });
+});
+
+// --- אדמין: צפייה ברשימה ---
+function adminAuth(req, res, next) {
+  const token = req.headers['x-admin-token'] || req.query.token;
+  if (token !== ADMIN_TOKEN) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
+  next();
 }
 
-// --- טיפול בשגיאות כלליות ---
+app.get('/api/admin/list', adminAuth, (_req, res) => {
+  const db = loadDB();
+  res.json({
+    ok: true,
+    capacity: { max: MAX_PAIRS, reserved: countReserved(db), approved: countApproved(db) },
+    registrations: db.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  });
+});
+
+// --- אדמין: שינוי סטטוס ---
+app.post('/api/admin/status/:id', adminAuth, express.json(), (req, res) => {
+  const { status, note } = req.body;
+  if (!STATUSES.includes(status)) return res.status(400).json({ ok: false, error: 'סטטוס לא חוקי' });
+
+  const db = loadDB();
+  const r = db.find(x => x.id === req.params.id);
+  if (!r) return res.status(404).json({ ok: false, error: 'לא נמצא' });
+
+  const prev = r.status;
+  r.status = status;
+  r.history.push({ at: new Date().toISOString(), status, by: 'admin', note: note || '' });
+
+  // אם שוחרר מקום - קדם ממתין מרשימת המתנה לממתין לתשלום
+  if (RESERVING.has(prev) && !RESERVING.has(status)) {
+    const waiter = db.find(x => x.status === 'waitlist');
+    if (waiter) {
+      waiter.status = 'awaiting_payment';
+      waiter.history.push({ at: new Date().toISOString(), status: 'awaiting_payment', by: 'system', note: 'קודם מרשימת המתנה' });
+      notifyPromoted(waiter).catch(()=>{});
+    }
+  }
+  saveDB(db);
+
+  // מייל למשתתף על עדכון סטטוס (ליידע אישור/דחייה)
+  if (['paid_confirmed','approved','waitlist','cancelled','refunded'].includes(status)) {
+    notifyStatusChange(r).catch(()=>{});
+  }
+
+  res.json({ ok: true, status: r.status });
+});
+
+// --- אדמין: הורדת קובץ של הרשמה ---
+app.get('/api/admin/file/:id/:kind', adminAuth, (req, res) => {
+  const db = loadDB();
+  const r = db.find(x => x.id === req.params.id);
+  if (!r) return res.status(404).send('not found');
+  const f = req.params.kind === 'health' ? r.healthFile : r.paymentProof;
+  if (!f) return res.status(404).send('no file');
+  res.download(path.join(UPLOAD_DIR, f.stored), f.original);
+});
+
+// --- מיילים ---
+async function sendRegistrationEmails(r) {
+  const t = buildTransport();
+  const admin = process.env.ADMIN_EMAIL;
+  if (!t || !admin || admin === 'to_be_provided_by_user') return;
+
+  const html = `
+    <div dir="rtl" style="font-family:Arial,sans-serif">
+      <h2>הרשמה חדשה - טורניר פאדל חדרה</h2>
+      <p><b>מזהה:</b> ${r.id} · <b>סטטוס:</b> ${statusHe(r.status)}</p>
+      <p><b>שם:</b> ${escapeHtml(r.fullName)} · ${escapeHtml(r.phone)} · ${escapeHtml(r.email)}</p>
+      <p><b>רמה:</b> ${r.level} · <b>שותף/ה:</b> ${escapeHtml(r.partnerName)} (${escapeHtml(r.partnerPhone)})</p>
+      ${r.notes ? `<p><b>הערות:</b> ${escapeHtml(r.notes)}</p>` : ''}
+      <p><b>הצהרת בריאות:</b> ${escapeHtml(r.healthFile.original)}</p>
+    </div>`;
+  await t.sendMail({
+    from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
+    to: admin, subject: `הרשמה חדשה - ${r.fullName} (רמה ${r.level})`, html,
+    attachments: [{ filename: r.healthFile.original, path: path.join(UPLOAD_DIR, r.healthFile.stored) }]
+  });
+  await t.sendMail({
+    from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
+    to: r.email,
+    subject: 'אישור קליטת הרשמה - טורניר פאדל חדרה',
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif">
+      <h2>הרשמתך נקלטה! 🎾</h2>
+      <p>מזהה: <b>${r.id}</b></p>
+      <p>סטטוס: <b>${statusHe(r.status)}</b></p>
+      ${r.status === 'awaiting_payment'
+        ? '<p>המקום יישמר סופית רק לאחר ביצוע תשלום ב-bit והעלאת אסמכתא.</p>'
+        : '<p>הטורניר מלא כרגע - את/ה ברשימת המתנה. נעדכן אם יתפנה מקום.</p>'}
+    </div>`
+  });
+}
+
+async function sendPaymentProofEmail(r) {
+  const t = buildTransport();
+  const admin = process.env.ADMIN_EMAIL;
+  if (!t || !admin || admin === 'to_be_provided_by_user') return;
+  await t.sendMail({
+    from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
+    to: admin,
+    subject: `אסמכתת תשלום - ${r.fullName} (${r.id})`,
+    html: `<div dir="rtl">
+      <p>${escapeHtml(r.fullName)} העלה/תה אסמכתת תשלום bit.</p>
+      <p>מזהה: ${r.id}</p>
+      <p>יש לבדוק ולאשר במערכת האדמין.</p>
+    </div>`,
+    attachments: [{ filename: r.paymentProof.original, path: path.join(UPLOAD_DIR, r.paymentProof.stored) }]
+  });
+}
+
+async function notifyStatusChange(r) {
+  const t = buildTransport();
+  if (!t) return;
+  const msg = {
+    paid_confirmed: 'התשלום אושר! מקומך בטורניר מאובטח.',
+    approved: 'ההרשמה אושרה סופית. נתראה על המגרש 🎾',
+    waitlist: 'כרגע הטורניר מלא - את/ה ברשימת המתנה.',
+    cancelled: 'ההרשמה בוטלה. אם יש שאלה - צרו קשר עם הצוות.',
+    refunded: 'ההחזר בוצע.'
+  }[r.status] || 'עדכון בסטטוס ההרשמה.';
+  await t.sendMail({
+    from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
+    to: r.email,
+    subject: 'עדכון סטטוס - טורניר פאדל חדרה',
+    html: `<div dir="rtl"><p>${msg}</p><p>מזהה: ${r.id}</p></div>`
+  });
+}
+
+async function notifyPromoted(r) {
+  const t = buildTransport();
+  if (!t) return;
+  await t.sendMail({
+    from: `"טורניר פאדל חדרה" <${process.env.SMTP_USER}>`,
+    to: r.email,
+    subject: 'התפנה מקום! - טורניר פאדל חדרה',
+    html: `<div dir="rtl"><p>היי ${escapeHtml(r.fullName)},</p>
+      <p>התפנה מקום בטורניר. יש להשלים תשלום ב-bit כדי לאבטח את ההשתתפות.</p>
+      <p>מזהה: ${r.id}</p></div>`
+  });
+}
+
+function statusHe(s) {
+  return ({
+    submitted: 'נקלטה', awaiting_payment: 'ממתין לתשלום',
+    payment_under_review: 'תשלום בבדיקה', paid_confirmed: 'תשלום אושר',
+    approved: 'מאושר', waitlist: 'רשימת המתנה',
+    cancelled: 'בוטל', refund_pending: 'החזר בתהליך', refunded: 'הוחזר'
+  })[s] || s;
+}
+
+// --- שגיאות ---
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ ok: false, errors: ['שגיאת שרת. נסה שוב מאוחר יותר.'] });
+  res.status(500).json({ ok: false, errors: ['שגיאת שרת.'] });
 });
 
 app.listen(PORT, () => {
-  console.log(`🎾 טורניר פאדל חדרה — השרת רץ על http://localhost:${PORT}`);
-  if (!process.env.ADMIN_EMAIL || process.env.ADMIN_EMAIL === 'to_be_provided_by_user') {
-    console.log('⚠️  ADMIN_EMAIL לא הוגדר ב-.env - הרשמות יישמרו אך לא יישלח מייל.');
-  }
+  console.log(`🎾 padel hadera on :${PORT}`);
+  console.log(`   admin token: ${ADMIN_TOKEN}`);
 });

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#0a3d2a" />
 <title>טורניר פאדל חדרה — הרשמה פתוחה</title>
-<meta name="description" content="הטורניר הפתוח של פאדל חדרה. שחקנים בכל הרמות, אווירה מעולה, פרסים ומשחקים רציניים. הרשמה אונליין עכשיו." />
+<meta name="description" content="טורניר פאדל חדרה · 8 זוגות בלבד · שתי רמות (2.5 / 3) · הרשמה אונליין, הצהרת בריאות ותשלום ב-bit." />
 <link rel="stylesheet" href="/styles.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,8 +22,9 @@
     <nav class="nav-links">
       <a href="#about">הטורניר</a>
       <a href="#how">איך זה עובד</a>
-      <a href="#categories">קטגוריות</a>
-      <a href="#prices">מחירים</a>
+      <a href="#format">פורמט</a>
+      <a href="#levels">רמות</a>
+      <a href="#prices">מחיר</a>
       <a href="#register" class="cta-mini">להרשמה</a>
     </nav>
   </div>
@@ -36,19 +37,25 @@
     <span class="eyebrow">◆ טורניר הפאדל של חדרה ◆</span>
     <h1>חדרה<br/>עולה על המגרש.</h1>
     <p class="hero-sub">
-      טורניר פאדל פתוח לשחקנים ושחקניות בכל הרמות.
-      אווירה אמיתית, משחקים צמודים, ופרסים שווים.
-      אל תתני לחברים להירשם בלעדייך.
+      טורניר זוגות מקומי, אווירה אמיתית, משחקים צמודים.
+      8 זוגות בלבד — ההרשמה על בסיס מקום פנוי,
+      והמקום נסגר רק אחרי תשלום ואישור.
     </p>
     <div class="hero-ctas">
       <a href="#register" class="btn btn-primary">להרשמה עכשיו</a>
       <a href="#about" class="btn btn-ghost">מה זה הטורניר?</a>
     </div>
     <ul class="hero-meta">
-      <li><b>מיקום</b><span>חדרה</span></li>
-      <li><b>פורמט</b><span>זוגות</span></li>
-      <li><b>רמות</b><span>מתחילים → מתקדמים</span></li>
+      <li><b>מיקום</b><span>חדרה · המיקום המדויק יישלח לנרשמים</span></li>
+      <li><b>פורמט</b><span>זוגות · 8 זוגות בלבד</span></li>
+      <li><b>רמות</b><span>מתחילים 2.5 · בינוניים 3</span></li>
     </ul>
+
+    <!-- מצב קיבולת חי -->
+    <div class="capacity-badge" id="capacityBadge" hidden>
+      <span class="cap-dot"></span>
+      <span id="capacityText">טוען סטטוס מקומות…</span>
+    </div>
   </div>
 </section>
 
@@ -58,24 +65,24 @@
     <h2>על הטורניר</h2>
     <p class="lead">
       טורניר פאדל חדרה הוא האירוע המקומי של קהילת הפאדל בעיר.
-      מתחילים שרוצים להרגיש תחרות אמיתית לראשונה,
-      ומתקדמים שמחפשים משחקים ברמה גבוהה — כולם על אותו מגרש.
+      מתחילים שמחפשים את התחרות הראשונה שלהם, ובינוניים שמחפשים משחקים ברמה טובה —
+      כולם נפגשים על אותם מגרשים באווירה חברית ואמיתית.
     </p>
     <div class="cards">
       <div class="card">
         <div class="card-icon">🏆</div>
         <h3>תחרות אמיתית</h3>
-        <p>בתים, פלייאוף, וגמר. כל משחק נחשב. כל נקודה מרגישה.</p>
+        <p>שיבוץ לפי רמה, משחקים צמודים, תוצאה שנחשבת.</p>
       </div>
       <div class="card">
         <div class="card-icon">🤝</div>
         <h3>קהילה מקומית</h3>
-        <p>שחקנים מחדרה והסביבה. אווירה חברית אחרי המשחק.</p>
+        <p>שחקנים מחדרה והסביבה. אווירה חברית בין המשחקים.</p>
       </div>
       <div class="card">
         <div class="card-icon">⚡</div>
-        <h3>ארגון חלק</h3>
-        <p>לוח זמנים ברור, שופטים, מים, ותזמון הוגן לכל זוג.</p>
+        <h3>ארגון הוגן</h3>
+        <p>לוח זמנים ברור, חלונות משחק מוגדרים, תזמון הוגן לכולם.</p>
       </div>
     </div>
   </div>
@@ -84,80 +91,106 @@
 <!-- HOW IT WORKS -->
 <section id="how" class="section section-dark">
   <div class="wrap">
-    <h2>איך זה עובד</h2>
+    <h2>איך ההרשמה עובדת</h2>
+    <p class="lead">בנינו את התהליך כדי שיהיה ברור, מסודר ונוח. חמישה שלבים, והמקום שלכם בטורניר סגור.</p>
     <ol class="steps">
       <li>
         <span class="step-num">1</span>
-        <h3>נרשמים בזוגות</h3>
-        <p>מוצאים שותף/ה, בוחרים קטגוריה, וממלאים את הטופס.</p>
+        <h3>ממלאים טופס</h3>
+        <p>פרטי שחקן, פרטי שותף/ה, ובחירת רמה (2.5 או 3).</p>
       </li>
       <li>
         <span class="step-num">2</span>
         <h3>מעלים הצהרת בריאות</h3>
-        <p>מורידים את הטופס, ממלאים וחותמים, מצרפים כקובץ.</p>
+        <p>מורידים את הטופס הרשמי של משרד הבריאות, חותמים, מצלמים ומעלים.</p>
       </li>
       <li>
         <span class="step-num">3</span>
-        <h3>מקבלים אישור</h3>
-        <p>הצוות שלנו שולח אישור למייל עם כל הפרטים.</p>
+        <h3>משלמים ב-bit</h3>
+        <p>500 ש"ח לזוג. מעלים צילום מסך של התשלום כאסמכתא.</p>
       </li>
       <li>
         <span class="step-num">4</span>
+        <h3>המארגנים מאשרים</h3>
+        <p>הצוות בודק את ההרשמה ואת התשלום ומאשר סופית.</p>
+      </li>
+      <li>
+        <span class="step-num">5</span>
         <h3>באים לשחק</h3>
-        <p>שלב הבתים, פלייאוף, וגמר. פרסים לזוגות המנצחים.</p>
+        <p>המיקום המדויק, לוח המשחקים והשיבוצים יישלחו לפני האירוע.</p>
       </li>
     </ol>
+    <p class="micro note-light">
+      שליחת הטופס בלבד אינה מבטיחה מקום. המקום בטורניר נשמר רק לאחר קבלת תשלום ואישור סופי מהמארגנים.
+    </p>
   </div>
 </section>
 
-<!-- CATEGORIES -->
-<section id="categories" class="section">
+<!-- FORMAT -->
+<section id="format" class="section section-accent">
   <div class="wrap">
-    <h2>קטגוריות</h2>
-    <p class="lead">בחרו את הקטגוריה שמתאימה לרמת המשחק שלכם.</p>
-    <div class="cats">
-      <div class="cat">
-        <div class="cat-tag">מתחילים</div>
-        <h3>Open B</h3>
-        <p>לשחקנים חדשים יחסית שמחפשים את התחרות הראשונה שלהם.</p>
+    <h2>איך המשחקים עובדים</h2>
+    <p class="lead">כללים פשוטים, זמן קבוע לכל משחק, והכי חשוב — לוח זמנים שעובד לכולם.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🎾</div>
+        <h3>מערכה אחת</h3>
+        <p>כל משחק הוא מערכה אחת — משוחקת עד 6 משחקונים.</p>
       </div>
-      <div class="cat">
-        <div class="cat-tag">ביניים</div>
-        <h3>Open A</h3>
-        <p>לשחקנים עם ניסיון משחק קבוע, שליטה טובה בזוויות ובסמאש.</p>
+      <div class="card">
+        <div class="card-icon">⏱️</div>
+        <h3>20 דקות מקסימום</h3>
+        <p>אם הזמן נגמר לפני סיום המערכה — המשחק נעצר בסיום חלון הזמן, והתוצאה הנוכחית קובעת.</p>
       </div>
-      <div class="cat">
-        <div class="cat-tag">מתקדמים</div>
-        <h3>Pro</h3>
-        <p>הרמה הגבוהה של הטורניר. משחקים מהירים, מנות חזקות.</p>
-      </div>
-      <div class="cat">
-        <div class="cat-tag">זוגות מעורבים</div>
-        <h3>Mixed</h3>
-        <p>גבר + אישה. קטגוריה נפרדת עם אווירה מצוינת.</p>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>חלוקה לפי רמה</h3>
+        <p>השיבוצים למשחקים נעשים לפי רמת ההרשמה (2.5 / 3) ולפי הלו"ז של הטורניר.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PRICES -->
+<!-- LEVELS -->
+<section id="levels" class="section">
+  <div class="wrap">
+    <h2>רמות הטורניר</h2>
+    <p class="lead">רק שתי רמות. הטורניר פתוח לכולם — זוגות גברים, זוגות נשים או זוגות מעורבים, בלי הבדל.</p>
+    <div class="cats">
+      <div class="cat">
+        <div class="cat-tag">מתחילים</div>
+        <h3>רמה 2.5</h3>
+        <p>שחקנים יחסית חדשים. כבר משחקים באופן קבוע ומחפשים את התחרות הראשונה שלהם.</p>
+      </div>
+      <div class="cat">
+        <div class="cat-tag">בינוניים</div>
+        <h3>רמה 3</h3>
+        <p>שחקנים עם ניסיון משחק, שליטה טובה בזוויות, בלוב ובסמאש, ומחפשים משחקים ברמה טובה.</p>
+      </div>
+    </div>
+    <p class="micro">הטורניר מוגבל ל-8 זוגות בסה"כ. החלוקה למשחקים מתבצעת לפי רמת ההרשמה.</p>
+  </div>
+</section>
+
+<!-- PRICE -->
 <section id="prices" class="section section-accent">
   <div class="wrap">
     <h2>מחיר השתתפות</h2>
+    <p class="lead">התשלום שומר לכם מקום בטורניר. ההרשמה היא על בסיס מקום פנוי, והמקום נסגר סופית רק לאחר השלמת תשלום.</p>
     <div class="price-card">
       <div class="price-top">
         <span class="price-label">השתתפות זוגית</span>
-        <span class="price-big">₪ 320</span>
-        <span class="price-sub">עבור הזוג — כולל כל המשחקים</span>
+        <span class="price-big">500 ₪</span>
+        <span class="price-sub">לזוג · 250 ש"ח לאדם</span>
       </div>
       <ul class="price-list">
-        <li>✓ מינימום 3 משחקים מובטחים</li>
-        <li>✓ חולצת טורניר למשתתף/ת</li>
-        <li>✓ שתייה + פינוקים במהלך היום</li>
-        <li>✓ פרסים לזוכים בכל קטגוריה</li>
+        <li>✓ 8 זוגות בלבד — הרשמה על בסיס מקום פנוי</li>
+        <li>✓ מגרשים ושיבוצים מסודרים לפי רמה</li>
+        <li>✓ מים ופינוקים באירוע</li>
+        <li>✓ אווירה קהילתית ומשחקים רציניים</li>
       </ul>
       <a href="#register" class="btn btn-primary btn-block">להרשמה</a>
-      <p class="micro">תשלום מסודר מול הצוות לאחר אישור ההרשמה.</p>
+      <p class="micro">התשלום מתבצע ב-bit לאחר שליחת הטופס, על פי ההוראות במסך האישור.</p>
     </div>
   </div>
 </section>
@@ -167,25 +200,25 @@
   <div class="wrap">
     <h2>הצהרת בריאות</h2>
     <p class="lead">
-      על מנת להשתתף בטורניר יש למלא הצהרת בריאות חתומה.
-      זה קצר, פשוט, וחובה מבחינת ביטוח והשתתפות.
+      כדי להשתתף בטורניר יש להגיש הצהרת בריאות חתומה — הטופס הרשמי של משרד הבריאות (הצהרת בריאות למבקש להתאמן בחדר כושר).
+      בלי זה ההרשמה לא נסגרת.
     </p>
     <div class="health-box">
       <div class="health-step">
         <span class="big-num">1</span>
-        <h3>הורדת הטופס</h3>
-        <p>מורידים את הטופס כ-PDF, מדפיסים/מסמנים וחותמים.</p>
-        <a class="btn btn-dark" href="/health-declaration.pdf" download>הורדת הטופס (PDF)</a>
+        <h3>הורדת הטופס הרשמי</h3>
+        <p>הטופס של משרד הבריאות, בעברית, PDF לחתימה.</p>
+        <a class="btn btn-dark" id="healthFormLink" target="_blank" rel="noopener">פתיחת הטופס ב-gov.il</a>
       </div>
       <div class="health-step">
         <span class="big-num">2</span>
-        <h3>צילום / סריקה</h3>
-        <p>מצלמים או סורקים את הטופס החתום — PDF / JPG / PNG (עד 8MB).</p>
+        <h3>מילוי וחתימה</h3>
+        <p>ממלאים את הפרטים, חותמים, ומצלמים או סורקים — PDF / JPG / PNG (עד 8MB).</p>
       </div>
       <div class="health-step">
         <span class="big-num">3</span>
-        <h3>העלאה בטופס ההרשמה</h3>
-        <p>מצרפים את הקובץ בטופס למטה — בלי זה ההרשמה לא תושלם.</p>
+        <h3>העלאה בטופס</h3>
+        <p>מצרפים את הקובץ החתום בטופס ההרשמה למטה. אם סימנת "כן" לאחת מהשאלות הרפואיות — ייתכן שתתבקש אישור רפואי נוסף.</p>
       </div>
     </div>
   </div>
@@ -195,7 +228,7 @@
 <section id="register" class="section section-form">
   <div class="wrap">
     <h2>טופס הרשמה</h2>
-    <p class="lead">כל שדה מסומן ב-* הוא שדה חובה. ההרשמה מאובטחת ולא נעבירה לגורם צד שלישי.</p>
+    <p class="lead">כל שדה עם * הוא שדה חובה. הפרטים נשמרים אצל המארגנים בלבד ולא מועברים לגורם חיצוני.</p>
 
     <form id="regForm" class="form" novalidate>
       <div class="grid-2">
@@ -212,13 +245,11 @@
           <input type="email" name="email" autocomplete="email" required />
         </label>
         <label class="field">
-          <span>קטגוריה *</span>
-          <select name="category" required>
-            <option value="">-- בחר/י קטגוריה --</option>
-            <option>Open B - מתחילים</option>
-            <option>Open A - ביניים</option>
-            <option>Pro - מתקדמים</option>
-            <option>Mixed - מעורב</option>
+          <span>רמה *</span>
+          <select name="level" required>
+            <option value="">-- בחר/י רמה --</option>
+            <option value="2.5">מתחילים — רמה 2.5</option>
+            <option value="3">בינוניים — רמה 3</option>
           </select>
         </label>
         <label class="field">
@@ -239,7 +270,7 @@
       <div class="upload-block">
         <div class="upload-head">
           <b>העלאת הצהרת בריאות חתומה *</b>
-          <a href="/health-declaration.pdf" download class="small-link">לא הורדת עדיין? הורד/י כאן</a>
+          <a id="healthFormLink2" target="_blank" rel="noopener" class="small-link">להורדת הטופס הרשמי</a>
         </div>
         <label class="upload-drop" id="dropZone">
           <input type="file" id="healthFile" name="healthFile" accept=".pdf,.jpg,.jpeg,.png" required />
@@ -254,38 +285,83 @@
       </label>
       <label class="check">
         <input type="checkbox" name="consent" required />
-        <span>אני מאשר/ת שההשתתפות בטורניר היא באחריותי האישית, קראתי את תנאי ההשתתפות ומסכים/ה לקבל מיילים ועדכונים מהצוות.</span>
+        <span>קראתי את תנאי ההשתתפות, ההשתתפות בטורניר היא באחריותי האישית, ואני מסכים/ה לקבלת עדכונים מהצוות.</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="paymentAck" required />
+        <span>הבנתי שההרשמה נסגרת סופית רק לאחר השלמת תשלום ואישור מהמארגנים, ושבמקרה של ביטול לאחר תשלום — החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר.</span>
       </label>
 
       <div class="form-errors" id="formErrors" hidden></div>
 
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">שליחת הרשמה</button>
-      <p class="micro center">לאחר השליחה יישלח אליכם מייל אישור. הצוות יחזור אליכם עם פרטי התשלום.</p>
+      <p class="micro center">לאחר שליחה תועברו למסך הוראות תשלום ב-bit. המקום נסגר רק אחרי אישור התשלום.</p>
     </form>
 
-    <!-- Thank You -->
+    <!-- Thank You + Payment Flow -->
     <div class="thankyou" id="thankyou" hidden>
       <div class="ty-mark">✓</div>
-      <h2>ההרשמה התקבלה!</h2>
-      <p>שלחנו לך מייל אישור עם המזהה שלך.</p>
+      <h2 id="tyHeading">ההרשמה נקלטה!</h2>
+      <p id="tyStatusLine">הסטטוס: <b id="tyStatus">—</b></p>
       <p class="ty-id">מזהה הרשמה: <b id="regId"></b></p>
 
-      <div class="ty-actions">
+      <!-- אזור תשלום bit -->
+      <div class="pay-box" id="payBox">
+        <h3>תשלום ב-bit — שלב שני ואחרון</h3>
+        <p class="pay-sub">המקום נסגר סופית רק לאחר אישור תשלום על ידי המארגנים.</p>
+
+        <div class="pay-grid">
+          <div class="pay-row"><span>סכום</span><b>500 ₪ לזוג</b></div>
+          <div class="pay-row"><span>נמען</span><b id="payName">—</b></div>
+          <div class="pay-row"><span>מספר ב-bit</span><b id="payPhone">—</b></div>
+          <div class="pay-row"><span>הערה בתשלום</span><b id="payRef">—</b></div>
+        </div>
+
+        <div class="ty-actions">
+          <a id="bitGroupBtn" class="btn btn-primary" target="_blank" rel="noopener" hidden>פתיחת קבוצת התשלום ב-bit</a>
+          <button type="button" id="copyPayBtn" class="btn btn-ghost-light">📋 העתקת פרטי התשלום</button>
+        </div>
+
+        <hr class="ty-sep" />
+
+        <h3 class="sub-h">העלאת אסמכתת תשלום *</h3>
+        <p class="pay-sub">צילום מסך של התשלום מה-bit · PDF / JPG / PNG · עד 8MB.</p>
+        <form id="payForm" class="pay-upload" enctype="multipart/form-data">
+          <label class="upload-drop upload-drop-light" id="payDrop">
+            <input type="file" id="payFile" name="paymentFile" accept=".pdf,.jpg,.jpeg,.png" required />
+            <span class="drop-text">בחר/י קובץ לצירוף</span>
+            <span class="drop-file" id="payFileLbl" hidden></span>
+          </label>
+          <div class="form-errors" id="payErrors" hidden></div>
+          <button type="submit" class="btn btn-primary btn-block" id="payBtn">שליחת אסמכתא</button>
+        </form>
+      </div>
+
+      <div class="ty-actions" style="margin-top:22px">
         <a id="waBtn" class="btn btn-wa" target="_blank" rel="noopener">
           <span class="wa-icon" aria-hidden="true">💬</span>
-          שליחה ב-WhatsApp לצוות הטורניר
+          שליחת הודעה לצוות הטורניר ב-WhatsApp
         </a>
         <a id="waGroupBtn" class="btn btn-ghost-light" target="_blank" rel="noopener" hidden>
           🎾 הצטרפות לקבוצת הטורניר
         </a>
-        <button type="button" id="copyBtn" class="btn btn-ghost-light">
-          📋 העתקת פרטי ההרשמה
-        </button>
       </div>
 
-      <p class="micro ty-note">אם ה-WhatsApp לא נפתח אוטומטית — הודעה עם פרטי ההרשמה מחכה בקליפבורד בלחיצה על "העתקה".</p>
-      <p class="micro" style="margin-top:14px">נתראה על המגרש 🎾</p>
+      <p class="micro ty-note">ניתן לסגור את הדף ולחזור אליו אחר כך — פרטי התשלום נשלחו גם במייל. נתראה על המגרש 🎾</p>
     </div>
+  </div>
+</section>
+
+<!-- REFUND POLICY -->
+<section id="refund" class="section">
+  <div class="wrap">
+    <h2>מדיניות ביטול והחזר</h2>
+    <ul class="legal-list">
+      <li>ההרשמה נחשבת סופית רק לאחר קבלת תשלום ואישור מהמארגנים.</li>
+      <li>במקרה של ביטול לאחר ביצוע תשלום — הביטול יתועד במערכת, וההחזר לא יתבצע מיידית.</li>
+      <li>החזר כספי, ככל שיאושר, יבוצע עד 7 ימים לאחר מועד הטורניר.</li>
+      <li>המארגנים שומרים לעצמם את הזכות לבדוק כל מקרה לגופו בהתאם לנסיבות ולמדיניות האירוע.</li>
+    </ul>
   </div>
 </section>
 
@@ -294,12 +370,12 @@
   <div class="wrap">
     <h2>תנאי השתתפות ואחריות</h2>
     <ul class="legal-list">
-      <li>ההשתתפות בטורניר היא באחריות המשתתף/ת. על כל משתתף/ת לוודא כי מצב בריאותו מאפשר פעילות גופנית מאומצת.</li>
-      <li>חובה להעלות הצהרת בריאות חתומה. ללא הצהרה לא תתאפשר השתתפות.</li>
-      <li>הצוות רשאי לשנות לוח משחקים, קטגוריות או שיבוצים במידת הצורך, מסיבות ארגוניות.</li>
-      <li>במקרה של פציעה במהלך המשחקים, האחריות על המשתתף/ת. מומלץ להגיע עם ביטוח תאונות אישי / ספורט.</li>
-      <li>פרטי המשתתפים נשמרים לצורכי ההרשמה והטורניר בלבד ולא מועברים לגורם חיצוני.</li>
-      <li>ביטול הרשמה: עד 7 ימים לפני האירוע — החזר מלא. לאחר מכן בתיאום עם הצוות.</li>
+      <li>ההשתתפות בטורניר היא באחריות המשתתף/ת. על כל משתתף/ת לוודא שמצב בריאותו מאפשר פעילות גופנית מאומצת.</li>
+      <li>ההשתתפות מותנית בהעלאת הצהרת בריאות תקינה חתומה ובהשלמת תשלום ואישור הרשמה.</li>
+      <li>מספר המקומות מוגבל ל-8 זוגות. ההרשמה היא על בסיס מקום פנוי; משלב מסוים הבאים בתור ייכנסו לרשימת המתנה.</li>
+      <li>המארגנים רשאים לשנות לוח משחקים, שיבוצים או מיקום מגרש מסיבות ארגוניות. המיקום המדויק יישלח לנרשמים לפני האירוע.</li>
+      <li>במקרה של פציעה במהלך המשחקים האחריות על המשתתף/ת. מומלץ להגיע עם ביטוח ספורט/תאונות אישי.</li>
+      <li>פרטי המשתתפים נשמרים לצורכי ההרשמה והטורניר בלבד, ולא מועברים לגורם חיצוני.</li>
     </ul>
   </div>
 </section>
@@ -312,7 +388,8 @@
     </div>
     <div class="footer-links">
       <a href="#register">הרשמה</a>
-      <a href="/health-declaration.pdf" download>הצהרת בריאות</a>
+      <a href="#health">הצהרת בריאות</a>
+      <a href="#refund">מדיניות החזר</a>
       <a href="#about">על הטורניר</a>
     </div>
     <div class="copy">© <span id="yr"></span> פאדל חדרה</div>

@@ -395,6 +395,66 @@ h2 {
 .footer-links a:hover { color: var(--lime); }
 .copy { opacity: 0.6; }
 
+/* ============ CAPACITY BADGE ============ */
+.capacity-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(212,255,58,0.12);
+  border: 1px solid rgba(212,255,58,0.35);
+  color: var(--lime);
+  padding: 8px 14px; border-radius: 999px;
+  font-weight: 600; font-size: 14px;
+  margin-top: 22px;
+}
+.cap-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--lime); box-shadow: 0 0 10px var(--lime);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.capacity-badge.cap-full { background: rgba(255,120,120,0.15); border-color: rgba(255,120,120,0.4); color: #ffc7c7; }
+.capacity-badge.cap-full .cap-dot { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+
+.note-light { color: #b5c8bf; margin-top: 24px; font-size: 14px; }
+
+/* ============ PAY BOX ============ */
+.pay-box {
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(212,255,58,0.25);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin: 22px auto 0;
+  max-width: 460px;
+  text-align: right;
+}
+.pay-box h3 { color: var(--lime); margin: 0 0 6px; font-size: 19px; }
+.pay-sub { color: #d8e5dd; margin: 0 0 16px; font-size: 14px; }
+.pay-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.pay-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; background: rgba(255,255,255,0.05);
+  border-radius: 10px; font-size: 15px;
+}
+.pay-row span { color: #b5c8bf; }
+.pay-row b { color: #fff; font-weight: 700; }
+.ty-sep { border: 0; border-top: 1px solid rgba(255,255,255,0.12); margin: 22px 0 16px; }
+.sub-h { color: #fff; margin: 0 0 4px; font-size: 17px; }
+.upload-drop-light {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-color: rgba(255,255,255,0.25);
+}
+.upload-drop-light:hover, .upload-drop-light.drag {
+  background: rgba(255,255,255,0.14); border-color: var(--lime);
+}
+.upload-drop-light .drop-text small { color: #b5c8bf; }
+.pay-ok {
+  background: rgba(212,255,58,0.12);
+  border: 1px solid rgba(212,255,58,0.35);
+  color: var(--lime);
+  padding: 14px; border-radius: 10px;
+  text-align: center; font-weight: 600;
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 540px) {
   .hero { padding: 60px 0 50px; }

@@ -148,8 +148,11 @@ html { font-size: calc(16px * var(--a11y-font-scale)); }
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* גווני אפור */
-.a11y-grayscale, .a11y-grayscale body { filter: grayscale(1); }
+/* גווני אפור — חל על כל הדף פרט לווידג'ט הנגישות עצמו,
+   כדי שהמשתמש תמיד יוכל לראות את הצבעים של הכפתור/פאנל ולבטל */
+.a11y-grayscale body > *:not(#a11y-panel):not(#a11y-fab):not(.skip-to-main):not(#back-home-fab) {
+  filter: grayscale(1);
+}
 
 /* הדגשת קישורים */
 .a11y-link-underline a {

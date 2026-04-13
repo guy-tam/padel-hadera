@@ -39,8 +39,16 @@
   .btn-outline:hover { background:rgba(212,255,58,.1) }
 
   /* ===== KPIs ===== */
-  .kpis { display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:0 0 22px }
+  .kpis { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:0 0 22px }
+  @media (max-width:1100px) { .kpis { grid-template-columns:repeat(3,1fr) } }
   @media (max-width:900px) { .kpis { grid-template-columns:repeat(2,1fr) } }
+  /* Organizer badge בולט (lime/teal) */
+  .org-badge { display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:800;background:linear-gradient(135deg,rgba(212,255,58,.22),rgba(127,227,168,.22));color:#d4ff3a;border:1px solid rgba(212,255,58,.35);white-space:nowrap }
+  .org-badge.self { background:linear-gradient(135deg,rgba(127,227,168,.25),rgba(43,182,115,.18));color:#7fe3a8;border-color:rgba(127,227,168,.4) }
+  /* ציר זמן אירוח */
+  .tl-month { margin:18px 0 10px;color:#d4ff3a;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px }
+  .tl-month::before { content:"";flex:0 0 6px;width:6px;height:6px;border-radius:50%;background:#d4ff3a;box-shadow:0 0 8px #d4ff3a }
+  .tl-month::after { content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,58,.3),transparent) }
   .kpi { position:relative;overflow:hidden;background:linear-gradient(135deg,#0d3323,#0a2418);border:1px solid rgba(212,255,58,.18);border-radius:18px;padding:18px 16px;transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease }
   .kpi:hover { transform:translateY(-3px);border-color:rgba(212,255,58,.45);box-shadow:0 14px 32px rgba(0,0,0,.35) }
   .kpi::before { content:"";position:absolute;top:-50%;right:-40%;width:180%;height:200%;background:linear-gradient(115deg,transparent 40%,rgba(212,255,58,.12) 50%,transparent 60%);transform:translateX(100%);transition:transform .9s ease;pointer-events:none }
@@ -316,12 +324,10 @@ function animateNumber(elm, to, opts) {
 function renderKpis() {
   const ts = DATA.tournaments || [];
   const slots = DATA.slots || [];
-  const activeSlots = slots.filter(s => s.status !== 'cancelled').length;
-  const totalPlayers = ts.reduce((s,t) => s + (t.capacity?.total||0), 0);
-  const avgFill = ts.length
-    ? Math.round(ts.reduce((s,t)=> s + (t.capacity?.max ? (t.capacity.paid/t.capacity.max) : 0), 0) / ts.length * 100)
-    : 0;
-  // ₪ צפוי: pricePair * (approved pairs) לכל סלוט התואם לטורניר
+  // KPIs מה-server (venue-centric). fallback לחישוב מקומי
+  const k = DATA.kpis || {};
+  const activeSlots = typeof k.activeSlots === 'number' ? k.activeSlots : slots.filter(s => s.status !== 'cancelled').length;
+  // ₪ צפוי: pricePair * (approved pairs)
   let expected = 0;
   ts.forEach(t => {
     const slot = slots.find(s => s.tournamentId === t.id);
@@ -329,11 +335,15 @@ function renderKpis() {
     const approvedPairs = Math.floor(((t.capacity?.approved||0) + (t.capacity?.paid||0)) / 2);
     expected += pricePair * approvedPairs;
   });
+  // 8 KPIs venue-centric (לפי התוכנית)
   const items = [
+    { ic:'🏆', n: k.upcomingCount ?? ts.length, lbl:'טורנירים מתארחים אצלי' },
+    { ic:'📆', n: k.hostingThisMonth ?? 0, lbl:'אירוח החודש' },
+    { ic:'👥', n: k.expectedThisWeek ?? 0, lbl:'משתתפים צפויים השבוע' },
+    { ic:'📊', n: k.expectedThisMonth ?? 0, lbl:'משתתפים צפויים החודש' },
+    { ic:'🎤', n: k.organizersActiveCount ?? 0, lbl:'מארגנים פעילים ב-venue' },
+    { ic:'🏟', n: k.courtLoadPct ?? 0, lbl:'עומס מגרשים', suffix:'%' },
     { ic:'📅', n: activeSlots, lbl:'חלונות פעילים' },
-    { ic:'🏆', n: ts.length, lbl:'טורנירים מתארחים' },
-    { ic:'👥', n: totalPlayers, lbl:'שחקנים סה״כ' },
-    { ic:'📊', n: avgFill, lbl:'% מילוי ממוצע', suffix:'%' },
     { ic:'💰', n: expected, lbl:'₪ צפוי', prefix:'₪' },
   ];
   el('kpis').innerHTML = items.map((k,i) => `
@@ -483,33 +493,50 @@ function renderSlots() {
     </div>`;
     return;
   }
-  // לוח חודש נוכחי — כרטיסים ויזואליים
+  // ציר זמן אירוח — כל החודשים העתידיים (לא רק הנוכחי)
   const now = new Date();
-  const monthSlots = (DATA.slots||[]).filter(s => {
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const futureSlots = (DATA.slots||[]).filter(s => {
     if (!s.date || s.status === 'cancelled') return false;
     const d = new Date(s.date);
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    return d >= today0;
   }).sort((a,b) => a.date.localeCompare(b.date));
 
   const levelHe = l => l === '2.5' ? 'רמה א' : l === '3' ? 'רמה א+' : 'מעורב';
+  // קיבוץ לפי חודש (YYYY-MM)
+  const byMonth = {};
+  futureSlots.forEach(s => {
+    const d = new Date(s.date);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    (byMonth[key] = byMonth[key] || []).push(s);
+  });
+  const monthKeys = Object.keys(byMonth).sort();
+  const monthLabel = (key) => {
+    const [y,mo] = key.split('-').map(Number);
+    return new Date(y, mo-1, 1).toLocaleDateString('he-IL', { year:'numeric', month:'long' });
+  };
   let schedHtml = '';
-  if (monthSlots.length) {
-    schedHtml = `<h3 style="color:#fff;margin:6px 0 12px;font-size:16px;font-weight:800">📆 לוח חודש נוכחי</h3>
-      <div class="sched">${monthSlots.map(s => {
+  if (monthKeys.length) {
+    schedHtml = '<h3 style="color:#fff;margin:6px 0 4px;font-size:16px;font-weight:800">📆 ציר זמן אירוח</h3>';
+    monthKeys.forEach(key => {
+      schedHtml += `<div class="tl-month">${esc(monthLabel(key))}</div><div class="sched">${byMonth[key].map(s => {
         const t = DATA.tournaments.find(x => x.id === s.tournamentId) || {};
         const max = t.capacity?.max || Math.max(1, Number(s.courts||1)*4);
         const paid = t.capacity?.paid || 0;
         const pct = Math.min(100, Math.round((paid/max)*100));
         const d = new Date(s.date);
+        const orgName = t.organizerName || '';
+        const isSelf = !t.organizerId;
         return `<div class="sched-card" onclick="${t.slug?`window.open('/tournaments/${t.slug}','_blank')`:''}">
           <div class="date">${d.toLocaleDateString('he-IL',{weekday:'short', day:'2-digit', month:'short'})}</div>
           <div class="time">${esc(s.startTime)}–${esc(s.endTime)}</div>
+          ${orgName ? `<div style="margin-top:4px"><span class="org-badge ${isSelf?'self':''}">🎤 ${esc(orgName)}</span></div>` : ''}
           <div class="meta"><span>🏟 <b>${s.courts}</b></span><span>🎯 <b>${levelHe(s.level)}</b></span><span>💰 <b>₪${s.pricePair}</b></span></div>
           <div class="meta"><span style="color:#7fe3a8">${paid}/${max} שילמו · ${pct}%</span></div>
           <div class="bar"><i data-pct="${pct}"></i></div>
         </div>`;
       }).join('')}</div>`;
-    // progress-bars fill על רינדור
+    });
     requestAnimationFrame(() => {
       document.querySelectorAll('.sched-card .bar > i').forEach(b => { b.style.width = (b.dataset.pct||0) + '%'; });
     });
@@ -522,7 +549,7 @@ function renderSlots() {
     return `<div class="slot">
       <div class="slot-head">
         <div>
-          <h3>${esc(t.title)} ${pillFor(t)}</h3>
+          <h3>${esc(t.title)} ${pillFor(t)} ${t.organizerName ? `<span class="org-badge ${!t.organizerId?'self':''}" title="מארגן">🎤 ${esc(t.organizerName)}</span>` : ''}</h3>
           <div class="slot-meta">
             ${t.date ? `<span>📅 <b>${esc(t.date)}</b></span>` : ''}
             ${slot ? `<span>⏰ <b>${esc(slot.startTime)}–${esc(slot.endTime)}</b></span>` : ''}
@@ -543,11 +570,20 @@ function renderSlots() {
 }
 
 let REG_FILTER = 'all';
+let REG_ORG = 'all';      // פילטר לפי-מארגן
+let REG_DATE = 'all';     // פילטר לפי-תאריך: all | week | month | upcoming
 function renderRegs() {
   const wrap = el('viewRegs');
   const all = [];
   DATA.tournaments.forEach(t => {
-    (t.registrations || []).forEach(r => all.push({ ...r, tournamentTitle: t.title, tournamentId: t.id }));
+    (t.registrations || []).forEach(r => all.push({
+      ...r,
+      tournamentTitle: t.title,
+      tournamentId: t.id,
+      tournamentDate: t.startDate || null,
+      organizerId: t.organizerId || null,
+      organizerName: t.organizerName || ''
+    }));
   });
   if (!all.length) { wrap.innerHTML = '<div class="empty">עוד אין הרשמות.</div>'; return; }
   all.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
@@ -556,34 +592,77 @@ function renderRegs() {
   const isApproved = s => s === 'approved';
   const isPaid = s => s === 'paid_confirmed';
 
+  // רשימת מארגנים ייחודיים (לפילטר)
+  const orgMap = {};
+  all.forEach(r => {
+    const key = r.organizerId || '__self__';
+    if (!orgMap[key]) orgMap[key] = { key, name: r.organizerName || 'עצמאי', count: 0, isSelf: !r.organizerId };
+    orgMap[key].count++;
+  });
+  const orgs = Object.values(orgMap).sort((a,b) => b.count - a.count);
+
+  // פילטר תאריך
+  const now = new Date();
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(today0); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 1);
+  const dateOK = (r) => {
+    if (REG_DATE === 'all') return true;
+    if (!r.tournamentDate) return false;
+    const d = new Date(r.tournamentDate);
+    if (REG_DATE === 'week') return d >= weekStart && d < weekEnd;
+    if (REG_DATE === 'month') return d >= monthStart && d < monthEnd;
+    if (REG_DATE === 'upcoming') return d >= today0;
+    return true;
+  };
+
+  const statusOK = r => ({
+    all: true,
+    pending: isPending(r.status),
+    approved: isApproved(r.status),
+    paid: isPaid(r.status),
+  }[REG_FILTER]);
+  const orgOK = r => REG_ORG === 'all' || (r.organizerId || '__self__') === REG_ORG;
+
   const counts = {
     all: all.length,
     pending: all.filter(r => isPending(r.status)).length,
     approved: all.filter(r => isApproved(r.status)).length,
     paid: all.filter(r => isPaid(r.status)).length,
   };
-  const filterFn = {
-    all: () => true,
-    pending: r => isPending(r.status),
-    approved: r => isApproved(r.status),
-    paid: r => isPaid(r.status),
-  }[REG_FILTER] || (() => true);
-  const rows = all.filter(filterFn);
 
-  const chipsHtml = `<div class="chips" id="regChips">
-    <button class="chip-btn ${REG_FILTER==='all'?'active':''}" data-f="all">הכל <b>${counts.all}</b></button>
-    <button class="chip-btn ${REG_FILTER==='pending'?'active':''}" data-f="pending">ממתינים <b>${counts.pending}</b></button>
-    <button class="chip-btn ${REG_FILTER==='approved'?'active':''}" data-f="approved">מאושרים <b>${counts.approved}</b></button>
-    <button class="chip-btn ${REG_FILTER==='paid'?'active':''}" data-f="paid">שולמו <b>${counts.paid}</b></button>
-  </div>`;
+  const rows = all.filter(r => statusOK(r) && orgOK(r) && dateOK(r));
+
+  const chipsHtml = `
+    <div class="chips" id="regChips">
+      <button class="chip-btn ${REG_FILTER==='all'?'active':''}" data-f="all">הכל <b>${counts.all}</b></button>
+      <button class="chip-btn ${REG_FILTER==='pending'?'active':''}" data-f="pending">ממתינים <b>${counts.pending}</b></button>
+      <button class="chip-btn ${REG_FILTER==='approved'?'active':''}" data-f="approved">מאושרים <b>${counts.approved}</b></button>
+      <button class="chip-btn ${REG_FILTER==='paid'?'active':''}" data-f="paid">שולמו <b>${counts.paid}</b></button>
+    </div>
+    <div class="chips" id="regDateChips">
+      <span style="color:#8fa69c;font-size:12px;align-self:center">📅 תאריך:</span>
+      <button class="chip-btn ${REG_DATE==='all'?'active':''}" data-d="all">הכל</button>
+      <button class="chip-btn ${REG_DATE==='upcoming'?'active':''}" data-d="upcoming">עתידיים</button>
+      <button class="chip-btn ${REG_DATE==='week'?'active':''}" data-d="week">השבוע</button>
+      <button class="chip-btn ${REG_DATE==='month'?'active':''}" data-d="month">החודש</button>
+    </div>
+    <div class="chips" id="regOrgChips">
+      <span style="color:#8fa69c;font-size:12px;align-self:center">🎤 מארגן:</span>
+      <button class="chip-btn ${REG_ORG==='all'?'active':''}" data-o="all">הכל</button>
+      ${orgs.map(o => `<button class="chip-btn ${REG_ORG===o.key?'active':''}" data-o="${esc(o.key)}">${esc(o.name)} <b>${o.count}</b></button>`).join('')}
+    </div>`;
 
   wrap.innerHTML = chipsHtml + (rows.length ? `<table class="reg-table">
-    <thead><tr><th>תאריך</th><th>שם</th><th>טורניר</th><th>רמה</th><th>שותף/ה</th><th>מייל</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+    <thead><tr><th>תאריך</th><th>שם</th><th>טורניר</th><th>מארגן</th><th>רמה</th><th>שותף/ה</th><th>מייל</th><th>סטטוס</th><th>פעולות</th></tr></thead>
     <tbody>
     ${rows.map(r => `<tr>
       <td style="white-space:nowrap;color:#8fa69c;font-size:12px">${new Date(r.createdAt).toLocaleDateString('he-IL')}</td>
       <td><b>${esc(r.fullName)}</b><br><span style="font-size:11px;color:#8fa69c">${esc(r.phone)}</span></td>
       <td style="font-size:12px;color:#b5c9bf">${esc(r.tournamentTitle)}</td>
+      <td>${r.organizerName ? `<span class="org-badge ${!r.organizerId?'self':''}">${esc(r.organizerName)}</span>` : '—'}</td>
       <td>${esc(r.level)}</td>
       <td style="font-size:12px">${r.partnerName ? esc(r.partnerName) : '—'}</td>
       <td style="font-size:11.5px">${esc(r.email)} ${r.emailVerified ? '<span class="badge ok">✓ אומת</span>' : '<span class="badge warn">ממתין</span>'} ${r.hasPaymentProof ? '<span class="badge pay">💳 אסמכתא</span>' : ''}</td>
@@ -595,6 +674,12 @@ function renderRegs() {
   // חיבור chips
   document.querySelectorAll('#regChips .chip-btn').forEach(b => {
     b.addEventListener('click', () => { REG_FILTER = b.dataset.f; renderRegs(); });
+  });
+  document.querySelectorAll('#regDateChips .chip-btn').forEach(b => {
+    b.addEventListener('click', () => { REG_DATE = b.dataset.d; renderRegs(); });
+  });
+  document.querySelectorAll('#regOrgChips .chip-btn').forEach(b => {
+    b.addEventListener('click', () => { REG_ORG = b.dataset.o; renderRegs(); });
   });
 }
 

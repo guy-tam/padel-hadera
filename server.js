@@ -859,7 +859,27 @@ app.get('/api/admin/list', adminAuth, async (_req, res) => {
       id: o.id, slug: o.slug, name: o.name, status: o.status,
       hasToken: !!o.dashboardToken,
       dashboardUrl: o.dashboardToken ? `/organizer/${o.dashboardToken}` : null
-    }))
+    })),
+    // KPIs חוצי-מערכת (platform-wide) לדשבורד אדמין
+    platform: (() => {
+      const all = db.registrations || [];
+      const tot = all.length;
+      const approved = all.filter(r => r.status === 'approved' || r.status === 'paid_confirmed').length;
+      const pendingPayment = all.filter(r => r.status === 'awaiting_payment' || r.status === 'payment_under_review').length;
+      const waitlist = all.filter(r => r.status === 'waitlist').length;
+      const cancelled = all.filter(r => ['cancelled','refund_pending','refunded'].includes(r.status)).length;
+      return {
+        totalTournaments: db.tournaments.length,
+        totalClubs: db.clubs.length,
+        totalOrganizers: db.organizers.length,
+        totalRegistrations: tot,
+        totalApproved: approved,
+        totalAwaitingPayment: pendingPayment,
+        totalWaitlist: waitlist,
+        totalCancelled: cancelled,
+        conversionPct: tot ? Math.round((approved / tot) * 100) : 0
+      };
+    })()
   });
 });
 
@@ -1589,23 +1609,55 @@ app.get('/api/organizer/:token/me', async (req, res) => {
     .filter(t => isDemoToken(req.params.token) ? true : t.organizerId === org.id)
     .map(t => {
       const regs = db.registrations.filter(r => r.tournamentId === t.id);
+      const max = t.format?.maxPairs || 8;
+      const reserved = regs.filter(r => RESERVING.has(r.status)).length;
+      const approved = regs.filter(r => r.status === 'approved' || r.status === 'paid_confirmed').length;
+      const pendingPayment = regs.filter(r => r.status === 'awaiting_payment' || r.status === 'payment_under_review').length;
+      const waitlist = regs.filter(r => r.status === 'waitlist').length;
+      const cancelled = regs.filter(r => ['cancelled','refund_pending','refunded'].includes(r.status)).length;
+      // הרשמות פעילות ללא הצהרת בריאות חתומה
+      const healthMissing = regs.filter(r => RESERVING.has(r.status) && t.requireHealthDeclaration && !r.healthDeclarationSigned).length;
       return {
         id: t.id, slug: t.slug, title: t.title, status: t.status,
         visibility: t.visibility, createdAt: t.createdAt,
+        date: t.date, location: t.location, clubId: t.clubId,
         capacity: {
-          max: t.format?.maxPairs || 8,
-          reserved: regs.filter(r => RESERVING.has(r.status)).length,
-          approved: regs.filter(r => r.status === 'approved' || r.status === 'paid_confirmed').length,
+          max, reserved, approved,
+          pendingPayment, waitlist, cancelled, healthMissing,
+          spotsLeft: Math.max(0, max - reserved),
           total: regs.length
         }
       };
     });
   const clubs = db.clubs.filter(c => c.status === 'active').map(c => ({ id: c.id, slug: c.slug, name: c.name, city: c.city }));
+  // בלוק KPIs מצטבר — operations של המארגן
+  const now = new Date();
+  const sum = (arr, k) => arr.reduce((s, t) => s + (t.capacity[k] || 0), 0);
+  const upcoming = tournaments.filter(t => {
+    if (!t.date) return false;
+    const d = new Date(t.date);
+    return !isNaN(d) && d >= now;
+  }).length;
+  const totalReg = sum(tournaments, 'total');
+  const totalApproved = sum(tournaments, 'approved');
+  const kpis = {
+    activeTournaments: tournaments.filter(t => t.status !== 'cancelled' && t.status !== 'archived').length,
+    upcomingTournaments: upcoming,
+    approvedPairs: totalApproved,
+    pendingPayment: sum(tournaments, 'pendingPayment'),
+    spotsLeft: sum(tournaments, 'spotsLeft'),
+    waitlist: sum(tournaments, 'waitlist'),
+    cancelled: sum(tournaments, 'cancelled'),
+    healthMissing: sum(tournaments, 'healthMissing'),
+    totalRegistrations: totalReg,
+    conversionPct: totalReg ? Math.round((totalApproved / totalReg) * 100) : 0
+  };
   res.json({
     ok: true,
     organizer: { id: org.id, name: org.name, slug: org.slug, business: org.business },
     tournaments,
-    clubs
+    clubs,
+    kpis
   });
 });
 
@@ -1759,17 +1811,27 @@ app.get('/api/club/:token/me', async (req, res) => {
     .filter(t => isDemoToken(req.params.token) ? true : t.clubId === c.id)
     .map(t => {
       const regs = db.registrations.filter(r => r.tournamentId === t.id);
+      const organizer = db.organizers.find(o => o.id === t.organizerId);
+      const approved = countApproved(db, t.id);
       return {
         id: t.id, slug: t.slug, title: t.title, date: t.date, location: t.location,
         visibility: t.visibility, status: t.status, confirmed: !!t.confirmed,
         confirmedAt: t.confirmedAt || null, allPaidAt: t.allPaidAt || null,
         slotId: t.slotId || null,
+        organizerId: t.organizerId,
+        // שם מארגן — אם אין מארגן זה אירוח עצמאי של המועדון
+        organizerName: organizer?.name || (t.organizerId ? 'מארגן חיצוני' : (c.name + ' (עצמאי)')),
+        startDate: t.startDate || null,
+        startTime: t.startTime || null, endTime: t.endTime || null,
+        pricing: t.pricing || null,
         capacity: {
           max: t.format.maxPairs,
           minPaid: t.format.minPaidPairs,
           reserved: countReserved(db, t.id),
-          approved: countApproved(db, t.id),
+          approved,
           paid: regs.filter(r => ['paid_confirmed','approved'].includes(r.status)).length,
+          waitlist: regs.filter(r => r.status === 'waitlist').length,
+          expectedPlayers: approved * 2, // זוגות → שחקנים צפויים ב-venue
           total: regs.length
         },
         registrations: regs.map(r => ({
@@ -1780,11 +1842,46 @@ app.get('/api/club/:token/me', async (req, res) => {
         })).sort((a,b) => b.createdAt.localeCompare(a.createdAt))
       };
     });
+  // KPIs ממוקדי-venue
+  const now = new Date();
+  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay()); startOfWeek.setHours(0,0,0,0);
+  const endOfWeek = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 7);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const slotsArr = c.slots || [];
+  const tDate = t => {
+    // עדיפות ל-startDate ISO, אח״כ לתאריך ה-slot, ואחרון — t.date (ייתכן בעברית)
+    if (t.startDate) { const d = new Date(t.startDate); if (!isNaN(d)) return d; }
+    const slot = slotsArr.find(s => s.tournamentId === t.id);
+    if (slot?.date) { const d = new Date(slot.date); if (!isNaN(d)) return d; }
+    if (t.date) { const d = new Date(t.date); if (!isNaN(d)) return d; }
+    return null;
+  };
+  const upcomingList = tournaments.filter(t => { const d = tDate(t); return d && d >= now; });
+  const thisWeekList = tournaments.filter(t => { const d = tDate(t); return d && d >= startOfWeek && d < endOfWeek; });
+  const thisMonthList = tournaments.filter(t => { const d = tDate(t); return d && d >= startOfMonth && d < endOfMonth; });
+  const expected = list => list.reduce((s, t) => s + (t.capacity.expectedPlayers || 0), 0);
+  const organizersActive = new Set(upcomingList.map(t => t.organizerId).filter(Boolean));
+  // עומס מגרשים: יחס reserved/max ממוצע בטורנירים הקרובים
+  const courtLoad = upcomingList.length
+    ? Math.round(upcomingList.reduce((s, t) => s + (t.capacity.reserved / Math.max(1, t.capacity.max)), 0) / upcomingList.length * 100)
+    : 0;
+  const kpis = {
+    upcomingCount: upcomingList.length,
+    hostingThisMonth: thisMonthList.length,
+    expectedThisWeek: expected(thisWeekList),
+    expectedThisMonth: expected(thisMonthList),
+    organizersActiveCount: organizersActive.size,
+    courtLoadPct: courtLoad,
+    activeSlots: (c.slots || []).filter(s => s.status === 'active' || s.status === 'open').length,
+    totalExpectedRevenue: 0 // יחושב בצד לקוח אם יש מחיר
+  };
   res.json({
     ok: true,
     club: { id: c.id, name: c.name, city: c.city, slug: c.slug, courts: c.courts, contactEmail: c.contactEmail },
     slots: c.slots || [],
-    tournaments
+    tournaments,
+    kpis
   });
 });
 

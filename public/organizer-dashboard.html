@@ -413,26 +413,33 @@ function renderHero() {
   }
 }
 
-// ====== KPIs עם אנימציית counter ======
+// ====== KPIs ממוקדי-operations למארגן (לא platform-wide) ======
 function renderKpis() {
-  const T = DATA.tournaments;
-  const active = T.filter(t => t.visibility === 'public').length;
-  const totalReg = T.reduce((s,t) => s + (t.capacity?.total || 0), 0);
-  const approved = T.reduce((s,t) => s + (t.capacity?.approved || 0), 0);
-  const pending = T.reduce((s,t) => s + Math.max(0, (t.capacity?.total || 0) - (t.capacity?.approved || 0)), 0);
-  let avgFill = 0;
-  const filled = T.map(t => {
-    const max = t.capacity?.max || 0; if (!max) return 0;
-    return Math.min(100, Math.round(((t.capacity?.reserved || 0) / max) * 100));
-  });
-  if (filled.length) avgFill = Math.round(filled.reduce((a,b)=>a+b,0) / filled.length);
+  // עדיפות: kpis מה-backend. אחרת — חישוב מקומי.
+  const T = DATA.tournaments || [];
+  const K = DATA.kpis || {};
+  const sum = k => T.reduce((s, t) => s + (t.capacity?.[k] || 0), 0);
+  const active = K.activeTournaments ?? T.filter(t => t.visibility === 'public' || t.status === 'open').length;
+  const upcoming = K.upcomingTournaments ?? T.filter(t => {
+    if (!t.date) return false; const d = new Date(t.date); return !isNaN(d) && d >= new Date();
+  }).length;
+  const approved = K.approvedPairs ?? sum('approved');
+  const pendingPay = K.pendingPayment ?? sum('pendingPayment');
+  const spotsLeft = K.spotsLeft ?? sum('spotsLeft');
+  const waitlist = K.waitlist ?? sum('waitlist');
+  const healthMissing = K.healthMissing ?? sum('healthMissing');
+  const totalReg = K.totalRegistrations ?? sum('total');
+  const conversion = K.conversionPct ?? (totalReg ? Math.round((approved/totalReg)*100) : 0);
 
   const tiles = [
-    { icon:'🏆', lbl:'טורנירים פעילים', val: active, trend:'+', prefix:'' },
-    { icon:'📝', lbl:'רשומים סה"כ', val: totalReg, trend:'+', prefix:'' },
-    { icon:'✅', lbl:'מאושרים', val: approved, trend:'+', prefix:'' },
-    { icon:'⏳', lbl:'ממתינים', val: pending, trend: pending>0?'+':'', prefix:'' },
-    { icon:'📊', lbl:'% אכלוס ממוצע', val: avgFill, trend:'+', prefix:'', suffix:'%' },
+    { icon:'🏆', lbl:'טורנירים פעילים', val: active },
+    { icon:'📅', lbl:'טורנירים קרובים', val: upcoming },
+    { icon:'✅', lbl:'זוגות מאושרים', val: approved },
+    { icon:'💳', lbl:'ממתינים לתשלום', val: pendingPay },
+    { icon:'🎟', lbl:'מקומות פנויים', val: spotsLeft },
+    { icon:'⏳', lbl:'רשימת המתנה', val: waitlist },
+    { icon:'📊', lbl:'% Conversion', val: conversion, suffix:'%' },
+    { icon:'📋', lbl:'הצהרות בריאות חסרות', val: healthMissing }
   ];
   el('kpis').innerHTML = tiles.map((t,i) => `
     <div class="kpi fade-up" style="transition-delay:${i*60}ms">
@@ -782,6 +789,9 @@ function escapeHtml(s) {
 }
 
 load();
+// Live data — רענון אוטומטי כל 15 שניות כדי לשקף שינויים בהרשמות/תשלומים/אישורים
+setInterval(() => { try { load(); } catch(_){} }, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 </script>
 <script src="/a11y.js" defer></script>
 <link rel="stylesheet" href="/magic.css"><script src="/magic.js" defer></script>

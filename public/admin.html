@@ -5,7 +5,7 @@
 <meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="theme-color" content="#062318" />
-<title>ניהול · טורניר פאדל חדרה</title>
+<title>ניהול פלטפורמה · פאדל</title>
 <link rel="stylesheet" href="/styles.css" />
 <link rel="stylesheet" href="/a11y.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -57,10 +57,23 @@
   .pill-err  { background: rgba(255,100,100,0.18); color: #ffb3b3; }
   .pill-muted{ background: rgba(255,255,255,0.08); color: #b5c8bf; }
 
-  select.status {
+  select.status, select.filter-sel, input.filter-in {
     background: #0b1411; color: #e8efe9; border: 1px solid #2c3f36;
     padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 13px; margin-top: 6px;
   }
+
+  /* סרגל פילטרים לטאב "כל ההרשמות במערכת" */
+  .filters-bar {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px; background: #12201a; border:1px solid #223128; border-radius:12px;
+    padding: 14px; margin-bottom: 14px;
+  }
+  .filters-bar .fld { display:flex; flex-direction:column; gap:4px; }
+  .filters-bar label { color:#b5c9bf; font-size:12px; font-weight:600; }
+  .filters-bar select, .filters-bar input { width: 100%; margin:0; }
+  .filter-summary { color:#b5c9bf; font-size:13px; margin: 6px 0 12px; }
+  .filter-summary b { color: var(--lime); }
+  .filter-summary a { color: var(--lime); text-decoration: underline; }
   .actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .mini-btn {
     background: #1c2c25; color: #d8e5dd; border: 1px solid #2c3f36;
@@ -223,7 +236,7 @@
 <a id="main" tabindex="-1" aria-hidden="true"></a>
 
 <div id="loginView" class="login-card">
-  <h2 style="margin-top:0">🔒 ניהול הטורניר</h2>
+  <h2 style="margin-top:0">🔒 ניהול פלטפורמה</h2>
   <p class="muted">הזינ/י את מפתח הגישה (ADMIN_TOKEN)</p>
   <input id="tokenInput" type="password" placeholder="admin token" autocomplete="off" />
   <button class="btn btn-primary" id="loginBtn">כניסה</button>
@@ -233,7 +246,7 @@
 <div id="appView" class="admin-wrap" hidden>
   <div class="admin-head">
     <div>
-      <h1>🎾 ניהול · טורניר פאדל חדרה <span class="live-dot" title="נתונים חיים"></span></h1>
+      <h1>🛰 ניהול פלטפורמה · תצוגת-על של כל המערכת <span class="live-dot" title="נתונים חיים"></span></h1>
       <div class="muted" id="lastUpdate">—</div>
     </div>
     <div class="actions">
@@ -246,8 +259,8 @@
   <section class="admin-hero reveal-on-scroll" id="adminHero">
     <div class="hero-top">
       <div>
-        <h2 class="hero-title">🔑 מרכז בקרה</h2>
-        <div class="hero-sub">סקירת פלטפורמה בזמן אמת</div>
+        <h2 class="hero-title">🛰 ניהול פלטפורמה</h2>
+        <div class="hero-sub">תצוגת-על של כל המערכת · טורנירים, מועדונים, מארגנים והרשמות — בזמן אמת</div>
       </div>
       <div class="hero-badge">
         <span class="live-dot"></span>
@@ -263,31 +276,47 @@
     </div>
   </section>
 
+  <!-- KPIs חוצי-מערכת — רק לתצוגת אדמין פלטפורמה -->
   <div class="kpi-grid reveal-on-scroll">
     <div class="kpi-card">
       <div class="kpi-icon">🏆</div>
-      <div class="kpi-value" id="kpiTournaments">0</div>
-      <div class="kpi-label">טורנירים פעילים</div>
+      <div class="kpi-value" id="kpiTotalTournaments">0</div>
+      <div class="kpi-label">סה"כ טורנירים במערכת</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-value" id="kpiRevenue">₪0</div>
-      <div class="kpi-label">הכנסות</div>
+      <div class="kpi-icon">🏟</div>
+      <div class="kpi-value" id="kpiTotalClubs">0</div>
+      <div class="kpi-label">סה"כ מועדונים</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">👥</div>
-      <div class="kpi-value" id="kpiNewPlayers">0</div>
-      <div class="kpi-label">שחקנים חדשים (7 ימים)</div>
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-value" id="kpiTotalOrganizers">0</div>
+      <div class="kpi-label">סה"כ מארגנים</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">📊</div>
-      <div class="kpi-value" id="kpiOccupancy">0%</div>
-      <div class="kpi-label">אחוז אכלוס</div>
+      <div class="kpi-icon">📥</div>
+      <div class="kpi-value" id="kpiTotalRegs">0</div>
+      <div class="kpi-label">סה"כ הרשמות</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-value" id="kpiTotalApproved">0</div>
+      <div class="kpi-label">מאושרים (כל המערכת)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">💳</div>
+      <div class="kpi-value" id="kpiTotalAwaitingPay">0</div>
+      <div class="kpi-label">ממתינים לתשלום</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon">⏳</div>
-      <div class="kpi-value" id="kpiPending">0</div>
-      <div class="kpi-label">ממתינים לאישור</div>
+      <div class="kpi-value" id="kpiTotalWaitlist">0</div>
+      <div class="kpi-label">ברשימת המתנה</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">↩️</div>
+      <div class="kpi-value" id="kpiTotalCancelled">0</div>
+      <div class="kpi-label">ביטולים / החזרים</div>
     </div>
   </div>
 
@@ -301,12 +330,13 @@
   </div>
 
   <div class="stats" id="stats"></div>
-  <div class="capbar" id="capbar"></div>
+  <!-- capbar הוסר מתצוגת אדמין — הוא לטורניר יחיד, לא ל-platform-wide -->
+  <div class="capbar" id="capbar" hidden></div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="list">הרשמות</button>
+    <button class="tab active" data-tab="list">כל ההרשמות במערכת</button>
     <button class="tab" data-tab="pending">ממתינים לאישור</button>
-    <button class="tab" data-tab="tournaments">טורנירים</button>
+    <button class="tab" data-tab="tournaments">כל הטורנירים</button>
     <button class="tab" data-tab="apps-organizers">בקשות יזמים <span id="badgeOrg"></span></button>
     <button class="tab" data-tab="apps-clubs">בקשות מגרשים <span id="badgeClub"></span></button>
     <button class="tab" data-tab="apps-players">שחקנים</button>
@@ -365,6 +395,8 @@ if (urlParams.get('open') === '1' && !TOKEN) {
 }
 let LAST_DATA = { capacity: {max:8,reserved:0,approved:0}, registrations: [] };
 let AUTO_REFRESH = null;
+// מצב פילטרים לטאב "כל ההרשמות במערכת"
+let FILTERS = { club:'', organizer:'', tournament:'', status:'', payment:'', city:'', q:'' };
 
 // עברים login
 document.getElementById('loginBtn').addEventListener('click', tryLogin);
@@ -551,18 +583,137 @@ async function rejectApp(key) {
   loadList();
 }
 
-function renderStats() {
-  const rows = LAST_DATA.registrations || [];
-  const by = s => rows.filter(r => r.status === s).length;
-  const today = new Date().toDateString();
-  const todayCount = rows.filter(r => new Date(r.createdAt).toDateString() === today).length;
-  const withPayment = rows.filter(r => r.paymentProof).length;
-  const needsReview = by('payment_under_review');
+// platformRegs — איחוד כל ההרשמות מכל הטורנירים במערכת עם metadata (מועדון/מארגן/עיר)
+function platformRegs() {
+  const out = [];
+  const clubById = new Map((LAST_DATA.clubs||[]).map(c => [c.id, c]));
+  for (const t of (LAST_DATA.tournaments || [])) {
+    const club = clubById.get(t.clubId);
+    for (const r of (t.registrations || [])) {
+      out.push({
+        ...r,
+        tournamentId: t.id,
+        tournamentTitle: t.title,
+        tournamentSlug: t.slug,
+        _clubId: t.clubId || '',
+        _clubName: club?.name || '',
+        _clubCity: club?.city || '',
+        _organizerId: t.organizerId || ''
+      });
+    }
+  }
+  // fallback: אם אין registrations בתוך tournaments — השתמש בפלאט
+  if (!out.length && LAST_DATA.registrations) return LAST_DATA.registrations;
+  return out;
+}
 
+// החלת פילטרים על מערך הרשמות
+function applyFilters(rows) {
+  return rows.filter(r => {
+    if (FILTERS.club && r._clubId !== FILTERS.club) return false;
+    if (FILTERS.organizer && r._organizerId !== FILTERS.organizer) return false;
+    if (FILTERS.tournament && r.tournamentId !== FILTERS.tournament) return false;
+    if (FILTERS.status && r.status !== FILTERS.status) return false;
+    if (FILTERS.payment === 'with' && !r.paymentProof) return false;
+    if (FILTERS.payment === 'without' && r.paymentProof) return false;
+    if (FILTERS.city && r._clubCity !== FILTERS.city) return false;
+    if (FILTERS.q) {
+      const q = FILTERS.q.trim().toLowerCase();
+      const hay = [r.fullName, r.phone, r.email, r.id, r.partnerName, r.partnerPhone, r.tournamentTitle, r._clubName]
+        .map(x => String(x||'').toLowerCase()).join(' | ');
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// בניית סרגל פילטרים
+function renderFiltersBar() {
+  const regs = platformRegs();
+  const tournaments = LAST_DATA.tournaments || [];
+  const clubs = LAST_DATA.clubs || [];
+  const organizers = LAST_DATA.organizers || [];
+  const cities = Array.from(new Set(regs.map(r => r._clubCity).filter(Boolean))).sort();
+
+  const opt = (v, label, sel) => `<option value="${esc(v)}" ${sel===v?'selected':''}>${esc(label)}</option>`;
+  return `
+    <div class="filters-bar">
+      <div class="fld"><label>מועדון</label>
+        <select class="filter-sel" data-f="club">
+          <option value="">— הכל —</option>
+          ${clubs.map(c => opt(c.id, c.name || c.id, FILTERS.club)).join('')}
+        </select>
+      </div>
+      <div class="fld"><label>מארגן</label>
+        <select class="filter-sel" data-f="organizer">
+          <option value="">— הכל —</option>
+          ${organizers.map(o => opt(o.id, o.name || o.id, FILTERS.organizer)).join('')}
+        </select>
+      </div>
+      <div class="fld"><label>טורניר</label>
+        <select class="filter-sel" data-f="tournament">
+          <option value="">— הכל —</option>
+          ${tournaments.map(t => opt(t.id, t.title || t.slug || t.id, FILTERS.tournament)).join('')}
+        </select>
+      </div>
+      <div class="fld"><label>סטטוס</label>
+        <select class="filter-sel" data-f="status">
+          <option value="">— הכל —</option>
+          ${Object.keys(STATUS_HE).map(s => opt(s, STATUS_HE[s], FILTERS.status)).join('')}
+        </select>
+      </div>
+      <div class="fld"><label>מצב-תשלום</label>
+        <select class="filter-sel" data-f="payment">
+          <option value="" ${FILTERS.payment===''?'selected':''}>— הכל —</option>
+          <option value="with" ${FILTERS.payment==='with'?'selected':''}>עם אסמכתא</option>
+          <option value="without" ${FILTERS.payment==='without'?'selected':''}>ללא אסמכתא</option>
+        </select>
+      </div>
+      <div class="fld"><label>עיר</label>
+        <select class="filter-sel" data-f="city">
+          <option value="">— הכל —</option>
+          ${cities.map(c => opt(c, c, FILTERS.city)).join('')}
+        </select>
+      </div>
+      <div class="fld" style="grid-column: span 2"><label>חיפוש חופשי</label>
+        <input class="filter-in" data-f="q" type="search" placeholder="שם, טלפון, מייל, מזהה, טורניר..." value="${esc(FILTERS.q)}" />
+      </div>
+    </div>`;
+}
+
+function wireFilters(root) {
+  root.querySelectorAll('[data-f]').forEach(el => {
+    const ev = el.tagName === 'INPUT' ? 'input' : 'change';
+    el.addEventListener(ev, () => {
+      FILTERS[el.dataset.f] = el.value;
+      renderList();
+    });
+  });
+}
+
+function renderStats() {
+  // KPIs חוצי-מערכת — מגיעים מה-backend (platform block) או מחושבים בצד לקוח
+  const p = LAST_DATA.platform || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('kpiTotalTournaments', p.totalTournaments ?? (LAST_DATA.tournaments||[]).length);
+  set('kpiTotalClubs', p.totalClubs ?? (LAST_DATA.clubs||[]).length);
+  set('kpiTotalOrganizers', p.totalOrganizers ?? (LAST_DATA.organizers||[]).length);
+  const allRegs = platformRegs();
+  const by = s => allRegs.filter(r => r.status === s).length;
+  set('kpiTotalRegs', p.totalRegistrations ?? allRegs.length);
+  set('kpiTotalApproved', p.totalApproved ?? (by('approved') + by('paid_confirmed')));
+  set('kpiTotalAwaitingPay', p.totalAwaitingPayment ?? (by('awaiting_payment') + by('payment_under_review')));
+  set('kpiTotalWaitlist', p.totalWaitlist ?? by('waitlist'));
+  set('kpiTotalCancelled', p.totalCancelled ?? (by('cancelled') + by('refund_pending') + by('refunded')));
+
+  // stats strip — נשאר להצצה מהירה אבל מציג את כל המערכת
+  const todayStr = new Date().toDateString();
+  const todayCount = allRegs.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === todayStr).length;
+  const withPayment = allRegs.filter(r => r.paymentProof).length;
   const stats = [
-    { n: rows.length, lbl: 'סה"כ הרשמות', cls: 'lime' },
+    { n: allRegs.length, lbl: 'סה"כ הרשמות במערכת', cls: 'lime' },
     { n: todayCount, lbl: 'נרשמו היום', cls: '' },
-    { n: needsReview, lbl: 'ממתין לאישור', cls: needsReview ? 'warn' : '' },
+    { n: by('payment_under_review'), lbl: 'תשלום בבדיקה', cls: by('payment_under_review') ? 'warn' : '' },
     { n: by('approved') + by('paid_confirmed'), lbl: 'מאושרים', cls: 'lime' },
     { n: withPayment, lbl: 'שלחו אסמכתא', cls: '' },
     { n: by('waitlist'), lbl: 'רשימת המתנה', cls: '' }
@@ -586,30 +737,45 @@ function renderCap() {
 }
 
 function renderList() {
-  document.getElementById('viewList').innerHTML = buildTable(LAST_DATA.registrations);
-  wireRowActions(document.getElementById('viewList'));
+  // כל ההרשמות במערכת — חוצה טורנירים + סרגל פילטרים
+  const all = platformRegs();
+  const filtered = applyFilters(all);
+  const wrap = document.getElementById('viewList');
+  const hasFilter = Object.values(FILTERS).some(v => v);
+  const header = `
+    <div class="filter-summary">
+      מציג <b>${filtered.length}</b> מתוך <b>${all.length}</b> הרשמות במערכת
+      ${hasFilter ? ` · <a href="#" id="clearFilters">נקה פילטרים</a>` : ''}
+    </div>`;
+  wrap.innerHTML = renderFiltersBar() + header + buildTable(filtered, { showTournament: true });
+  wireFilters(wrap);
+  const cf = document.getElementById('clearFilters');
+  if (cf) cf.addEventListener('click', (e) => { e.preventDefault(); FILTERS = { club:'', organizer:'', tournament:'', status:'', payment:'', city:'', q:'' }; renderList(); });
+  wireRowActions(wrap);
 }
 
 function renderPending() {
-  const rows = (LAST_DATA.registrations || []).filter(r =>
-    ['payment_under_review','awaiting_payment'].includes(r.status));
+  // מסונן מתוך כל ההרשמות המערכתיות
+  const all = platformRegs();
+  const rows = all.filter(r => ['payment_under_review','awaiting_payment'].includes(r.status));
   const v = document.getElementById('viewPending');
-  v.innerHTML = rows.length ? buildTable(rows) : '<div class="empty">אין ממתינים לאישור</div>';
+  const header = `<div class="filter-summary">ממתינים לאישור ברחבי המערכת: <b>${rows.length}</b> / ${all.length}</div>`;
+  v.innerHTML = rows.length ? header + buildTable(rows, { showTournament: true }) : '<div class="empty">אין ממתינים לאישור</div>';
   wireRowActions(v);
 }
 
 function renderTimeline() {
   const events = [];
-  for (const r of (LAST_DATA.registrations || [])) {
+  for (const r of platformRegs()) {
     for (const h of (r.history || [])) {
-      events.push({ at: h.at, who: r.fullName, id: r.id, status: h.status, by: h.by, note: h.note });
+      events.push({ at: h.at, who: r.fullName, id: r.id, status: h.status, by: h.by, note: h.note, t: r.tournamentTitle });
     }
     if (r.paymentProof) {
-      events.push({ at: r.paymentProof.at, who: r.fullName, id: r.id, status: 'העלה אסמכתת תשלום', by: 'user' });
+      events.push({ at: r.paymentProof.at, who: r.fullName, id: r.id, status: 'העלה אסמכתת תשלום', by: 'user', t: r.tournamentTitle });
     }
   }
-  events.sort((a,b) => b.at.localeCompare(a.at));
-  const top = events.slice(0, 40);
+  events.sort((a,b) => String(b.at||'').localeCompare(String(a.at||'')));
+  const top = events.slice(0, 60);
   const html = top.map(e => {
     const d = new Date(e.at);
     const ts = d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
@@ -617,16 +783,17 @@ function renderTimeline() {
     return `<div class="tl-item">
       <div class="tl-time">${ts}</div>
       <div class="tl-what"><b>${esc(e.who)}</b> · ${esc(label)} <span class="sub">(${e.by}${e.note?' · '+esc(e.note):''})</span>
-        <div class="sub" style="font-family:monospace">${e.id}</div>
+        <div class="sub" style="font-family:monospace">${esc(e.id)}${e.t?' · '+esc(e.t):''}</div>
       </div>
     </div>`;
   }).join('') || '<div class="empty">אין פעילות עדיין</div>';
   document.getElementById('viewTimeline').innerHTML = `<div class="timeline">${html}</div>`;
 }
 
-function buildTable(rows) {
+function buildTable(rows, opts) {
+  opts = opts || {};
   if (!rows || !rows.length) return '<div class="empty">אין הרשמות עדיין</div>';
-  const headers = ['זמן / מזהה','נרשם/ת','רמה','שותף/ה','סטטוס','מסמכים','פעולות'];
+  const headers = ['זמן / מזהה', opts.showTournament ? 'טורניר / מועדון' : null, 'נרשם/ת','רמה','שותף/ה','סטטוס','מסמכים','פעולות'].filter(Boolean);
   const html = ['<table><thead><tr>', ...headers.map(h => `<th>${h}</th>`), '</tr></thead><tbody>'];
   for (const r of rows) {
     const d = new Date(r.createdAt);
@@ -640,8 +807,15 @@ function buildTable(rows) {
       `<button class="mini-btn" data-preview="${r.id}:health">📄 בריאות</button>` +
       (r.paymentProof ? ` <button class="mini-btn ok" data-preview="${r.id}:payment">💳 אסמכתא</button>` : ' <span class="sub">— לא נשלחה</span>');
 
+    const tournamentCell = opts.showTournament ? `
+      <td>
+        <div class="name">${esc(r.tournamentTitle || '—')}</div>
+        <div class="sub">${esc(r._clubName || '')}${r._clubCity?' · '+esc(r._clubCity):''}</div>
+      </td>` : '';
+
     html.push(`<tr>
       <td><div class="sub">${dStr}</div><div class="sub" style="font-family:monospace">${r.id}</div></td>
+      ${tournamentCell}
       <td>
         <div class="name">${esc(r.fullName)}</div>
         <div class="sub">
@@ -698,7 +872,7 @@ async function updateStatus(id, status) {
 
 function openPreview(key) {
   const [id, kind] = key.split(':');
-  const reg = LAST_DATA.registrations.find(r => r.id === id);
+  const reg = platformRegs().find(r => r.id === id);
   if (!reg) return;
   const f = kind === 'health' ? reg.healthFile : reg.paymentProof;
   if (!f) return toast('אין קובץ', true);
@@ -742,7 +916,7 @@ function switchTab(name) {
 // --- 3 תצוגות דשבורד-למשתמש ---
 function renderViewPlayers() {
   const players = (LAST_DATA.applications?.players || []).filter(p => p.status === 'active' || p.status === 'approved' || p.dashboardToken);
-  const regs = LAST_DATA.registrations || [];
+  const regs = platformRegs();
   const wrap = document.getElementById('viewView-players');
   if (!players.length) { wrap.innerHTML = '<div class="empty">אין שחקנים רשומים — הדגמה זמינה ב-<a class="mini-btn ok" target="_blank" href="/player/demo">/player/demo ↗</a></div>'; return; }
   wrap.innerHTML = '<div class="sub" style="margin-bottom:10px">👁 כל שחקן · לחיצה פותחת את הדשבורד שלו כפי שהוא רואה אותו</div>' +

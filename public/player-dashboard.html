@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>הדאשבורד שלי — Padel Platform</title>
+<link rel="stylesheet" href="/platform.css" />
+<link rel="stylesheet" href="/a11y.css" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  .pd-wrap { max-width: 1150px; margin: 0 auto; padding: 24px 18px 80px; }
+  .pd-hero {
+    background: linear-gradient(135deg, #0a3d2a, #062a1c);
+    border: 1px solid rgba(212,255,58,.2);
+    border-radius: 22px;
+    padding: 36px 30px;
+    margin-bottom: 22px;
+    position: relative; overflow: hidden;
+  }
+  .pd-hero::before {
+    content: "🎾"; position: absolute;
+    font-size: 200px; opacity: .05;
+    top: -30px; left: -30px; transform: rotate(-12deg);
+  }
+  .pd-hero h1 { color: #fff; font-size: clamp(28px, 4vw, 44px); margin: 0 0 4px; }
+  .pd-hero .tag { color: var(--lime); font-weight: 700; font-size: 13px; letter-spacing: .4px; }
+  .pd-hero .sub { color: #b5c8bf; margin-top: 6px; }
+
+  .pd-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px; margin-bottom: 26px;
+  }
+  .pd-stat {
+    background: rgba(10,61,42,0.55);
+    border: 1px solid rgba(212,255,58,0.2);
+    border-radius: 14px;
+    padding: 20px 18px;
+    text-align: center;
+  }
+  .pd-stat .n {
+    font-size: 36px; font-weight: 900; line-height: 1;
+    color: var(--lime);
+    text-shadow: 0 2px 16px rgba(212,255,58,.25);
+  }
+  .pd-stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 8px; font-weight: 600; }
+  .pd-stat.win .n { color: #ffd968; }
+  .pd-stat.points .n { font-size: 44px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid rgba(212,255,58,.15); }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
+
+  .match-card {
+    background: rgba(10,61,42,0.4);
+    border: 1px solid rgba(212,255,58,.15);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+    transition: transform .2s, border-color .2s;
+  }
+  .match-card:hover { border-color: var(--lime); transform: translateY(-2px); }
+  .match-card .info h3 { margin: 0 0 4px; color: #fff; font-size: 19px; }
+  .match-card .info .sub { color: #b5c8bf; font-size: 13px; }
+  .match-card .info a { color: var(--lime); }
+  .result-badge {
+    text-align: center;
+    min-width: 90px;
+    background: rgba(212,255,58,0.12);
+    border: 1px solid rgba(212,255,58,.3);
+    border-radius: 14px;
+    padding: 12px 18px;
+  }
+  .result-badge.gold { background: linear-gradient(135deg, #ffd968, #f5a623); color: #062a1c; border-color: #ffd968; }
+  .result-badge.silver { background: linear-gradient(135deg, #c0c0c0, #909090); color: #000; border-color: #e0e0e0; }
+  .result-badge.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border-color: #cd7f32; }
+  .result-badge .place { font-size: 22px; font-weight: 900; line-height: 1; }
+  .result-badge .pts { font-size: 12px; margin-top: 4px; font-weight: 700; }
+  .result-badge .pend { color: #9fb1a8; font-size: 13px; }
+
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .status-pill.ok { background: rgba(43,182,115,.25); color: #7fe3a8; }
+  .status-pill.pending { background: rgba(255,200,50,.2); color: #ffd968; }
+  .status-pill.wait { background: rgba(255,255,255,.1); color: #b5c8bf; }
+
+  .level-chip {
+    display: inline-block;
+    background: var(--lime); color: var(--green-900);
+    padding: 4px 12px; border-radius: 999px;
+    font-weight: 800; font-size: 12px;
+  }
+
+  .empty { text-align: center; color: #9fb1a8; padding: 50px 20px; background: rgba(10,61,42,0.3); border-radius: 14px; }
+  .empty a { color: var(--lime); font-weight: 700; }
+
+  .share-box {
+    background: rgba(212,255,58,.06);
+    border: 1px dashed rgba(212,255,58,.35);
+    padding: 14px 18px; border-radius: 12px;
+    margin-bottom: 22px; font-size: 13px; color: #b5c8bf;
+  }
+  .share-box b { color: var(--lime); }
+</style>
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">המגרשים</a>
+      <a href="/">דף הבית</a>
+    </nav>
+    <span class="pnav-cta">🎾 הדאשבורד שלי</span>
+  </div>
+</header>
+
+<main id="main" class="pd-wrap">
+  <div class="pd-hero">
+    <div class="tag">🎾 שחקן/ית רשומ/ה</div>
+    <h1>{{PLAYER_NAME}}</h1>
+    <div class="sub" id="pdMeta">טוען נתונים...</div>
+  </div>
+
+  <div class="share-box">
+    🔗 <b>שמור קישור זה:</b> <span id="shareLink">טוען...</span>
+    · הוא הכניסה האישית שלך לדאשבורד. ניתן לשמור כסימניה או להוסיף למסך הבית בטלפון.
+    <button class="btn btn-ghost" id="copyLink" style="font-size:12px;padding:6px 14px;margin-right:8px;vertical-align:middle;border-color:rgba(212,255,58,.4);color:var(--lime)">📋 העתקה</button>
+  </div>
+
+  <div class="pd-stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="history">היסטוריית טורנירים</button>
+    <button class="tab" data-tab="active">הרשמות פעילות</button>
+    <button class="tab" data-tab="leaderboard">דירוג כללי</button>
+  </div>
+
+  <div id="viewHistory"></div>
+  <div id="viewActive" hidden></div>
+  <div id="viewLeaderboard" hidden></div>
+</main>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner">
+    <div><b>🎾 padel.platform</b></div>
+    <div><a href="/tournaments">טורנירים</a><a href="/accessibility">נגישות</a></div>
+  </div>
+</footer>
+
+<script>
+const TOKEN = "{{TOKEN}}";
+let DATA = null;
+
+document.querySelectorAll('.tab').forEach(t =>
+  t.addEventListener('click', () => switchTab(t.dataset.tab))
+);
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('viewHistory').hidden = name !== 'history';
+  document.getElementById('viewActive').hidden = name !== 'active';
+  document.getElementById('viewLeaderboard').hidden = name !== 'leaderboard';
+  if (name === 'leaderboard') loadLeaderboard();
+}
+
+document.getElementById('copyLink').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    const b = document.getElementById('copyLink');
+    const old = b.textContent; b.textContent = '✓ הועתק!';
+    setTimeout(() => b.textContent = old, 2000);
+  } catch {}
+});
+
+async function load() {
+  const r = await fetch('/api/player/' + TOKEN + '/me');
+  const j = await r.json();
+  if (!r.ok || !j.ok) {
+    document.getElementById('main').innerHTML = '<div class="empty">אין הרשאה. <a href="/players/join">הירשם/י כשחקן</a></div>';
+    return;
+  }
+  DATA = j;
+  render();
+}
+
+function render() {
+  const p = DATA.player;
+  const s = p.stats;
+  const lv = p.level === '2.5' ? 'מתחילים · 2.5' : p.level === '3' ? 'בינוניים · 3' : 'לא מוגדרת';
+  document.getElementById('pdMeta').innerHTML =
+    `<span class="level-chip">${lv}</span> &nbsp;·&nbsp; ${esc(p.city)} &nbsp;·&nbsp; חבר/ה מ-${new Date(p.memberSince).toLocaleDateString('he-IL',{year:'numeric',month:'long'})}`;
+
+  document.getElementById('shareLink').textContent = location.href;
+
+  document.getElementById('stats').innerHTML = [
+    `<div class="pd-stat points"><div class="n">${s.points}</div><div class="lbl">נקודות</div></div>`,
+    `<div class="pd-stat"><div class="n">${s.tournaments}</div><div class="lbl">טורנירים</div></div>`,
+    `<div class="pd-stat win"><div class="n">🥇 ${s.wins}</div><div class="lbl">ניצחונות</div></div>`,
+    `<div class="pd-stat"><div class="n">🥈 ${s.finals}</div><div class="lbl">גמרים</div></div>`,
+    `<div class="pd-stat"><div class="n">🥉 ${s.semifinals}</div><div class="lbl">חצאי גמר</div></div>`,
+  ].join('');
+
+  renderHistory();
+  renderActive();
+}
+
+function renderHistory() {
+  const h = DATA.history || [];
+  const wrap = document.getElementById('viewHistory');
+  if (!h.length) {
+    wrap.innerHTML = '<div class="empty">עדיין לא שיחקת בטורניר. <a href="/tournaments">גלה טורנירים</a>.</div>';
+    return;
+  }
+  wrap.innerHTML = h.slice().reverse().map(e => {
+    const badge = e.place === 1 ? 'gold' : e.place === 2 ? 'silver' : e.place === 3 ? 'bronze' : '';
+    return `<div class="match-card">
+      <div class="info">
+        <h3>${esc(e.tournamentTitle)}</h3>
+        <div class="sub">
+          ${new Date(e.date).toLocaleDateString('he-IL')}
+          ${e.partner ? ' · שותף: ' + esc(e.partner) : ''}
+          · <a href="/tournaments/${encodeURIComponent(e.tournamentSlug)}" target="_blank">דף הטורניר ↗</a>
+        </div>
+      </div>
+      <div class="result-badge ${badge}">
+        <div class="place">${placeLabel(e.place)}</div>
+        <div class="pts">+${e.points} נק'</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderActive() {
+  const regs = DATA.registrations || [];
+  // פעילות = לא completed/refunded/cancelled
+  const active = regs.filter(r => !['refunded','cancelled'].includes(r.status) && !r.result);
+  const wrap = document.getElementById('viewActive');
+  if (!active.length) {
+    wrap.innerHTML = '<div class="empty">אין הרשמות פעילות כרגע. <a href="/tournaments">גלה טורנירים זמינים</a>.</div>';
+    return;
+  }
+  wrap.innerHTML = active.map(r => {
+    const pill = ({
+      awaiting_payment: '<span class="status-pill pending">ממתין לתשלום</span>',
+      payment_under_review: '<span class="status-pill pending">תשלום בבדיקה</span>',
+      paid_confirmed: '<span class="status-pill ok">תשלום אושר</span>',
+      approved: '<span class="status-pill ok">מאושר</span>',
+      waitlist: '<span class="status-pill wait">רשימת המתנה</span>',
+      submitted: '<span class="status-pill wait">נקלטה</span>'
+    })[r.status] || `<span class="status-pill wait">${r.status}</span>`;
+    return `<div class="match-card">
+      <div class="info">
+        <h3>${esc(r.tournamentTitle)}</h3>
+        <div class="sub">
+          ${esc(r.clubName)} · ${esc(r.clubCity)}
+          ${r.tournamentDate ? ' · ' + esc(r.tournamentDate) : ''}
+          ${r.partnerName ? ' · שותף: ' + esc(r.partnerName) : ''}
+          · <a href="/tournaments/${encodeURIComponent(r.tournamentSlug)}" target="_blank">דף הטורניר ↗</a>
+        </div>
+      </div>
+      <div>${pill}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadLeaderboard() {
+  const wrap = document.getElementById('viewLeaderboard');
+  wrap.innerHTML = '<div class="empty">טוען...</div>';
+  try {
+    const r = await fetch('/api/leaderboard');
+    const j = await r.json();
+    if (!j.players.length) { wrap.innerHTML = '<div class="empty">עדיין אין שחקנים מדורגים.</div>'; return; }
+    wrap.innerHTML = '<table class="reg-table" style="width:100%;border-collapse:collapse;background:rgba(10,61,42,0.4);border-radius:14px;overflow:hidden">' +
+      '<thead><tr><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">דירוג</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">שחקן</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">עיר</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">נקודות</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">ניצחונות</th></tr></thead>' +
+      '<tbody>' + j.players.map((p, i) => `<tr style="border-top:1px solid rgba(212,255,58,.1)">
+        <td style="padding:12px;color:${i<3?'#ffd968':'#fff'};font-weight:900;font-size:${i<3?'18px':'14px'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</td>
+        <td style="padding:12px;color:#fff;font-weight:700">${esc(p.name)} ${i === 0 ? '(הוא שלי?) ' : ''}</td>
+        <td style="padding:12px;color:#b5c8bf">${esc(p.city)}</td>
+        <td style="padding:12px;color:#d4ff3a;font-weight:900">${p.points}</td>
+        <td style="padding:12px;color:#fff">${p.wins}</td>
+      </tr>`).join('') + '</tbody></table>';
+  } catch { wrap.innerHTML = '<div class="empty">שגיאת רשת.</div>'; }
+}
+
+function placeLabel(p) {
+  if (p === 1) return '🥇 1';
+  if (p === 2) return '🥈 2';
+  if (p === 3) return '🥉 3';
+  return '#' + p;
+}
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+load();
+</script>
+<script src="/a11y.js" defer></script>
+</body>
+</html>

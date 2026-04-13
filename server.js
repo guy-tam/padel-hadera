@@ -590,9 +590,8 @@ app.post('/api/applications/organizer', express.json(), (req, res) => {
   res.json({ ok: true, id: entry.id });
 });
 
-// שחקנים
-app.post('/api/applications/player', express.json(), (req, res) => {
-  const db = loadDB();
+// שחקנים — עם dashboardToken אישי + פתיחת פרופיל
+app.post('/api/applications/player', express.json(), async (req, res) => {
   const { name, email, phone, city, level, partnerName, note, consent } = req.body || {};
   const errs = [];
   if (!name || name.trim().length < 2) errs.push('שם חסר.');
@@ -602,20 +601,26 @@ app.post('/api/applications/player', express.json(), (req, res) => {
   if (!['2.5','3','unknown'].includes(level)) errs.push('רמה לא תקינה.');
   if (!consent) errs.push('יש לאשר תנאי שימוש.');
   if (errs.length) return res.status(400).json({ ok: false, errors: errs });
-  const entry = {
-    id: 'PL-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
-    createdAt: new Date().toISOString(),
-    name: clean(name, 100), email: clean(email, 100), phone: clean(phone, 20),
-    city: clean(city, 60), level,
-    partnerName: clean(partnerName, 100),
-    note: cleanLong(note, 500),
-    status: 'active'
-  };
-  if (!db.applications.players) db.applications.players = [];
-  db.applications.players.push(entry);
-  saveDB(db);
-  notifyOrganizerWhatsApp(`🎾 שחקן/ית חדש/ה ברשת:\n${entry.name} · ${entry.phone} · רמה ${entry.level} · ${entry.city}`).catch(()=>{});
-  res.json({ ok: true, id: entry.id });
+
+  const result = await withDB(db => {
+    const token = crypto.randomBytes(16).toString('hex');
+    const entry = {
+      id: 'PL-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
+      dashboardToken: token,
+      createdAt: new Date().toISOString(),
+      name: clean(name, 100), email: clean(email, 100), phone: clean(phone, 20),
+      city: clean(city, 60), level,
+      partnerName: clean(partnerName, 100),
+      note: cleanLong(note, 500),
+      stats: { points: 0, tournaments: 0, wins: 0, finals: 0, semifinals: 0 },
+      history: [],
+      status: 'active'
+    };
+    db.applications.players.push(entry);
+    return { ok: true, id: entry.id, dashboardToken: token, dashboardUrl: `/player/${token}` };
+  });
+  notifyOrganizerWhatsApp(`🎾 שחקן/ית חדש/ה ברשת:\n${name} · ${phone} · רמה ${level} · ${city}`).catch(()=>{});
+  res.json(result);
 });
 
 app.post('/api/applications/club', express.json(), (req, res) => {
@@ -832,6 +837,142 @@ app.post('/api/admin/tournaments/:id/unpublish', adminAuth, async (req, res) => 
       t.visibility = 'private';
     });
     res.json({ ok: true });
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// =================================================================
+//  אזור שחקן — אימות לפי dashboardToken
+// =================================================================
+function findPlayerByToken(db, token) {
+  return (db.applications.players || []).find(p => p.dashboardToken === token && p.status === 'active');
+}
+function findPlayerByEmailOrPhone(db, email, phone) {
+  return (db.applications.players || []).find(p =>
+    (p.email && email && p.email.toLowerCase() === email.toLowerCase()) ||
+    (p.phone && phone && p.phone.replace(/\D/g,'') === phone.replace(/\D/g,''))
+  );
+}
+
+app.get('/player/:token', (req, res) => {
+  const db = loadDB();
+  const p = findPlayerByToken(db, req.params.token);
+  if (!p) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><link rel=stylesheet href="/platform.css"><div style="text-align:center;padding:80px;color:#fff"><h1>🔒 קישור לא תקף</h1><p>השתמש בקישור שקיבלת לאחר ההרשמה כשחקן.</p><a href="/players/join" style="color:#062a1c;background:#d4ff3a;padding:10px 20px;border-radius:999px;font-weight:700;display:inline-block;margin-top:20px">להרשמה כשחקן</a></div>');
+  serveTemplate(res, 'player-dashboard.html', {
+    TOKEN: req.params.token,
+    PLAYER_NAME: escapeHtml(p.name),
+    PLAYER_ID: p.id
+  });
+});
+
+app.get('/api/player/:token/me', (req, res) => {
+  const db = loadDB();
+  const p = findPlayerByToken(db, req.params.token);
+  if (!p) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
+  // מצטרף מידע על הרשמות שלי לטורנירים (by email match)
+  const myRegs = db.registrations.filter(r =>
+    (r.email && r.email.toLowerCase() === p.email.toLowerCase()) ||
+    (r.phone && r.phone.replace(/\D/g,'') === p.phone.replace(/\D/g,''))
+  );
+  const enriched = myRegs.map(r => {
+    const t = db.tournaments.find(x => x.id === r.tournamentId);
+    const club = t ? db.clubs.find(c => c.id === t.clubId) : null;
+    return {
+      id: r.id,
+      tournamentId: r.tournamentId,
+      tournamentTitle: t?.title || '',
+      tournamentSlug: t?.slug || '',
+      tournamentDate: t?.date || '',
+      clubName: club?.name || '',
+      clubCity: club?.city || '',
+      status: r.status,
+      level: r.level,
+      partnerName: r.partnerName,
+      createdAt: r.createdAt,
+      result: r.result || null // יוגדר בסיום הטורניר ע"י אדמין
+    };
+  }).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  res.json({
+    ok: true,
+    player: {
+      id: p.id, name: p.name, email: p.email, phone: p.phone, city: p.city, level: p.level,
+      stats: p.stats || { points: 0, tournaments: 0, wins: 0, finals: 0, semifinals: 0 },
+      memberSince: p.createdAt
+    },
+    registrations: enriched,
+    history: p.history || []
+  });
+});
+
+// ranking גלובלי (Top N)
+app.get('/api/leaderboard', (_req, res) => {
+  const db = loadDB();
+  const players = (db.applications.players || [])
+    .filter(p => p.status === 'active' && (p.stats?.points || 0) > 0)
+    .map(p => ({
+      name: p.name,
+      city: p.city,
+      level: p.level,
+      points: p.stats?.points || 0,
+      tournaments: p.stats?.tournaments || 0,
+      wins: p.stats?.wins || 0
+    }))
+    .sort((a,b) => b.points - a.points)
+    .slice(0, 50);
+  res.json({ ok: true, players });
+});
+
+// ---------- אדמין: רישום תוצאות טורניר ----------
+// כשטורניר הסתיים, אדמין מתעד את הדירוג הסופי.
+// דוגמה לבקשה:
+// { results: [{ regId: 'HDR-...', place: 1 }, { regId: '...', place: 2 }, ...] }
+// מערכת מעניקה נקודות: 1st=25, 2nd=15, 3rd=10, 4th=6, 5-8=3, 9+=1, השתתפות=1
+const PLACE_POINTS = { 1: 25, 2: 15, 3: 10, 4: 6 };
+function pointsForPlace(p) {
+  if (PLACE_POINTS[p]) return PLACE_POINTS[p];
+  if (p >= 5 && p <= 8) return 3;
+  if (p > 8) return 1;
+  return 1;
+}
+app.post('/api/admin/tournaments/:id/results', adminAuth, express.json(), async (req, res) => {
+  const { results } = req.body || {};
+  if (!Array.isArray(results) || !results.length) return res.status(400).json({ ok: false, error: 'results ריק' });
+  try {
+    const result = await withDB(db => {
+      const t = db.tournaments.find(x => x.id === req.params.id);
+      if (!t) throw new Error('לא נמצא');
+      t.results = results.map(r => ({ regId: r.regId, place: parseInt(r.place, 10) }));
+      t.finalizedAt = new Date().toISOString();
+      t.status = 'completed';
+
+      // עדכון ניקוד לשחקנים (לפי email/phone של ההרשמה)
+      let updated = 0;
+      for (const rr of t.results) {
+        const reg = db.registrations.find(x => x.id === rr.regId);
+        if (!reg) continue;
+        reg.result = { place: rr.place, points: pointsForPlace(rr.place), tournamentId: t.id };
+        // מצא את השחקן המקביל וגם את השותף
+        for (const ident of [{ email: reg.email, phone: reg.phone }, { phone: reg.partnerPhone }]) {
+          if (!ident.email && !ident.phone) continue;
+          const p = findPlayerByEmailOrPhone(db, ident.email, ident.phone);
+          if (!p) continue;
+          p.stats = p.stats || { points: 0, tournaments: 0, wins: 0, finals: 0, semifinals: 0 };
+          p.stats.points += pointsForPlace(rr.place);
+          p.stats.tournaments += 1;
+          if (rr.place === 1) p.stats.wins += 1;
+          if (rr.place === 2) p.stats.finals += 1;
+          if (rr.place === 3 || rr.place === 4) p.stats.semifinals += 1;
+          p.history = p.history || [];
+          p.history.push({
+            tournamentId: t.id, tournamentTitle: t.title, tournamentSlug: t.slug,
+            date: new Date().toISOString(),
+            place: rr.place, points: pointsForPlace(rr.place), partner: reg.partnerName
+          });
+          updated++;
+        }
+      }
+      return { ok: true, updated, totalResults: t.results.length };
+    });
+    res.json(result);
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
 

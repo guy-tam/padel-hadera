@@ -825,13 +825,10 @@ app.post('/api/applications/club', express.json(), async (req, res) => {
 });
 
 // --- Admin ---
+// בינתיים: כל נתיבי האדמין פתוחים (ללא טוקן) לפי בקשת המשתמש.
+// להחזרה: להסיר את ה-next() המוקדם ולהחזיר את בדיקת ה-timingSafeEqual.
 function adminAuth(req, res, next) {
-  const token = String(req.headers['x-admin-token'] || req.query.token || '');
-  // constant-time comparison למניעת timing attacks
-  const a = Buffer.from(token.padEnd(64, ' ').slice(0, 64));
-  const b = Buffer.from(String(ADMIN_TOKEN).padEnd(64, ' ').slice(0, 64));
-  if (!crypto.timingSafeEqual(a, b)) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
-  next();
+  return next();
 }
 
 app.get('/api/admin/list', adminAuth, async (_req, res) => {

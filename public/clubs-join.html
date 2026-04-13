@@ -6,6 +6,35 @@
 <title>הצטרפות כמועדון — Padel Platform</title>
 <link rel="stylesheet" href="/platform.css" />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* Hero עם וידאו ואפקטים — הועתק מ-home.html */
+  .p-hero { position: relative; overflow: hidden; min-height: 78vh; padding: 90px 0 70px; display: flex; align-items: center; background: #020b07; color: #fff; }
+  .p-hero-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .p-hero-video iframe { position: absolute; top: 50%; left: 50%; width: 177.78vh; height: 100vh; min-width: 100%; min-height: 56.25vw; transform: translate(-50%, -50%); border: 0; pointer-events: none; opacity: 0.55; filter: saturate(1.1) contrast(1.02); }
+  .p-hero-overlay { position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(115deg, rgba(6,42,28,0.82) 0%, rgba(10,61,42,0.6) 45%, rgba(2,21,13,0.78) 100%),
+      radial-gradient(ellipse at 100% 100%, rgba(212,255,58,0.22), transparent 55%),
+      radial-gradient(ellipse at 0% 0%, rgba(43,182,115,0.3), transparent 60%);
+    pointer-events: none; }
+  .p-hero-inner { position: relative; z-index: 3; max-width: 1100px; margin: 0 auto; padding: 0 20px; width: 100%; }
+  .p-hero h1 { font-size: clamp(40px, 7vw, 84px); line-height: 1.0; font-weight: 900; letter-spacing: -1.2px; text-shadow: 0 4px 40px rgba(0,0,0,0.5); margin: 0 0 22px; }
+  .p-hero h1 .lime { color: var(--lime); }
+  .p-hero-sub { font-size: clamp(17px, 2vw, 20px); max-width: 640px; color: #dbe7e0; margin: 0 0 32px; }
+  .p-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .p-balls { position: absolute; inset: 0; overflow: hidden; z-index: 2; pointer-events: none; }
+  .p-ball { position: absolute; width: 6px; height: 6px; background: var(--lime); border-radius: 50%; box-shadow: 0 0 24px 4px rgba(212,255,58,0.55); opacity: 0; animation: pdrift 16s ease-in-out infinite; }
+  .p-ball.b1 { top: 20%; left: 8%; animation-delay: 0s; }
+  .p-ball.b2 { top: 55%; left: 20%; animation-delay: -4s; }
+  .p-ball.b3 { top: 30%; right: 15%; animation-delay: -8s; }
+  .p-ball.b4 { top: 75%; right: 25%; animation-delay: -2s; width: 4px; height: 4px; }
+  .p-ball.b5 { top: 45%; left: 50%; animation-delay: -11s; width: 5px; height: 5px; }
+  @keyframes pdrift { 0%,100%{transform:translate(0,0);opacity:0;} 20%{opacity:.9;} 50%{transform:translate(60px,-80px);opacity:.7;} 80%{opacity:.3;} }
+  .p-court { position: absolute; left: 3%; top: 50%; transform: translateY(-50%); width: 40%; max-width: 480px; opacity: .28; z-index: 2; pointer-events: none; }
+  @media (max-width: 860px) { .p-court { display: none; } .p-hero { min-height: 66vh; padding: 80px 0 50px; } }
+  .p-hero .ch { display: inline-block; opacity: 0; transform: translateY(40px) rotate(-8deg); animation: pChIn .6s cubic-bezier(.5,1.6,.6,1) forwards; }
+  @keyframes pChIn { to { opacity: 1; transform: translateY(0) rotate(0); } }
+</style>
 </head>
 <body>
 
@@ -21,6 +50,47 @@
     </nav>
   </div>
 </header>
+
+<!-- HERO -->
+<section class="p-hero" aria-label="גיבור">
+  <div class="p-hero-video" aria-hidden="true">
+    <iframe
+      src="https://www.youtube-nocookie.com/embed/ThHNRDhXfmw?autoplay=1&mute=1&loop=1&playlist=ThHNRDhXfmw&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&start=3"
+      title="רקע: משחק פאדל" loading="eager"></iframe>
+  </div>
+  <div class="p-hero-overlay" aria-hidden="true"></div>
+  <div class="p-balls" aria-hidden="true">
+    <span class="p-ball b1"></span><span class="p-ball b2"></span><span class="p-ball b3"></span>
+    <span class="p-ball b4"></span><span class="p-ball b5"></span>
+  </div>
+  <svg class="p-court" viewBox="0 0 400 300" aria-hidden="true">
+    <defs><linearGradient id="pcG" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#2bb673" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#0a3d2a" stop-opacity=".4"/>
+    </linearGradient></defs>
+    <rect x="10" y="10" width="380" height="280" rx="6" fill="url(#pcG)" stroke="#d4ff3a" stroke-width="2"/>
+    <line x1="200" y1="10" x2="200" y2="290" stroke="#d4ff3a" stroke-width="2" opacity=".9"/>
+    <line x1="10" y1="150" x2="390" y2="150" stroke="#d4ff3a" stroke-width="1.5" opacity=".7"/>
+    <rect x="100" y="90" width="200" height="120" stroke="#d4ff3a" stroke-width="1.2" opacity=".55" fill="none"/>
+    <circle r="6" fill="#d4ff3a">
+      <animate attributeName="cx" values="80;320;80" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="150;80;150;220;150" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+  <div class="p-hero-inner">
+    <span class="eyebrow">🤝 מגרשים מארחים</span>
+    <h1>
+      <span class="ch" style="animation-delay:.1s">ה</span><span class="ch" style="animation-delay:.2s">מ</span><span class="ch" style="animation-delay:.3s">ג</span><span class="ch" style="animation-delay:.4s">ר</span><span class="ch" style="animation-delay:.5s">ש</span><span class="ch" style="animation-delay:.6s">&nbsp;</span><span class="ch" style="animation-delay:.7s">ש</span><span class="ch" style="animation-delay:.8s">ל</span><span class="ch" style="animation-delay:.9s">ך</span><span class="ch" style="animation-delay:1.0s">.</span><br/>
+      <span class="lime">
+        <span class="ch" style="animation-delay:1.2s">צ</span><span class="ch" style="animation-delay:1.3s">ו</span><span class="ch" style="animation-delay:1.4s">מ</span><span class="ch" style="animation-delay:1.5s">ת</span><span class="ch" style="animation-delay:1.6s">&nbsp;</span><span class="ch" style="animation-delay:1.7s">פ</span><span class="ch" style="animation-delay:1.8s">ע</span><span class="ch" style="animation-delay:1.9s">י</span><span class="ch" style="animation-delay:2.0s">ל</span><span class="ch" style="animation-delay:2.1s">ו</span><span class="ch" style="animation-delay:2.2s">ת</span><span class="ch" style="animation-delay:2.3s">.</span>
+      </span>
+    </h1>
+    <p class="p-hero-sub">טראפיק, חשיפה, והכנסה מכל טורניר שמתארח אצלך.</p>
+    <div class="p-hero-ctas">
+      <a href="#form" class="btn btn-primary">הצטרף כמארח ←</a>
+    </div>
+  </div>
+</section>
 
 <section class="section">
   <div class="wrap">

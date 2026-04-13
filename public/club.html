@@ -7,14 +7,88 @@
 <link rel="stylesheet" href="/platform.css" />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
+  /* Hero משודרג — עם וידאו, כדורים, ואותיות מתגלות */
   .club-hero {
-    padding: 70px 0 40px;
-    background: linear-gradient(180deg, rgba(6,42,28,0.4), rgba(2,11,7,0.95)),
-                var(--club-bg) center/cover no-repeat;
-    position: relative;
+    position: relative; overflow: hidden;
+    min-height: 78vh; padding: 100px 0 70px;
+    display: flex; align-items: center;
+    background: #020b07;
+    color: #fff;
   }
-  .club-meta { display: flex; gap: 16px; flex-wrap: wrap; color: #b5c8bf; margin-top: 8px; }
+  /* וידאו ברקע (השכבה הכי תחתונה) */
+  .p-hero-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .p-hero-video iframe {
+    position: absolute; top: 50%; left: 50%;
+    width: 177.78vh; height: 100vh;
+    min-width: 100%; min-height: 56.25vw;
+    transform: translate(-50%, -50%);
+    border: 0; pointer-events: none;
+    opacity: 0.45; filter: saturate(1.1) contrast(1.02);
+  }
+  /* תמונת המגרש — מעל הוידאו ומתחת ל-overlay */
+  .club-hero-img {
+    position: absolute; inset: 0; z-index: 1;
+    background: var(--club-bg) center/cover no-repeat;
+    opacity: 0.40; pointer-events: none;
+  }
+  /* overlay ירוק-כהה */
+  .p-hero-overlay {
+    position: absolute; inset: 0; z-index: 2;
+    background:
+      linear-gradient(115deg, rgba(6,42,28,0.82) 0%, rgba(10,61,42,0.55) 45%, rgba(2,21,13,0.82) 100%),
+      radial-gradient(ellipse at 100% 100%, rgba(212,255,58,0.22), transparent 55%),
+      radial-gradient(ellipse at 0% 0%, rgba(43,182,115,0.3), transparent 60%);
+    pointer-events: none;
+  }
+  /* תוכן */
+  .club-hero .wrap { position: relative; z-index: 4; }
+  .club-hero h1 {
+    font-size: clamp(40px, 7vw, 84px);
+    line-height: 0.98; font-weight: 900; letter-spacing: -1.2px;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.5);
+    margin: 10px 0 18px;
+  }
+  .club-meta { display: flex; gap: 16px; flex-wrap: wrap; color: #dbe7e0; margin-top: 8px; }
   .club-meta a { color: var(--lime); }
+
+  /* כדורי אור מרחפים */
+  .p-balls { position: absolute; inset: 0; overflow: hidden; z-index: 3; pointer-events: none; }
+  .p-ball {
+    position: absolute; width: 6px; height: 6px;
+    background: var(--lime); border-radius: 50%;
+    box-shadow: 0 0 24px 4px rgba(212,255,58,0.55);
+    opacity: 0; animation: pdrift 16s ease-in-out infinite;
+  }
+  .p-ball.b1 { top: 20%; left: 8%; animation-delay: 0s; }
+  .p-ball.b2 { top: 55%; left: 20%; animation-delay: -4s; }
+  .p-ball.b3 { top: 30%; right: 15%; animation-delay: -8s; }
+  .p-ball.b4 { top: 75%; right: 25%; animation-delay: -2s; width: 4px; height: 4px; }
+  .p-ball.b5 { top: 45%; left: 50%; animation-delay: -11s; width: 5px; height: 5px; }
+  @keyframes pdrift {
+    0%, 100% { transform: translate(0,0); opacity: 0; }
+    20% { opacity: .9; }
+    50% { transform: translate(60px,-80px); opacity: .7; }
+    80% { opacity: .3; }
+  }
+
+  /* eyebrow מהבהב */
+  .club-hero .eyebrow {
+    animation: ebBlink 2.4s ease-in-out infinite;
+    color: var(--lime);
+  }
+  @keyframes ebBlink {
+    0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(212,255,58,0); }
+    50% { opacity: .7; text-shadow: 0 0 14px rgba(212,255,58,.7); }
+  }
+
+  /* אותיות מתגלות */
+  .club-hero h1 .ch {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(40px) rotate(-8deg);
+    animation: pChIn .6s cubic-bezier(.5,1.6,.6,1) forwards;
+  }
+  @keyframes pChIn { to { opacity: 1; transform: translateY(0) rotate(0); } }
 </style>
 </head>
 <body>
@@ -32,7 +106,23 @@
   </div>
 </header>
 
-<section class="club-hero" style="--club-bg:url('{{CLUB_IMAGE}}')">
+<section class="club-hero" style="--club-bg:url('{{CLUB_IMAGE}}')" aria-label="גיבור מגרש">
+  <!-- שכבה 0: וידאו YouTube ברקע -->
+  <div class="p-hero-video" aria-hidden="true">
+    <iframe
+      src="https://www.youtube-nocookie.com/embed/ThHNRDhXfmw?autoplay=1&mute=1&loop=1&playlist=ThHNRDhXfmw&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&start=3"
+      title="רקע: משחק פאדל" loading="eager"></iframe>
+  </div>
+  <!-- שכבה 1: תמונת המגרש ב-40% -->
+  <div class="club-hero-img" aria-hidden="true"></div>
+  <!-- שכבה 2: overlay ירוק -->
+  <div class="p-hero-overlay" aria-hidden="true"></div>
+  <!-- שכבה 3: כדורי אור מרחפים -->
+  <div class="p-balls" aria-hidden="true">
+    <span class="p-ball b1"></span><span class="p-ball b2"></span><span class="p-ball b3"></span>
+    <span class="p-ball b4"></span><span class="p-ball b5"></span>
+  </div>
+  <!-- שכבה 4: תוכן -->
   <div class="wrap">
     <span class="eyebrow">🏟 מועדון מארח</span>
     <h1>{{CLUB_NAME}}</h1>
@@ -44,6 +134,7 @@
     <p class="lead" style="margin-top:22px">{{CLUB_DESCRIPTION}}</p>
   </div>
 </section>
+
 
 <section class="section">
   <div class="wrap">
@@ -61,5 +152,36 @@
     <div><a href="/tournaments">טורנירים</a><a href="/clubs">מועדונים</a></div>
   </div>
 </footer>
+<script>
+  // עטיפת אותיות בכותרת המגרש ב-span.ch עם delay מדורג, אחרי שהשרת מילא את {{CLUB_NAME}}
+  (function () {
+    function wrapLetters() {
+      var h1 = document.querySelector('.club-hero h1') || document.querySelector('main h1') || document.querySelector('h1');
+      if (!h1) return;
+      var text = h1.textContent.trim();
+      if (!text) return;
+      var frag = document.createDocumentFragment();
+      // שבירת האותיות ביחידות Unicode נכונות (תומך באותיות עבריות ו-surrogate pairs)
+      var chars = Array.from(text);
+      var delay = 0.08;
+      chars.forEach(function (c, i) {
+        var span = document.createElement('span');
+        span.className = 'ch';
+        span.style.animationDelay = (0.1 + i * delay) + 's';
+        // שמירת רווחים גלויים
+        if (c === ' ') { span.innerHTML = '&nbsp;'; }
+        else { span.textContent = c; }
+        frag.appendChild(span);
+      });
+      h1.textContent = '';
+      h1.appendChild(frag);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wrapLetters);
+    } else {
+      wrapLetters();
+    }
+  })();
+</script>
 </body>
 </html>

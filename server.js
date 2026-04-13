@@ -17,8 +17,11 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (process.env.NODE_ENV === 'production'
-  ? (() => { throw new Error('ADMIN_TOKEN must be set in production'); })()
+  ? crypto.randomBytes(24).toString('hex')  // production: אם חסר, טוקן אקראי (אדמין לא יוכל להיכנס עד שיוגדר env var — זה הרצוי)
   : 'padel-admin-2026');
+if (!process.env.ADMIN_TOKEN && process.env.NODE_ENV === 'production') {
+  console.warn('[WARN] ADMIN_TOKEN not set in production — admin access disabled until configured');
+}
 
 // --- תיקיות ---
 const UPLOAD_DIR = path.join(__dirname, 'uploads');

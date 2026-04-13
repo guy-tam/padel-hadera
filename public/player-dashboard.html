@@ -160,6 +160,13 @@
 const TOKEN = "{{TOKEN}}";
 let DATA = null;
 
+if (TOKEN === 'demo') {
+  const b = document.createElement('div');
+  b.style.cssText = 'position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#d4ff3a,#7fe3a8);color:#062a1c;padding:10px 16px;text-align:center;font-weight:800;font-size:14px';
+  b.innerHTML = '👁 מצב הדגמה · קריאה בלבד · <a href="/players/join" style="color:#062a1c;text-decoration:underline">להרשמה אמיתית כשחקן ←</a>';
+  document.body.insertBefore(b, document.body.firstChild);
+}
+
 document.querySelectorAll('.tab').forEach(t =>
   t.addEventListener('click', () => switchTab(t.dataset.tab))
 );

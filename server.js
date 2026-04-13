@@ -1391,7 +1391,40 @@ app.post('/api/admin/tournaments/:id/unpublish', adminAuth, async (req, res) => 
 // =================================================================
 //  אזור שחקן — אימות לפי dashboardToken
 // =================================================================
+// ====== מצב הדגמה (Demo) — פתוח לכולם כדי להציג איך הדשבורדים עובדים ======
+const DEMO_TOKEN = 'demo';
+const DEMO_PLAYER = {
+  id: 'p-demo', dashboardToken: DEMO_TOKEN, status: 'active',
+  name: 'אורן (הדגמה)', email: 'demo-player@padel.platform',
+  phone: '0500000000', city: 'תל אביב', level: '3',
+  stats: { points: 420, tournaments: 12, wins: 3, finals: 5, semifinals: 7 },
+  history: [], createdAt: new Date().toISOString()
+};
+const DEMO_CLUB = {
+  id: 'c-demo', dashboardToken: DEMO_TOKEN, status: 'active',
+  name: 'מגרש הדגמה · Padel Platform', slug: 'demo', city: 'תל אביב',
+  image: '', shortDescription: 'מצב הדגמה לדשבורד מועדון', createdAt: new Date().toISOString()
+};
+const DEMO_ORGANIZER = {
+  id: 'o-demo', dashboardToken: DEMO_TOKEN, status: 'active',
+  name: 'מארגן להדגמה', slug: 'demo',
+  business: { legalName: 'הדגמה', contactName: 'אורן', email: 'demo@padel.platform', phone: '0500000000' },
+  createdAt: new Date().toISOString()
+};
+function isDemoToken(token) { return token === DEMO_TOKEN; }
+
+// חסימת כתיבה במצב הדגמה — קריאה בלבד
+app.use((req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD') return next();
+  const m = req.path.match(/^\/api\/(player|organizer|club)\/([^/]+)/);
+  if (m && isDemoToken(m[2])) {
+    return res.status(403).json({ ok: false, error: 'מצב הדגמה — קריאה בלבד. להרשמה אמיתית לחצ/י על "הצטרפות".' });
+  }
+  next();
+});
+
 function findPlayerByToken(db, token) {
+  if (isDemoToken(token)) return DEMO_PLAYER;
   return (db.applications.players || []).find(p => p.dashboardToken === token && p.status === 'active');
 }
 function findPlayerByEmailOrPhone(db, email, phone) {
@@ -1528,6 +1561,7 @@ app.post('/api/admin/tournaments/:id/results', adminAuth, express.json(), async 
 //  אזור מארגן — אימות לפי dashboardToken
 // =================================================================
 function findOrganizerByToken(db, token) {
+  if (isDemoToken(token)) return DEMO_ORGANIZER;
   return db.organizers.find(o => o.dashboardToken === token && o.status === 'active');
 }
 
@@ -1692,6 +1726,7 @@ app.get('/my/:id', async (req, res) => {
 //  Club Dashboard — "לוח זמנים" עם יצירת טורניר אוטומטית
 // =================================================================
 function findClubByToken(db, token) {
+  if (isDemoToken(token)) return DEMO_CLUB;
   return db.clubs.find(c => c.dashboardToken === token && c.status === 'active');
 }
 

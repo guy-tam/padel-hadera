@@ -12,8 +12,79 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/polish.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  .cd-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 120px; }
+  .cd-wrap { max-width: 1240px; margin: 0 auto; padding: 18px 18px 120px; }
+  /* ===== HERO ===== */
+  .cd-hero { position:relative;overflow:hidden;border-radius:22px;padding:28px 28px 32px;margin-bottom:22px;
+    background: radial-gradient(1200px 340px at 100% -10%, rgba(212,255,58,.12), transparent 60%),
+                radial-gradient(900px 320px at -10% 110%, rgba(127,227,168,.08), transparent 60%),
+                linear-gradient(135deg,#0a3d2a,#062a1c);
+    border:1px solid rgba(212,255,58,.22);
+    box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .cd-hero::before { content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 360' opacity='0.18'><rect x='60' y='40' width='480' height='280' rx='10' fill='none' stroke='%23d4ff3a' stroke-width='2'/><line x1='300' y1='40' x2='300' y2='320' stroke='%23d4ff3a' stroke-width='2'/><line x1='60' y1='180' x2='540' y2='180' stroke='%23d4ff3a' stroke-width='1' stroke-dasharray='6 6'/><rect x='60' y='120' width='90' height='120' fill='none' stroke='%237fe3a8' stroke-width='1.5'/><rect x='450' y='120' width='90' height='120' fill='none' stroke='%237fe3a8' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:left -40px center;background-size:620px auto;pointer-events:none; }
+  .cd-hero > * { position:relative;z-index:1 }
+  .cd-hero-row { display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap; }
+  .cd-hero h1 { margin:0;font-size:32px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1; }
+  .cd-hero .sub { color:#b5c8bf;margin-top:8px;font-size:14.5px;display:flex;gap:14px;flex-wrap:wrap;align-items:center }
+  .cd-hero .sub b { color:#d4ff3a }
+  .cd-hero .chip { display:inline-flex;gap:6px;align-items:center;background:rgba(212,255,58,.08);border:1px solid rgba(212,255,58,.22);padding:5px 12px;border-radius:999px;font-size:12.5px;color:#d4ff3a;font-weight:700 }
+  .cd-hero-cta { display:flex;gap:10px;flex-wrap:wrap;align-items:center }
+  .btn-cta { position:relative;background:linear-gradient(135deg,#d4ff3a,#7fe3a8);color:#062a1c;border:0;padding:12px 20px;border-radius:12px;font-weight:800;font-size:14.5px;cursor:pointer;font-family:inherit;box-shadow:0 8px 28px rgba(212,255,58,.35);transition:transform .18s ease, box-shadow .18s ease }
+  .btn-cta:hover { transform:translateY(-2px);box-shadow:0 14px 36px rgba(212,255,58,.5) }
+  .btn-cta.glow-pulse::after { content:"";position:absolute;inset:-3px;border-radius:14px;background:linear-gradient(135deg,#d4ff3a,#7fe3a8);filter:blur(14px);opacity:.35;z-index:-1;animation:glowP 2.6s ease-in-out infinite }
+  @keyframes glowP { 0%,100%{opacity:.3} 50%{opacity:.6} }
+  .btn-outline { background:transparent;color:#d4ff3a;border:1px solid rgba(212,255,58,.4);padding:11px 16px;border-radius:12px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:background .18s }
+  .btn-outline:hover { background:rgba(212,255,58,.1) }
+
+  /* ===== KPIs ===== */
+  .kpis { display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:0 0 22px }
+  @media (max-width:900px) { .kpis { grid-template-columns:repeat(2,1fr) } }
+  .kpi { position:relative;overflow:hidden;background:linear-gradient(135deg,#0d3323,#0a2418);border:1px solid rgba(212,255,58,.18);border-radius:18px;padding:18px 16px;transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease }
+  .kpi:hover { transform:translateY(-3px);border-color:rgba(212,255,58,.45);box-shadow:0 14px 32px rgba(0,0,0,.35) }
+  .kpi::before { content:"";position:absolute;top:-50%;right:-40%;width:180%;height:200%;background:linear-gradient(115deg,transparent 40%,rgba(212,255,58,.12) 50%,transparent 60%);transform:translateX(100%);transition:transform .9s ease;pointer-events:none }
+  .kpi:hover::before { transform:translateX(-60%) }
+  .kpi .ic { font-size:20px;margin-bottom:10px;display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:10px;background:rgba(212,255,58,.12);border:1px solid rgba(212,255,58,.25) }
+  .kpi .n { font-size:30px;font-weight:900;color:#d4ff3a;line-height:1;letter-spacing:-.5px }
+  .kpi .lbl { color:#b5c9bf;font-size:12.5px;margin-top:7px;font-weight:600 }
+  .kpi .delta { position:absolute;top:14px;left:14px;font-size:10.5px;color:#7fe3a8;background:rgba(127,227,168,.12);padding:2px 7px;border-radius:999px;font-weight:700 }
+
+  /* ===== Charts grid ===== */
+  .charts { display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:22px }
+  .charts-row2 { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px }
+  @media (max-width:900px) { .charts, .charts-row2 { grid-template-columns:1fr } }
+  .card { background:linear-gradient(135deg,#0a3d2a,#062a1c);border:1px solid rgba(212,255,58,.16);border-radius:18px;padding:18px;position:relative;overflow:hidden }
+  .card h3 { margin:0 0 14px;font-size:15px;color:#fff;font-weight:800;display:flex;align-items:center;gap:8px }
+  .card h3 .dot { width:8px;height:8px;border-radius:50%;background:#d4ff3a;box-shadow:0 0 10px #d4ff3a }
+  .card .ch-box { position:relative;height:240px }
+  .card .ch-box.sm { height:210px }
+
+  /* ===== Schedule grid (month view) ===== */
+  .sched { display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px }
+  .sched-card { background:linear-gradient(135deg,#0d3323,#0a2418);border:1px solid rgba(212,255,58,.18);border-radius:14px;padding:14px;cursor:pointer;transition:transform .2s ease, border-color .2s ease;position:relative;overflow:hidden }
+  .sched-card:hover { transform:translateY(-2px);border-color:#d4ff3a }
+  .sched-card .date { font-size:12px;color:#7fe3a8;font-weight:700 }
+  .sched-card .time { font-size:18px;font-weight:900;color:#fff;margin:4px 0 }
+  .sched-card .meta { display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#b5c9bf;margin-top:6px }
+  .sched-card .meta b { color:#d4ff3a }
+  .sched-card .bar { height:5px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:10px;overflow:hidden }
+  .sched-card .bar > i { display:block;height:100%;background:linear-gradient(90deg,#d4ff3a,#7fe3a8);border-radius:999px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1) }
+
+  /* ===== Filter chips ===== */
+  .chips { display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px }
+  .chip-btn { background:transparent;border:1px solid rgba(212,255,58,.25);color:#b5c9bf;padding:7px 14px;border-radius:999px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;transition:all .18s }
+  .chip-btn:hover { color:#d4ff3a;border-color:#d4ff3a }
+  .chip-btn.active { background:#d4ff3a;color:#062a1c;border-color:#d4ff3a }
+  .badge { display:inline-block;padding:2px 7px;border-radius:6px;font-size:10.5px;font-weight:800;margin-inline-start:4px }
+  .badge.ok { background:rgba(127,227,168,.22);color:#7fe3a8 }
+  .badge.warn { background:rgba(255,217,104,.2);color:#ffd968 }
+  .badge.pay { background:rgba(212,255,58,.2);color:#d4ff3a }
+
+  /* ===== Entrance animation ===== */
+  .fade-up { opacity:0;transform:translateY(16px);transition:opacity .6s ease, transform .6s ease }
+  .fade-up.in { opacity:1;transform:none }
+
   .cd-head { display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px; }
   .cd-head h1 { margin:0;font-size:26px;color:#fff; }
   .cd-head .muted { color:#b5c9bf;font-size:14px; }
@@ -74,18 +145,45 @@
 </header>
 
 <main id="main" class="cd-wrap">
-  <div class="cd-head">
-    <div>
-      <h1>{{CLUB_NAME}}</h1>
-      <div class="muted">{{CLUB_CITY}} · דשבורד מועדון</div>
+  <section class="cd-hero fade-up" id="hero">
+    <div class="cd-hero-row">
+      <div>
+        <h1 id="heroName">{{CLUB_NAME}}</h1>
+        <div class="sub">
+          <span>📍 <b id="heroCity">{{CLUB_CITY}}</b></span>
+          <span>🏟 <b id="heroCourts">—</b> מגרשים</span>
+          <span class="chip">⚡ דשבורד חי</span>
+        </div>
+      </div>
+      <div class="cd-hero-cta">
+        <button class="btn-outline" id="copyBtn" onclick="copyLink()">📋 העתק קישור</button>
+        <button class="btn-cta glow-pulse" onclick="switchTab('new')">+ חלון זמן חדש</button>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost" id="copyBtn" onclick="copyLink()">📋 העתק קישור דשבורד</button>
-      <button class="btn btn-primary" onclick="switchTab('new')">+ חלון זמן חדש</button>
+  </section>
+
+  <div class="kpis fade-up" id="kpis"></div>
+
+  <div class="charts fade-up">
+    <div class="card">
+      <h3><span class="dot"></span>אכלוס לפי טורניר</h3>
+      <div class="ch-box"><canvas id="chTour"></canvas></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>פילוח רמות</h3>
+      <div class="ch-box"><canvas id="chLevel"></canvas></div>
     </div>
   </div>
-
-  <div class="stats" id="stats"></div>
+  <div class="charts-row2 fade-up">
+    <div class="card">
+      <h3><span class="dot"></span>עומס לפי תאריך</h3>
+      <div class="ch-box sm"><canvas id="chLoad"></canvas></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>Top 5 טורנירים לפי הכנסות צפויות</h3>
+      <div class="ch-box sm"><canvas id="chRev"></canvas></div>
+    </div>
+  </div>
 
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="slots" role="tab">📅 לוח זמנים וטורנירים</button>
@@ -183,27 +281,189 @@ async function load() {
     const j = await r.json();
     if (!r.ok || !j.ok) { document.body.innerHTML = '<p style="color:#fff;padding:60px;text-align:center;font-size:18px">🔒 אין הרשאה לדשבורד זה</p>'; return; }
     DATA = j;
-    renderStats();
+    renderHero();
+    renderKpis();
     renderSlots();
     renderRegs();
+    renderCharts();
+    armObserver();
   } catch (e) {
     console.error(e);
   }
 }
 
-function renderStats() {
-  const ts = DATA.tournaments;
-  const activeSlots = (DATA.slots || []).filter(s => s.status !== 'cancelled').length;
-  const totalRegs = ts.reduce((s,t) => s + t.capacity.total, 0);
-  const totalPaid = ts.reduce((s,t) => s + t.capacity.paid, 0);
-  const confirmed = ts.filter(t => t.confirmed).length;
-  el('stats').innerHTML = [
-    `<div class="stat"><div class="n">${activeSlots}</div><div class="lbl">חלונות זמן פעילים</div></div>`,
-    `<div class="stat"><div class="n">${ts.length}</div><div class="lbl">סה"כ טורנירים</div></div>`,
-    `<div class="stat"><div class="n">${confirmed}</div><div class="lbl">אושרו (יצאו לדרך)</div></div>`,
-    `<div class="stat"><div class="n">${totalRegs}</div><div class="lbl">הרשמות כולל</div></div>`,
-    `<div class="stat"><div class="n">${totalPaid}</div><div class="lbl">שילמו</div></div>`
-  ].join('');
+function renderHero() {
+  const c = DATA.club || {};
+  if (c.name) el('heroName').textContent = c.name;
+  if (c.city) el('heroCity').textContent = c.city;
+  if (typeof c.courts !== 'undefined') el('heroCourts').textContent = c.courts;
+}
+
+/* ==== KPIs עם counter מונפש ==== */
+function animateNumber(elm, to, opts) {
+  const dur = 1100, start = performance.now(), from = 0;
+  const prefix = (opts&&opts.prefix)||'', suffix=(opts&&opts.suffix)||'';
+  function tick(now) {
+    const p = Math.min(1, (now - start)/dur);
+    const eased = 1 - Math.pow(1-p, 3);
+    const v = Math.round(from + (to - from)*eased);
+    elm.textContent = prefix + v.toLocaleString('he-IL') + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderKpis() {
+  const ts = DATA.tournaments || [];
+  const slots = DATA.slots || [];
+  const activeSlots = slots.filter(s => s.status !== 'cancelled').length;
+  const totalPlayers = ts.reduce((s,t) => s + (t.capacity?.total||0), 0);
+  const avgFill = ts.length
+    ? Math.round(ts.reduce((s,t)=> s + (t.capacity?.max ? (t.capacity.paid/t.capacity.max) : 0), 0) / ts.length * 100)
+    : 0;
+  // ₪ צפוי: pricePair * (approved pairs) לכל סלוט התואם לטורניר
+  let expected = 0;
+  ts.forEach(t => {
+    const slot = slots.find(s => s.tournamentId === t.id);
+    const pricePair = slot ? Number(slot.pricePair||0) : 0;
+    const approvedPairs = Math.floor(((t.capacity?.approved||0) + (t.capacity?.paid||0)) / 2);
+    expected += pricePair * approvedPairs;
+  });
+  const items = [
+    { ic:'📅', n: activeSlots, lbl:'חלונות פעילים' },
+    { ic:'🏆', n: ts.length, lbl:'טורנירים מתארחים' },
+    { ic:'👥', n: totalPlayers, lbl:'שחקנים סה״כ' },
+    { ic:'📊', n: avgFill, lbl:'% מילוי ממוצע', suffix:'%' },
+    { ic:'💰', n: expected, lbl:'₪ צפוי', prefix:'₪' },
+  ];
+  el('kpis').innerHTML = items.map((k,i) => `
+    <div class="kpi" style="animation-delay:${i*60}ms">
+      <div class="ic">${k.ic}</div>
+      <div class="n" data-n="${k.n}" data-prefix="${k.prefix||''}" data-suffix="${k.suffix||''}">0</div>
+      <div class="lbl">${k.lbl}</div>
+    </div>`).join('');
+  // הפעלת counters
+  document.querySelectorAll('#kpis .n').forEach(n => {
+    animateNumber(n, Number(n.dataset.n||0), { prefix:n.dataset.prefix, suffix:n.dataset.suffix });
+  });
+}
+
+/* ==== Chart.js ==== */
+const CHART_COLORS = ['#d4ff3a','#7fe3a8','#62e2b5','#ffd968','#ff6b6b'];
+const GRID = 'rgba(255,255,255,0.05)';
+const TICK = { color:'#b5c8bf', font:{ family:'Rubik', size:11 } };
+let charts = {};
+function destroyChart(k){ if (charts[k]) { charts[k].destroy(); delete charts[k]; } }
+
+function renderCharts() {
+  if (typeof Chart === 'undefined') return;
+  Chart.defaults.font.family = 'Rubik';
+  Chart.defaults.color = '#b5c8bf';
+  const ts = (DATA.tournaments||[]).slice(0, 10);
+  const slots = DATA.slots||[];
+
+  // 1) Bar stacked: reserved / approved / paid מתוך max
+  destroyChart('tour');
+  charts.tour = new Chart(el('chTour'), {
+    type:'bar',
+    data:{
+      labels: ts.map(t => (t.title||'').slice(0,18)),
+      datasets:[
+        { label:'משוריינים', data: ts.map(t=>t.capacity?.reserved||0), backgroundColor:'#ffd968', borderRadius:6, stack:'s' },
+        { label:'מאושרים', data: ts.map(t=>t.capacity?.approved||0), backgroundColor:'#7fe3a8', borderRadius:6, stack:'s' },
+        { label:'שילמו', data: ts.map(t=>t.capacity?.paid||0), backgroundColor:'#d4ff3a', borderRadius:6, stack:'s' },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#b5c8bf', boxWidth:10, font:{ size:11 } } } },
+      scales:{
+        x:{ stacked:true, grid:{ color:GRID }, ticks:TICK },
+        y:{ stacked:true, grid:{ color:GRID }, ticks:TICK, beginAtZero:true }
+      },
+      animation:{ duration:900, easing:'easeOutQuart' }
+    }
+  });
+
+  // 2) Doughnut: פילוח רמות מתוך slots
+  destroyChart('level');
+  const levels = { '2.5':0, '3':0, 'both':0 };
+  slots.forEach(s => { if (levels[s.level] !== undefined) levels[s.level] += Number(s.courts||1); });
+  charts.level = new Chart(el('chLevel'), {
+    type:'doughnut',
+    data:{
+      labels:['רמה א (2.5)','רמה א+ (3)','מעורב'],
+      datasets:[{ data:[levels['2.5'], levels['3'], levels['both']], backgroundColor:['#d4ff3a','#7fe3a8','#ffd968'], borderColor:'#062a1c', borderWidth:3 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{ color:'#b5c8bf', boxWidth:10, padding:10, font:{size:11} } } },
+      animation:{ animateRotate:true, duration:900 }
+    }
+  });
+
+  // 3) Line: עומס לפי תאריך
+  destroyChart('load');
+  const byDate = {};
+  ts.forEach(t => {
+    if (!t.date) return;
+    byDate[t.date] = (byDate[t.date] || 0) + (t.capacity?.total||0);
+  });
+  const dates = Object.keys(byDate).sort();
+  charts.load = new Chart(el('chLoad'), {
+    type:'line',
+    data:{
+      labels: dates.map(d => new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'})),
+      datasets:[{
+        label:'שחקנים',
+        data: dates.map(d => byDate[d]),
+        borderColor:'#d4ff3a', backgroundColor:'rgba(212,255,58,.15)',
+        fill:true, tension:.35, pointBackgroundColor:'#d4ff3a', pointRadius:4, pointHoverRadius:6, borderWidth:2.5
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ grid:{ color:GRID }, ticks:TICK }, y:{ grid:{ color:GRID }, ticks:TICK, beginAtZero:true } },
+      animation:{ duration:900 }
+    }
+  });
+
+  // 4) Horizontal bar: Top 5 revenues
+  destroyChart('rev');
+  const revs = ts.map(t => {
+    const slot = slots.find(s => s.tournamentId === t.id);
+    const price = slot ? Number(slot.pricePair||0) : 0;
+    const pairs = Math.floor(((t.capacity?.approved||0)+(t.capacity?.paid||0))/2);
+    return { title:(t.title||'').slice(0,24), rev: price * pairs };
+  }).filter(x => x.rev > 0).sort((a,b)=>b.rev-a.rev).slice(0,5);
+  charts.rev = new Chart(el('chRev'), {
+    type:'bar',
+    data:{
+      labels: revs.length ? revs.map(r=>r.title) : ['—'],
+      datasets:[{
+        label:'₪ צפוי',
+        data: revs.length ? revs.map(r=>r.rev) : [0],
+        backgroundColor:'#d4ff3a', borderRadius:8
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ grid:{ color:GRID }, ticks:TICK, beginAtZero:true }, y:{ grid:{ color:GRID }, ticks:TICK } },
+      animation:{ duration:900 }
+    }
+  });
+}
+
+/* ==== IntersectionObserver כניסות ==== */
+let _obs = null;
+function armObserver() {
+  if (_obs) return;
+  _obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); _obs.unobserve(e.target); } });
+  }, { threshold:.08 });
+  document.querySelectorAll('.fade-up').forEach(n => _obs.observe(n));
 }
 
 function pillFor(t) {
@@ -223,7 +483,38 @@ function renderSlots() {
     </div>`;
     return;
   }
-  wrap.innerHTML = ts.map(t => {
+  // לוח חודש נוכחי — כרטיסים ויזואליים
+  const now = new Date();
+  const monthSlots = (DATA.slots||[]).filter(s => {
+    if (!s.date || s.status === 'cancelled') return false;
+    const d = new Date(s.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).sort((a,b) => a.date.localeCompare(b.date));
+
+  const levelHe = l => l === '2.5' ? 'רמה א' : l === '3' ? 'רמה א+' : 'מעורב';
+  let schedHtml = '';
+  if (monthSlots.length) {
+    schedHtml = `<h3 style="color:#fff;margin:6px 0 12px;font-size:16px;font-weight:800">📆 לוח חודש נוכחי</h3>
+      <div class="sched">${monthSlots.map(s => {
+        const t = DATA.tournaments.find(x => x.id === s.tournamentId) || {};
+        const max = t.capacity?.max || Math.max(1, Number(s.courts||1)*4);
+        const paid = t.capacity?.paid || 0;
+        const pct = Math.min(100, Math.round((paid/max)*100));
+        const d = new Date(s.date);
+        return `<div class="sched-card" onclick="${t.slug?`window.open('/tournaments/${t.slug}','_blank')`:''}">
+          <div class="date">${d.toLocaleDateString('he-IL',{weekday:'short', day:'2-digit', month:'short'})}</div>
+          <div class="time">${esc(s.startTime)}–${esc(s.endTime)}</div>
+          <div class="meta"><span>🏟 <b>${s.courts}</b></span><span>🎯 <b>${levelHe(s.level)}</b></span><span>💰 <b>₪${s.pricePair}</b></span></div>
+          <div class="meta"><span style="color:#7fe3a8">${paid}/${max} שילמו · ${pct}%</span></div>
+          <div class="bar"><i data-pct="${pct}"></i></div>
+        </div>`;
+      }).join('')}</div>`;
+    // progress-bars fill על רינדור
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.sched-card .bar > i').forEach(b => { b.style.width = (b.dataset.pct||0) + '%'; });
+    });
+  }
+  wrap.innerHTML = schedHtml + ts.map(t => {
     const pct = Math.min(100, Math.round((t.capacity.paid / t.capacity.max) * 100));
     const pctReserved = Math.min(100, Math.round((t.capacity.reserved / t.capacity.max) * 100));
     const slot = (DATA.slots || []).find(s => s.tournamentId === t.id);
@@ -251,6 +542,7 @@ function renderSlots() {
   }).join('');
 }
 
+let REG_FILTER = 'all';
 function renderRegs() {
   const wrap = el('viewRegs');
   const all = [];
@@ -259,20 +551,51 @@ function renderRegs() {
   });
   if (!all.length) { wrap.innerHTML = '<div class="empty">עוד אין הרשמות.</div>'; return; }
   all.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-  wrap.innerHTML = `<table class="reg-table">
+
+  const isPending = s => ['submitted','awaiting_payment','payment_under_review','waitlist'].includes(s);
+  const isApproved = s => s === 'approved';
+  const isPaid = s => s === 'paid_confirmed';
+
+  const counts = {
+    all: all.length,
+    pending: all.filter(r => isPending(r.status)).length,
+    approved: all.filter(r => isApproved(r.status)).length,
+    paid: all.filter(r => isPaid(r.status)).length,
+  };
+  const filterFn = {
+    all: () => true,
+    pending: r => isPending(r.status),
+    approved: r => isApproved(r.status),
+    paid: r => isPaid(r.status),
+  }[REG_FILTER] || (() => true);
+  const rows = all.filter(filterFn);
+
+  const chipsHtml = `<div class="chips" id="regChips">
+    <button class="chip-btn ${REG_FILTER==='all'?'active':''}" data-f="all">הכל <b>${counts.all}</b></button>
+    <button class="chip-btn ${REG_FILTER==='pending'?'active':''}" data-f="pending">ממתינים <b>${counts.pending}</b></button>
+    <button class="chip-btn ${REG_FILTER==='approved'?'active':''}" data-f="approved">מאושרים <b>${counts.approved}</b></button>
+    <button class="chip-btn ${REG_FILTER==='paid'?'active':''}" data-f="paid">שולמו <b>${counts.paid}</b></button>
+  </div>`;
+
+  wrap.innerHTML = chipsHtml + (rows.length ? `<table class="reg-table">
     <thead><tr><th>תאריך</th><th>שם</th><th>טורניר</th><th>רמה</th><th>שותף/ה</th><th>מייל</th><th>סטטוס</th><th>פעולות</th></tr></thead>
     <tbody>
-    ${all.map(r => `<tr>
+    ${rows.map(r => `<tr>
       <td style="white-space:nowrap;color:#8fa69c;font-size:12px">${new Date(r.createdAt).toLocaleDateString('he-IL')}</td>
       <td><b>${esc(r.fullName)}</b><br><span style="font-size:11px;color:#8fa69c">${esc(r.phone)}</span></td>
       <td style="font-size:12px;color:#b5c9bf">${esc(r.tournamentTitle)}</td>
       <td>${esc(r.level)}</td>
       <td style="font-size:12px">${r.partnerName ? esc(r.partnerName) : '—'}</td>
-      <td style="font-size:11.5px">${esc(r.email)}<br>${r.emailVerified ? '<span style="color:#7fe3a8">✓ אומת</span>' : '<span style="color:#ffd968">ממתין</span>'}</td>
+      <td style="font-size:11.5px">${esc(r.email)} ${r.emailVerified ? '<span class="badge ok">✓ אומת</span>' : '<span class="badge warn">ממתין</span>'} ${r.hasPaymentProof ? '<span class="badge pay">💳 אסמכתא</span>' : ''}</td>
       <td><b style="color:#d4ff3a">${statusHe(r.status)}</b></td>
       <td>${renderActions(r)}</td>
     </tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table>` : '<div class="empty">אין הרשמות בקטגוריה זו.</div>');
+
+  // חיבור chips
+  document.querySelectorAll('#regChips .chip-btn').forEach(b => {
+    b.addEventListener('click', () => { REG_FILTER = b.dataset.f; renderRegs(); });
+  });
 }
 
 function renderRegTable(regs, tid) {

@@ -107,6 +107,116 @@
   }
 </style>
 <link rel="stylesheet" href="/polish.css" />
+<link rel="stylesheet" href="/admin-enhance.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="/admin-charts.js" defer></script>
+<style>
+  /* שדרוג טאבים */
+  .tab { transition: color .2s ease, border-color .25s ease, background .2s ease, transform .15s ease; border-radius: 8px 8px 0 0; }
+  .tab:hover { background: rgba(127,227,168,0.06); transform: translateY(-1px); }
+  .tab.active { color: var(--lime); border-bottom-color: var(--lime); text-shadow: 0 0 10px rgba(163,236,193,0.35); background: rgba(127,227,168,0.05); }
+
+  /* Hero */
+  .admin-hero {
+    position: relative;
+    background:
+      radial-gradient(1200px 320px at 90% -10%, rgba(163,236,193,0.18), transparent 60%),
+      radial-gradient(800px 260px at 10% 110%, rgba(43,182,115,0.18), transparent 60%),
+      linear-gradient(135deg, #0f2219 0%, #12201a 60%, #0b1411 100%);
+    border: 1px solid #2c3f36;
+    border-radius: 22px;
+    padding: 28px 28px 24px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+  }
+  .admin-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 50% -40%, rgba(127,227,168,0.14), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; position:relative; z-index:1; }
+  .hero-title { margin:0; font-size: 30px; font-weight: 900; color:#fff; letter-spacing:.3px; }
+  .hero-sub { color:#b5c9bf; font-size: 14.5px; margin-top:6px; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(11,20,17,0.65); border:1px solid #2c3f36;
+    padding: 8px 14px; border-radius: 999px; color:#d8e5dd; font-size:13px;
+    backdrop-filter: blur(6px);
+  }
+  .hero-badge .live-dot { margin:0; }
+  .hero-shortcuts { display:flex; gap:10px; flex-wrap:wrap; margin-top: 18px; position:relative; z-index:1; }
+  .hero-shortcut {
+    background: rgba(11,20,17,0.7);
+    border: 1px solid #2c3f36;
+    color: #d8e5dd;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all .2s ease;
+  }
+  .hero-shortcut:hover { background: rgba(127,227,168,0.12); border-color: var(--lime); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+
+  /* KPI grid */
+  .kpi-grid {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 22px;
+  }
+  .kpi-card {
+    background: linear-gradient(160deg, #13231c 0%, #0f1c16 100%);
+    border:1px solid #223128;
+    border-radius: 16px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+  .kpi-card::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(127,227,168,0.08), transparent 50%);
+    opacity: 0; transition: opacity .25s ease;
+    pointer-events: none;
+  }
+  .kpi-card:hover { transform: translateY(-3px); border-color: #3e7a5a; box-shadow: 0 10px 26px rgba(0,0,0,0.4); }
+  .kpi-card:hover::after { opacity: 1; }
+  .kpi-icon { font-size: 26px; margin-bottom: 8px; }
+  .kpi-value { font-size: 32px; font-weight: 900; color:#fff; line-height: 1.05; }
+  .kpi-label { color:#b5c9bf; font-size: 13px; margin-top: 6px; }
+
+  /* Charts grid */
+  .charts-grid {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px; margin-bottom: 26px;
+  }
+  .chart-card {
+    background: #12201a;
+    border: 1px solid #223128;
+    border-radius: 16px;
+    padding: 18px;
+    min-height: 280px;
+  }
+  .chart-card h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color:#e8efe9;
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+  .chart-card canvas { max-height: 260px; }
+
+  /* reveal-on-scroll */
+  .reveal-on-scroll { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal-on-scroll.revealed { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 720px) {
+    .hero-title { font-size: 24px; }
+    .admin-hero { padding: 20px; }
+  }
+</style>
 </head>
 <body>
 <a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
@@ -133,6 +243,63 @@
     </div>
   </div>
 
+  <section class="admin-hero reveal-on-scroll" id="adminHero">
+    <div class="hero-top">
+      <div>
+        <h2 class="hero-title">🔑 מרכז בקרה</h2>
+        <div class="hero-sub">סקירת פלטפורמה בזמן אמת</div>
+      </div>
+      <div class="hero-badge">
+        <span class="live-dot"></span>
+        <span id="heroLastUpdate">עדכון אחרון: —</span>
+      </div>
+    </div>
+    <div class="hero-shortcuts">
+      <button class="hero-shortcut" data-shortcut="tournaments">🏆 טורנירים</button>
+      <button class="hero-shortcut" data-shortcut="active-clubs">🏟 מגרשים פעילים</button>
+      <button class="hero-shortcut" data-shortcut="pending">⏳ בקשות ממתינות</button>
+      <button class="hero-shortcut" data-shortcut="view-players">👥 שחקנים</button>
+      <button class="hero-shortcut" data-shortcut="timeline">⚡ פעילות</button>
+    </div>
+  </section>
+
+  <div class="kpi-grid reveal-on-scroll">
+    <div class="kpi-card">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-value" id="kpiTournaments">0</div>
+      <div class="kpi-label">טורנירים פעילים</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-value" id="kpiRevenue">₪0</div>
+      <div class="kpi-label">הכנסות</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-value" id="kpiNewPlayers">0</div>
+      <div class="kpi-label">שחקנים חדשים (7 ימים)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-value" id="kpiOccupancy">0%</div>
+      <div class="kpi-label">אחוז אכלוס</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-value" id="kpiPending">0</div>
+      <div class="kpi-label">ממתינים לאישור</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card reveal-on-scroll"><h3>מגמת הרשמות · 30 ימים</h3><canvas id="chartRegTrend"></canvas></div>
+    <div class="chart-card reveal-on-scroll"><h3>פילוח הכנסות לפי מגרש</h3><canvas id="chartRevenue"></canvas></div>
+    <div class="chart-card reveal-on-scroll"><h3>משפך בקשות</h3><canvas id="chartFunnel"></canvas></div>
+    <div class="chart-card reveal-on-scroll"><h3>שחקנים לפי עיר</h3><canvas id="chartCityHeat"></canvas></div>
+    <div class="chart-card reveal-on-scroll"><h3>סטטוסי טורנירים</h3><canvas id="chartStatusPie"></canvas></div>
+    <div class="chart-card reveal-on-scroll"><h3>Top 5 מגרשים מארחים</h3><canvas id="chartTopClubs"></canvas></div>
+  </div>
+
   <div class="stats" id="stats"></div>
   <div class="capbar" id="capbar"></div>
 
@@ -150,17 +317,17 @@
     <button class="tab" data-tab="timeline">פעילות אחרונה</button>
   </div>
 
-  <div id="viewList"></div>
-  <div id="viewPending" hidden></div>
-  <div id="viewTournaments" hidden></div>
-  <div id="viewApps-organizers" hidden></div>
-  <div id="viewApps-clubs" hidden></div>
-  <div id="viewApps-players" hidden></div>
-  <div id="viewActive-clubs" hidden></div>
-  <div id="viewView-players" hidden></div>
-  <div id="viewView-organizers" hidden></div>
-  <div id="viewView-clubs" hidden></div>
-  <div id="viewTimeline" hidden></div>
+  <div id="viewList" class="reveal-on-scroll"></div>
+  <div id="viewPending" class="reveal-on-scroll" hidden></div>
+  <div id="viewTournaments" class="reveal-on-scroll" hidden></div>
+  <div id="viewApps-organizers" class="reveal-on-scroll" hidden></div>
+  <div id="viewApps-clubs" class="reveal-on-scroll" hidden></div>
+  <div id="viewApps-players" class="reveal-on-scroll" hidden></div>
+  <div id="viewActive-clubs" class="reveal-on-scroll" hidden></div>
+  <div id="viewView-players" class="reveal-on-scroll" hidden></div>
+  <div id="viewView-organizers" class="reveal-on-scroll" hidden></div>
+  <div id="viewView-clubs" class="reveal-on-scroll" hidden></div>
+  <div id="viewTimeline" class="reveal-on-scroll" hidden></div>
 </div>
 
 <div class="preview-overlay" id="previewOverlay">
@@ -208,6 +375,10 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   if (AUTO_REFRESH) { clearInterval(AUTO_REFRESH); AUTO_REFRESH=null; }
 });
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+document.querySelectorAll('.hero-shortcut').forEach(b => b.addEventListener('click', () => {
+  const name = b.dataset.shortcut;
+  if (name) { switchTab(name); const el = document.querySelector('.tabs'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+}));
 document.getElementById('previewClose').addEventListener('click', closePreview);
 document.getElementById('previewOverlay').addEventListener('click', e => {
   if (e.target.id === 'previewOverlay') closePreview();
@@ -256,7 +427,11 @@ async function loadList() {
     const j = await r.json();
     LAST_DATA = j;
     render();
-    document.getElementById('lastUpdate').textContent = 'עדכון אחרון: ' + new Date().toLocaleTimeString('he-IL');
+    if (window.AdminCharts) { window.AdminCharts.render(LAST_DATA); window.AdminCharts.observeEntries(); }
+    const stamp = 'עדכון אחרון: ' + new Date().toLocaleTimeString('he-IL');
+    document.getElementById('lastUpdate').textContent = stamp;
+    const heroStamp = document.getElementById('heroLastUpdate');
+    if (heroStamp) heroStamp.textContent = stamp;
   } catch {}
 }
 

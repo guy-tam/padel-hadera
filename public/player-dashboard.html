@@ -12,65 +12,187 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
-  .pd-wrap { max-width: 1150px; margin: 0 auto; padding: 24px 18px 80px; }
+  :root {
+    --lime: #d4ff3a;
+    --turq: #7fe3a8;
+    --turq2: #62e2b5;
+    --gold: #ffd968;
+    --red: #ff6b6b;
+    --ink: #062318;
+    --ink2: #062a1c;
+    --ink3: #0a3d2a;
+    --mute: #b5c8bf;
+  }
+  body { font-family: 'Rubik', system-ui, sans-serif; background: var(--ink); }
+  .pd-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 80px; }
+
+  /* Hero */
   .pd-hero {
-    background: linear-gradient(135deg, #0a3d2a, #062a1c);
-    border: 1px solid rgba(212,255,58,.2);
-    border-radius: 22px;
-    padding: 36px 30px;
-    margin-bottom: 22px;
     position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #0a3d2a 0%, #062a1c 100%);
+    border: 1px solid rgba(212,255,58,.22);
+    border-radius: 22px;
+    padding: 40px 34px;
+    margin-bottom: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(212,255,58,.08);
   }
   .pd-hero::before {
-    content: "🎾"; position: absolute;
-    font-size: 200px; opacity: .05;
-    top: -30px; left: -30px; transform: rotate(-12deg);
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 85% 20%, rgba(212,255,58,.12), transparent 40%),
+                      radial-gradient(circle at 15% 90%, rgba(127,227,168,.1), transparent 45%);
+    pointer-events: none;
   }
-  .pd-hero h1 { color: #fff; font-size: clamp(28px, 4vw, 44px); margin: 0 0 4px; }
-  .pd-hero .tag { color: var(--lime); font-weight: 700; font-size: 13px; letter-spacing: .4px; }
-  .pd-hero .sub { color: #b5c8bf; margin-top: 6px; }
+  .pd-hero .racket-svg {
+    position: absolute; top: -20px; left: -40px;
+    width: 260px; height: 260px; opacity: .08;
+    transform: rotate(-18deg);
+    pointer-events: none;
+  }
+  .pd-hero .content { position: relative; z-index: 2; }
+  .pd-hero .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--lime); font-weight: 700; font-size: 13px;
+    letter-spacing: .4px; margin-bottom: 10px;
+  }
+  .pd-hero .tag .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 0 0 0 rgba(212,255,58,.7);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,255,58,.7); }
+    70% { box-shadow: 0 0 0 12px rgba(212,255,58,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,255,58,0); }
+  }
+  .pd-hero h1 {
+    color: #fff; font-size: clamp(28px, 4.2vw, 48px);
+    margin: 0 0 8px; font-weight: 900; letter-spacing: -.5px;
+  }
+  .pd-hero .sub { color: var(--mute); margin-top: 6px; font-size: 15px; }
 
+  .level-chip {
+    display: inline-block;
+    background: var(--lime); color: var(--ink2);
+    padding: 4px 12px; border-radius: 999px;
+    font-weight: 800; font-size: 12px;
+  }
+
+  /* KPIs */
   .pd-stats {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 14px; margin-bottom: 26px;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 14px; margin-bottom: 28px;
   }
+  @media (max-width: 820px) { .pd-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 420px) { .pd-stats { grid-template-columns: 1fr; } }
+
   .pd-stat {
-    background: rgba(10,61,42,0.55);
-    border: 1px solid rgba(212,255,58,0.2);
-    border-radius: 14px;
-    padding: 20px 18px;
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(10,61,42,.7), rgba(6,42,28,.7));
+    border: 1px solid rgba(212,255,58,.18);
+    border-radius: 18px;
+    padding: 22px 18px;
     text-align: center;
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
+  .pd-stat:hover {
+    transform: translateY(-4px);
+    border-color: rgba(212,255,58,.55);
+    box-shadow: 0 12px 30px rgba(0,0,0,.35), 0 0 0 1px rgba(212,255,58,.15) inset;
+  }
+  .pd-stat::after {
+    content: ""; position: absolute; top: 0; left: -80%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212,255,58,.1), transparent);
+    transform: skewX(-20deg);
+    transition: left .7s ease;
+    pointer-events: none;
+  }
+  .pd-stat:hover::after { left: 140%; }
+  .pd-stat .icon { font-size: 22px; margin-bottom: 6px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.3)); }
   .pd-stat .n {
-    font-size: 36px; font-weight: 900; line-height: 1;
+    font-size: 38px; font-weight: 900; line-height: 1.1;
     color: var(--lime);
     text-shadow: 0 2px 16px rgba(212,255,58,.25);
+    font-variant-numeric: tabular-nums;
   }
-  .pd-stat .lbl { color: #b5c9bf; font-size: 13px; margin-top: 8px; font-weight: 600; }
-  .pd-stat.win .n { color: #ffd968; }
-  .pd-stat.points .n { font-size: 44px; }
+  .pd-stat .lbl { color: var(--mute); font-size: 13px; margin-top: 6px; font-weight: 600; }
+  .pd-stat .trend { color: var(--turq); font-size: 11px; font-weight: 700; margin-top: 4px; }
+  .pd-stat.gold .n { color: var(--gold); text-shadow: 0 2px 16px rgba(255,217,104,.28); }
+  .pd-stat.turq .n { color: var(--turq); text-shadow: 0 2px 16px rgba(127,227,168,.28); }
+  .pd-stat.points .n { font-size: 46px; }
 
-  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid rgba(212,255,58,.15); }
-  .tab { padding: 10px 18px; background: transparent; border: 0; color: #b5c9bf; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; border-bottom: 2px solid transparent; }
+  /* Charts grid */
+  .charts-grid {
+    display: grid; grid-template-columns: 1.3fr 1fr;
+    gap: 16px; margin-bottom: 22px;
+  }
+  .charts-grid.second { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 820px) {
+    .charts-grid, .charts-grid.second { grid-template-columns: 1fr; }
+  }
+  .chart-card {
+    background: linear-gradient(135deg, rgba(10,61,42,.55), rgba(6,42,28,.55));
+    border: 1px solid rgba(212,255,58,.15);
+    border-radius: 18px;
+    padding: 20px 22px;
+    transition: border-color .25s;
+  }
+  .chart-card:hover { border-color: rgba(212,255,58,.3); }
+  .chart-card h3 {
+    margin: 0 0 14px; color: #fff; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chart-card h3 .mini { color: var(--mute); font-size: 12px; font-weight: 500; margin-right: auto; }
+  .chart-box { position: relative; height: 240px; }
+  .chart-empty { color: var(--mute); text-align: center; padding: 60px 10px; font-size: 14px; }
+
+  /* Section title */
+  .sec-title {
+    color: #fff; font-size: 18px; font-weight: 800;
+    margin: 26px 0 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .sec-title .count { color: var(--mute); font-weight: 500; font-size: 13px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid rgba(212,255,58,.15); flex-wrap: wrap; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: var(--mute); cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; }
+  .tab:hover { color: #fff; }
   .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
 
+  /* Match cards */
   .match-card {
-    background: rgba(10,61,42,0.4);
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(10,61,42,.5), rgba(6,42,28,.5));
     border: 1px solid rgba(212,255,58,.15);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 20px 22px;
     margin-bottom: 12px;
     display: flex; justify-content: space-between; align-items: center; gap: 16px;
     flex-wrap: wrap;
-    transition: transform .2s, border-color .2s;
+    transition: transform .25s, border-color .25s, box-shadow .25s;
   }
-  .match-card:hover { border-color: var(--lime); transform: translateY(-2px); }
-  .match-card .info h3 { margin: 0 0 4px; color: #fff; font-size: 19px; }
-  .match-card .info .sub { color: #b5c8bf; font-size: 13px; }
-  .match-card .info a { color: var(--lime); }
+  .match-card::after {
+    content: ""; position: absolute; top: 0; left: -80%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212,255,58,.08), transparent);
+    transform: skewX(-20deg);
+    transition: left .7s ease;
+    pointer-events: none;
+  }
+  .match-card:hover {
+    border-color: var(--lime);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.3);
+  }
+  .match-card:hover::after { left: 140%; }
+  .match-card .info h3 { margin: 0 0 4px; color: #fff; font-size: 18px; font-weight: 700; }
+  .match-card .info .sub { color: var(--mute); font-size: 13px; line-height: 1.6; }
+  .match-card .info a { color: var(--lime); text-decoration: none; }
+  .match-card .info a:hover { text-decoration: underline; }
+
   .result-badge {
-    text-align: center;
-    min-width: 90px;
+    text-align: center; min-width: 90px;
     background: rgba(212,255,58,0.12);
     border: 1px solid rgba(212,255,58,.3);
     border-radius: 14px;
@@ -81,30 +203,70 @@
   .result-badge.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border-color: #cd7f32; }
   .result-badge .place { font-size: 22px; font-weight: 900; line-height: 1; }
   .result-badge .pts { font-size: 12px; margin-top: 4px; font-weight: 700; }
-  .result-badge .pend { color: #b5c9bf; font-size: 13px; }
 
-  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-  .status-pill.ok { background: rgba(43,182,115,.25); color: #7fe3a8; }
-  .status-pill.pending { background: rgba(255,200,50,.2); color: #ffd968; }
-  .status-pill.wait { background: rgba(255,255,255,.1); color: #b5c8bf; }
+  .status-pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .2px; }
+  .status-pill.ok { background: rgba(43,182,115,.25); color: var(--turq); }
+  .status-pill.pending { background: rgba(255,200,50,.2); color: var(--gold); }
+  .status-pill.wait { background: rgba(255,255,255,.1); color: var(--mute); }
 
-  .level-chip {
-    display: inline-block;
-    background: var(--lime); color: var(--green-900);
-    padding: 4px 12px; border-radius: 999px;
-    font-weight: 800; font-size: 12px;
+  .empty {
+    text-align: center; color: var(--mute);
+    padding: 50px 20px;
+    background: linear-gradient(135deg, rgba(10,61,42,.4), rgba(6,42,28,.4));
+    border: 1px dashed rgba(212,255,58,.2);
+    border-radius: 16px;
   }
-
-  .empty { text-align: center; color: #b5c9bf; padding: 50px 20px; background: rgba(10,61,42,0.3); border-radius: 14px; }
   .empty a { color: var(--lime); font-weight: 700; }
 
   .share-box {
     background: rgba(212,255,58,.06);
     border: 1px dashed rgba(212,255,58,.35);
     padding: 14px 18px; border-radius: 12px;
-    margin-bottom: 22px; font-size: 13px; color: #b5c8bf;
+    margin-bottom: 22px; font-size: 13px; color: var(--mute);
   }
   .share-box b { color: var(--lime); }
+
+  /* Mini leaderboard */
+  .mini-lb {
+    background: linear-gradient(135deg, rgba(10,61,42,.5), rgba(6,42,28,.5));
+    border: 1px solid rgba(212,255,58,.15);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+  }
+  .mini-lb h3 { margin: 0 0 14px; color: #fff; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .mini-lb-row {
+    display: grid; grid-template-columns: 44px 1fr auto auto;
+    gap: 10px; align-items: center;
+    padding: 10px 12px; border-radius: 10px;
+    transition: background .2s;
+  }
+  .mini-lb-row + .mini-lb-row { border-top: 1px solid rgba(212,255,58,.06); }
+  .mini-lb-row:hover { background: rgba(212,255,58,.04); }
+  .mini-lb-row.me { background: rgba(212,255,58,.12); border: 1px solid rgba(212,255,58,.35); }
+  .mini-lb-row .rank { font-weight: 900; color: var(--mute); font-size: 14px; text-align: center; }
+  .mini-lb-row .rank.top { font-size: 20px; }
+  .mini-lb-row .nm { color: #fff; font-weight: 700; font-size: 14px; }
+  .mini-lb-row .nm small { color: var(--mute); font-weight: 500; font-size: 12px; display: block; }
+  .mini-lb-row .pts { color: var(--lime); font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .mini-lb-row .tns { color: var(--mute); font-size: 12px; font-weight: 600; }
+
+  /* Entrance animations */
+  .fade-up {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .65s ease, transform .65s ease;
+  }
+  .fade-up.in { opacity: 1; transform: translateY(0); }
+
+  /* Leaderboard table */
+  .lb-table {
+    width: 100%; border-collapse: collapse;
+    background: linear-gradient(135deg, rgba(10,61,42,.5), rgba(6,42,28,.5));
+    border-radius: 14px; overflow: hidden;
+  }
+  .lb-table th { padding: 14px; text-align: right; color: var(--mute); font-size: 12px; font-weight: 700; border-bottom: 1px solid rgba(212,255,58,.1); }
+  .lb-table td { padding: 12px 14px; border-top: 1px solid rgba(212,255,58,.06); }
+  .lb-table tr.me-row { background: rgba(212,255,58,.1); }
 </style>
 <link rel="stylesheet" href="/polish.css" />
 </head>
@@ -124,29 +286,73 @@
 </header>
 
 <main id="main" class="pd-wrap">
-  <div class="pd-hero">
-    <div class="tag">🎾 שחקן/ית רשומ/ה</div>
-    <h1>{{PLAYER_NAME}}</h1>
-    <div class="sub" id="pdMeta">טוען נתונים...</div>
-  </div>
 
-  <div class="share-box">
+  <!-- Hero -->
+  <section class="pd-hero fade-up">
+    <svg class="racket-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g fill="none" stroke="#d4ff3a" stroke-width="2.5">
+        <ellipse cx="80" cy="80" rx="55" ry="60"/>
+        <path d="M120 120 L165 175" stroke-width="8" stroke-linecap="round"/>
+        <path d="M35 50 L125 50 M30 70 L130 70 M30 90 L130 90 M30 110 L125 110"/>
+        <path d="M45 25 L45 135 M70 20 L70 140 M95 20 L95 140 M120 25 L120 135"/>
+      </g>
+    </svg>
+    <div class="content">
+      <div class="tag"><span class="pulse"></span>שחקן/ית פעיל/ה</div>
+      <h1>{{PLAYER_NAME}}</h1>
+      <div class="sub" id="pdMeta">טוען נתונים...</div>
+    </div>
+  </section>
+
+  <div class="share-box fade-up">
     🔗 <b>שמור קישור זה:</b> <span id="shareLink">טוען...</span>
     · הוא הכניסה האישית שלך לדאשבורד. ניתן לשמור כסימניה או להוסיף למסך הבית בטלפון.
     <button class="btn btn-ghost" id="copyLink" style="font-size:12px;padding:6px 14px;margin-right:8px;vertical-align:middle;border-color:rgba(212,255,58,.4);color:var(--lime)">📋 העתקה</button>
   </div>
 
-  <div class="pd-stats" id="stats"></div>
+  <!-- KPIs -->
+  <div class="pd-stats fade-up" id="stats"></div>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="history">היסטוריית טורנירים</button>
-    <button class="tab" data-tab="active">הרשמות פעילות</button>
-    <button class="tab" data-tab="leaderboard">דירוג כללי</button>
+  <!-- Charts row 1 -->
+  <div class="charts-grid fade-up">
+    <div class="chart-card">
+      <h3>📈 נקודות לאורך זמן <span class="mini" id="pointsSub"></span></h3>
+      <div class="chart-box"><canvas id="chartPoints"></canvas><div id="pointsEmpty" class="chart-empty" hidden>אין עדיין היסטוריית נקודות — שחק/י בטורניר ראשון ונתחיל לבנות גרף.</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>🍩 פילוח שלבים</h3>
+      <div class="chart-box"><canvas id="chartStages"></canvas><div id="stagesEmpty" class="chart-empty" hidden>עדיין אין תוצאות לחלק.</div></div>
+    </div>
   </div>
 
-  <div id="viewHistory"></div>
-  <div id="viewActive" hidden></div>
-  <div id="viewLeaderboard" hidden></div>
+  <!-- Charts row 2 -->
+  <div class="charts-grid second fade-up">
+    <div class="chart-card">
+      <h3>🤝 שותפים תכופים <span class="mini">Top 5</span></h3>
+      <div class="chart-box"><canvas id="chartPartners"></canvas><div id="partnersEmpty" class="chart-empty" hidden>עדיין לא נרשמת עם שותף/ה. כדאי להתחיל!</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>📊 מיקום ביחס לממוצע</h3>
+      <div class="chart-box"><canvas id="chartRadar"></canvas><div id="radarEmpty" class="chart-empty" hidden>טוען דירוגים...</div></div>
+    </div>
+  </div>
+
+  <!-- Mini leaderboard -->
+  <div class="mini-lb fade-up" id="miniLb" hidden>
+    <h3>🏆 דירוג כללי — Top 10</h3>
+    <div id="miniLbBody"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs fade-up">
+    <button class="tab active" data-tab="history">היסטוריית טורנירים</button>
+    <button class="tab" data-tab="active">הרשמות פעילות</button>
+    <button class="tab" data-tab="leaderboard">דירוג מלא</button>
+  </div>
+
+  <div id="viewHistory" class="fade-up"></div>
+  <div id="viewActive" class="fade-up" hidden></div>
+  <div id="viewLeaderboard" class="fade-up" hidden></div>
 </main>
 
 <footer class="pfooter">
@@ -156,9 +362,12 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
 const TOKEN = "{{TOKEN}}";
 let DATA = null;
+let LEADERBOARD = null;
+const CHARTS = {};
 
 if (TOKEN === 'demo') {
   const b = document.createElement('div');
@@ -167,6 +376,13 @@ if (TOKEN === 'demo') {
   document.body.insertBefore(b, document.body.firstChild);
 }
 
+// IntersectionObserver entrance
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: .12 });
+document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+
+// Tabs
 document.querySelectorAll('.tab').forEach(t =>
   t.addEventListener('click', () => switchTab(t.dataset.tab))
 );
@@ -187,38 +403,372 @@ document.getElementById('copyLink').addEventListener('click', async () => {
   } catch {}
 });
 
+// Counter animation
+function animateCounter(el, target, duration = 1200) {
+  const start = 0;
+  const startTime = performance.now();
+  const step = (now) => {
+    const p = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(step);
+}
+
 async function load() {
-  const r = await fetch('/api/player/' + TOKEN + '/me');
-  const j = await r.json();
-  if (!r.ok || !j.ok) {
-    document.getElementById('main').innerHTML = '<div class="empty">אין הרשאה. <a href="/players/join">הירשם/י כשחקן</a></div>';
-    return;
+  try {
+    const r = await fetch('/api/player/' + TOKEN + '/me');
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      document.getElementById('main').innerHTML = '<div class="empty">אין הרשאה. <a href="/players/join">הירשם/י כשחקן</a></div>';
+      return;
+    }
+    DATA = j;
+    render();
+    // Fetch leaderboard in background for mini view + radar
+    fetchLeaderboardBackground();
+  } catch (e) {
+    document.getElementById('main').innerHTML = '<div class="empty">שגיאת רשת. נסה/י לרענן.</div>';
   }
-  DATA = j;
-  render();
+}
+
+async function fetchLeaderboardBackground() {
+  try {
+    const r = await fetch('/api/leaderboard');
+    const j = await r.json();
+    if (j.ok && j.players) {
+      LEADERBOARD = j.players;
+      renderMiniLeaderboard();
+      renderRadar();
+    }
+  } catch {}
 }
 
 function render() {
   const p = DATA.player;
-  const s = p.stats;
-  const lv = p.level === '2.5' ? 'רמה א' : p.level === '3' ? 'רמה א+' : 'לא מוגדרת';
+  const s = p.stats || {points:0,tournaments:0,wins:0,finals:0,semifinals:0};
+  const lv = p.level === '2.5' ? 'רמה א' : p.level === '3' ? 'רמה א+' : p.level ? 'רמה ' + p.level : 'רמה לא מוגדרת';
+
   document.getElementById('pdMeta').innerHTML =
-    `<span class="level-chip">${lv}</span> &nbsp;·&nbsp; ${esc(p.city)} &nbsp;·&nbsp; חבר/ה מ-${new Date(p.memberSince).toLocaleDateString('he-IL',{year:'numeric',month:'long'})}`;
+    `<span class="level-chip">${lv}</span> &nbsp;·&nbsp; ${esc(p.city || '—')} &nbsp;·&nbsp; חבר/ה מ-${p.memberSince ? new Date(p.memberSince).toLocaleDateString('he-IL',{year:'numeric',month:'long'}) : '—'}`;
 
   document.getElementById('shareLink').textContent = location.href;
 
-  document.getElementById('stats').innerHTML = [
-    `<div class="pd-stat points"><div class="n">${s.points}</div><div class="lbl">נקודות</div></div>`,
-    `<div class="pd-stat"><div class="n">${s.tournaments}</div><div class="lbl">טורנירים</div></div>`,
-    `<div class="pd-stat win"><div class="n">🥇 ${s.wins}</div><div class="lbl">ניצחונות</div></div>`,
-    `<div class="pd-stat"><div class="n">🥈 ${s.finals}</div><div class="lbl">גמרים</div></div>`,
-    `<div class="pd-stat"><div class="n">🥉 ${s.semifinals}</div><div class="lbl">חצאי גמר</div></div>`,
-  ].join('');
+  // KPIs
+  const winRate = s.tournaments > 0 ? Math.round((s.wins / s.tournaments) * 100) : 0;
+  const podium = (s.wins||0) + (s.finals||0) + (s.semifinals||0);
+  const kpis = [
+    { cls: 'points', icon: '⭐', val: s.points||0, lbl: 'נקודות', trend: s.points ? 'סה"כ צבירה' : '' },
+    { cls: 'turq', icon: '🎾', val: s.tournaments||0, lbl: 'טורנירים', trend: s.tournaments ? `${podium} פעמים על הפודיום` : '' },
+    { cls: 'gold', icon: '🥇', val: s.wins||0, lbl: 'ניצחונות', trend: s.tournaments ? `${winRate}% אחוז זכייה` : '' },
+    { cls: '', icon: '🥈', val: s.finals||0, lbl: 'גמרים', trend: '' },
+    { cls: '', icon: '🥉', val: s.semifinals||0, lbl: 'חצי-גמרים', trend: '' },
+  ];
+  document.getElementById('stats').innerHTML = kpis.map((k,i) =>
+    `<div class="pd-stat ${k.cls}">
+      <div class="icon">${k.icon}</div>
+      <div class="n" data-target="${k.val}" id="kpi-${i}">0</div>
+      <div class="lbl">${k.lbl}</div>
+      ${k.trend ? `<div class="trend">${k.trend}</div>` : ''}
+    </div>`
+  ).join('');
+  // trigger counters
+  kpis.forEach((k,i) => {
+    const el = document.getElementById('kpi-'+i);
+    if (el) animateCounter(el, k.val);
+  });
 
   renderHistory();
   renderActive();
+  renderCharts();
 }
 
+// ===== Charts =====
+const CHART_COLORS = {
+  lime: '#d4ff3a',
+  turq: '#7fe3a8',
+  turq2: '#62e2b5',
+  gold: '#ffd968',
+  red: '#ff6b6b',
+  grid: 'rgba(255,255,255,0.05)',
+  tick: '#b5c8bf'
+};
+
+function commonChartOpts() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#062a1c',
+        borderColor: 'rgba(212,255,58,.3)', borderWidth: 1,
+        titleColor: '#d4ff3a', bodyColor: '#fff',
+        padding: 10, cornerRadius: 8,
+        titleFont: { family: 'Rubik', weight: 700 },
+        bodyFont: { family: 'Rubik' }
+      }
+    }
+  };
+}
+
+function renderCharts() {
+  renderPointsChart();
+  renderStagesChart();
+  renderPartnersChart();
+}
+
+// Line chart: points over time
+function renderPointsChart() {
+  const history = DATA.history || [];
+  const regsWithResult = (DATA.registrations || []).filter(r => r.result && (r.result.points || r.result.place));
+
+  const events = [];
+  history.forEach(e => {
+    if (e.date) events.push({ date: new Date(e.date), points: Number(e.points)||0, title: e.tournamentTitle });
+  });
+  regsWithResult.forEach(r => {
+    const d = r.tournamentDate ? new Date(r.tournamentDate) : (r.createdAt ? new Date(r.createdAt) : null);
+    if (d && !isNaN(d)) {
+      const pts = Number(r.result && r.result.points) || 0;
+      events.push({ date: d, points: pts, title: r.tournamentTitle });
+    }
+  });
+  events.sort((a,b) => a.date - b.date);
+
+  const box = document.getElementById('chartPoints').parentElement;
+  if (!events.length) {
+    document.getElementById('chartPoints').style.display = 'none';
+    document.getElementById('pointsEmpty').hidden = false;
+    return;
+  }
+
+  let cum = 0;
+  const labels = [], pts = [];
+  events.forEach(e => { cum += e.points; labels.push(e.date.toLocaleDateString('he-IL',{day:'2-digit',month:'short'})); pts.push(cum); });
+
+  document.getElementById('pointsSub').textContent = `${events.length} אירועים · ${cum} נק' סה"כ`;
+
+  const ctx = document.getElementById('chartPoints').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 240);
+  grad.addColorStop(0, 'rgba(212,255,58,.35)');
+  grad.addColorStop(1, 'rgba(212,255,58,0)');
+
+  CHARTS.points = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: pts,
+        borderColor: CHART_COLORS.lime,
+        backgroundColor: grad,
+        borderWidth: 3,
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointBackgroundColor: CHART_COLORS.lime,
+        pointBorderColor: '#062a1c',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      ...commonChartOpts(),
+      animation: { duration: 1200, easing: 'easeOutQuart' },
+      scales: {
+        x: { grid: { color: CHART_COLORS.grid, drawBorder: false }, ticks: { color: CHART_COLORS.tick, font: { family: 'Rubik', size: 11 } } },
+        y: { grid: { color: CHART_COLORS.grid, drawBorder: false }, ticks: { color: CHART_COLORS.tick, font: { family: 'Rubik', size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// Doughnut: stages breakdown
+function renderStagesChart() {
+  const s = DATA.player.stats || {};
+  const regs = DATA.registrations || [];
+  let wins = s.wins||0, finals = s.finals||0, semis = s.semifinals||0, quarters = 0, lower = 0;
+  regs.forEach(r => {
+    if (r.result && r.result.place) {
+      const p = r.result.place;
+      if (p >= 4 && p <= 8) quarters++;
+      else if (p > 8) lower++;
+    }
+  });
+  const total = wins + finals + semis + quarters + lower;
+  if (!total) {
+    document.getElementById('chartStages').style.display = 'none';
+    document.getElementById('stagesEmpty').hidden = false;
+    return;
+  }
+  const ctx = document.getElementById('chartStages').getContext('2d');
+  CHARTS.stages = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['ניצחון', 'גמר', 'חצי-גמר', 'רבע-גמר', 'פחות'],
+      datasets: [{
+        data: [wins, finals, semis, quarters, lower],
+        backgroundColor: [CHART_COLORS.gold, CHART_COLORS.lime, CHART_COLORS.turq, CHART_COLORS.turq2, CHART_COLORS.red],
+        borderColor: '#062a1c', borderWidth: 3, hoverOffset: 10
+      }]
+    },
+    options: {
+      ...commonChartOpts(),
+      cutout: '62%',
+      animation: { animateRotate: true, duration: 1100, easing: 'easeOutQuart' },
+      plugins: {
+        ...commonChartOpts().plugins,
+        legend: { display: true, position: 'bottom', labels: { color: CHART_COLORS.tick, font: { family: 'Rubik', size: 12 }, padding: 12, boxWidth: 12 } }
+      }
+    }
+  });
+}
+
+// Horizontal bar: partners
+function renderPartnersChart() {
+  const regs = DATA.registrations || [];
+  const counts = {};
+  regs.forEach(r => {
+    const n = (r.partnerName || '').trim();
+    if (n) counts[n] = (counts[n] || 0) + 1;
+  });
+  const arr = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+  if (!arr.length) {
+    document.getElementById('chartPartners').style.display = 'none';
+    document.getElementById('partnersEmpty').hidden = false;
+    return;
+  }
+  const ctx = document.getElementById('chartPartners').getContext('2d');
+  CHARTS.partners = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: arr.map(x => x[0]),
+      datasets: [{
+        data: arr.map(x => x[1]),
+        backgroundColor: arr.map((_,i) => [CHART_COLORS.lime, CHART_COLORS.turq, CHART_COLORS.turq2, CHART_COLORS.gold, CHART_COLORS.red][i]),
+        borderRadius: 8,
+        borderSkipped: false,
+        barThickness: 22
+      }]
+    },
+    options: {
+      ...commonChartOpts(),
+      indexAxis: 'y',
+      animation: { duration: 1000, easing: 'easeOutQuart' },
+      scales: {
+        x: { grid: { color: CHART_COLORS.grid, drawBorder: false }, ticks: { color: CHART_COLORS.tick, font: { family: 'Rubik', size: 11 }, stepSize: 1 }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { color: '#fff', font: { family: 'Rubik', size: 12, weight: '600' } } }
+      }
+    }
+  });
+}
+
+// Radar: me vs national avg
+function renderRadar() {
+  if (!LEADERBOARD || !DATA) return;
+  const me = DATA.player;
+  const myStats = me.stats || {};
+  const all = LEADERBOARD;
+  if (!all.length) {
+    document.getElementById('chartRadar').style.display = 'none';
+    document.getElementById('radarEmpty').hidden = false;
+    document.getElementById('radarEmpty').textContent = 'אין עדיין מספיק נתונים ארציים להשוואה.';
+    return;
+  }
+  const avg = {
+    points: all.reduce((s,p) => s + (p.points||0), 0) / all.length,
+    tournaments: all.reduce((s,p) => s + (p.tournaments||0), 0) / all.length,
+    wins: all.reduce((s,p) => s + (p.wins||0), 0) / all.length
+  };
+  const max = {
+    points: Math.max(1, ...all.map(p => p.points||0)),
+    tournaments: Math.max(1, ...all.map(p => p.tournaments||0)),
+    wins: Math.max(1, ...all.map(p => p.wins||0)),
+    finals: Math.max(1, (myStats.finals||0), 5),
+    semifinals: Math.max(1, (myStats.semifinals||0), 5)
+  };
+  const myNorm = [
+    Math.round(((myStats.points||0) / max.points) * 100),
+    Math.round(((myStats.tournaments||0) / max.tournaments) * 100),
+    Math.round(((myStats.wins||0) / max.wins) * 100),
+    Math.round(((myStats.finals||0) / max.finals) * 100),
+    Math.round(((myStats.semifinals||0) / max.semifinals) * 100),
+  ];
+  const avgNorm = [
+    Math.round((avg.points / max.points) * 100),
+    Math.round((avg.tournaments / max.tournaments) * 100),
+    Math.round((avg.wins / max.wins) * 100),
+    30, 30
+  ];
+
+  const ctx = document.getElementById('chartRadar').getContext('2d');
+  CHARTS.radar = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['נקודות', 'טורנירים', 'ניצחונות', 'גמרים', 'חצאי'],
+      datasets: [
+        { label: 'אני', data: myNorm, borderColor: CHART_COLORS.lime, backgroundColor: 'rgba(212,255,58,.25)', borderWidth: 2, pointBackgroundColor: CHART_COLORS.lime, pointRadius: 4 },
+        { label: 'ממוצע', data: avgNorm, borderColor: CHART_COLORS.turq, backgroundColor: 'rgba(127,227,168,.15)', borderWidth: 2, pointBackgroundColor: CHART_COLORS.turq, pointRadius: 3 }
+      ]
+    },
+    options: {
+      ...commonChartOpts(),
+      animation: { duration: 1100, easing: 'easeOutQuart' },
+      plugins: {
+        ...commonChartOpts().plugins,
+        legend: { display: true, position: 'bottom', labels: { color: CHART_COLORS.tick, font: { family: 'Rubik', size: 12 }, padding: 12, boxWidth: 12 } }
+      },
+      scales: {
+        r: {
+          angleLines: { color: 'rgba(255,255,255,.08)' },
+          grid: { color: 'rgba(255,255,255,.08)' },
+          pointLabels: { color: '#fff', font: { family: 'Rubik', size: 12, weight: '600' } },
+          ticks: { display: false, stepSize: 25 },
+          suggestedMin: 0, suggestedMax: 100
+        }
+      }
+    }
+  });
+}
+
+// Mini leaderboard (Top 10)
+function renderMiniLeaderboard() {
+  if (!LEADERBOARD || !DATA) return;
+  const top = LEADERBOARD.slice(0, 10);
+  if (!top.length) return;
+  const myId = DATA.player.id;
+  const myIdx = LEADERBOARD.findIndex(p => p.id === myId);
+
+  document.getElementById('miniLb').hidden = false;
+  const rowsHtml = top.map((p, i) => {
+    const isMe = p.id === myId;
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i+1);
+    return `<div class="mini-lb-row ${isMe ? 'me' : ''}">
+      <div class="rank ${i<3?'top':''}">${medal}</div>
+      <div class="nm">${esc(p.name)}${isMe ? ' <span style="color:var(--lime);font-size:11px">(זה/י אני)</span>' : ''}<small>${esc(p.city||'')}</small></div>
+      <div class="pts">${p.points||0}</div>
+      <div class="tns">${p.tournaments||0} טורנירים</div>
+    </div>`;
+  }).join('');
+
+  let meFooter = '';
+  if (myIdx >= 10) {
+    const me = LEADERBOARD[myIdx];
+    meFooter = `<div class="mini-lb-row me" style="margin-top:8px;border-top:2px dashed rgba(212,255,58,.25);padding-top:14px">
+      <div class="rank">#${myIdx+1}</div>
+      <div class="nm">${esc(me.name)} <span style="color:var(--lime);font-size:11px">(זה/י אני)</span><small>${esc(me.city||'')}</small></div>
+      <div class="pts">${me.points||0}</div>
+      <div class="tns">${me.tournaments||0} טורנירים</div>
+    </div>`;
+  } else if (myIdx === -1) {
+    meFooter = `<div style="color:var(--mute);font-size:12px;margin-top:10px;text-align:center">עדיין לא מדורג/ת — שחק/י בטורניר כדי להיכנס לדירוג!</div>`;
+  }
+
+  document.getElementById('miniLbBody').innerHTML = rowsHtml + meFooter;
+}
+
+// ===== Lists =====
 function renderHistory() {
   const h = DATA.history || [];
   const wrap = document.getElementById('viewHistory');
@@ -234,12 +784,12 @@ function renderHistory() {
         <div class="sub">
           ${new Date(e.date).toLocaleDateString('he-IL')}
           ${e.partner ? ' · שותף: ' + esc(e.partner) : ''}
-          · <a href="/tournaments/${encodeURIComponent(e.tournamentSlug)}" target="_blank">דף הטורניר ↗</a>
+          ${e.tournamentSlug ? ' · <a href="/tournaments/' + encodeURIComponent(e.tournamentSlug) + '" target="_blank">דף הטורניר ↗</a>' : ''}
         </div>
       </div>
       <div class="result-badge ${badge}">
         <div class="place">${placeLabel(e.place)}</div>
-        <div class="pts">+${e.points} נק'</div>
+        <div class="pts">+${e.points||0} נק'</div>
       </div>
     </div>`;
   }).join('');
@@ -247,7 +797,6 @@ function renderHistory() {
 
 function renderActive() {
   const regs = DATA.registrations || [];
-  // פעילות = לא completed/refunded/cancelled
   const active = regs.filter(r => !['refunded','cancelled'].includes(r.status) && !r.result);
   const wrap = document.getElementById('viewActive');
   if (!active.length) {
@@ -262,15 +811,15 @@ function renderActive() {
       approved: '<span class="status-pill ok">מאושר</span>',
       waitlist: '<span class="status-pill wait">רשימת המתנה</span>',
       submitted: '<span class="status-pill wait">נקלטה</span>'
-    })[r.status] || `<span class="status-pill wait">${r.status}</span>`;
+    })[r.status] || `<span class="status-pill wait">${esc(r.status||'—')}</span>`;
     return `<div class="match-card">
       <div class="info">
         <h3>${esc(r.tournamentTitle)}</h3>
         <div class="sub">
-          ${esc(r.clubName)} · ${esc(r.clubCity)}
+          ${esc(r.clubName||'')} ${r.clubCity ? '· ' + esc(r.clubCity) : ''}
           ${r.tournamentDate ? ' · ' + esc(r.tournamentDate) : ''}
           ${r.partnerName ? ' · שותף: ' + esc(r.partnerName) : ''}
-          · <a href="/tournaments/${encodeURIComponent(r.tournamentSlug)}" target="_blank">דף הטורניר ↗</a>
+          ${r.tournamentSlug ? ' · <a href="/tournaments/' + encodeURIComponent(r.tournamentSlug) + '" target="_blank">דף הטורניר ↗</a>' : ''}
         </div>
       </div>
       <div>${pill}</div>
@@ -282,17 +831,17 @@ async function loadLeaderboard() {
   const wrap = document.getElementById('viewLeaderboard');
   wrap.innerHTML = '<div class="empty">טוען...</div>';
   try {
-    const r = await fetch('/api/leaderboard');
-    const j = await r.json();
-    if (!j.players.length) { wrap.innerHTML = '<div class="empty">עדיין אין שחקנים מדורגים.</div>'; return; }
-    wrap.innerHTML = '<table class="reg-table" style="width:100%;border-collapse:collapse;background:rgba(10,61,42,0.4);border-radius:14px;overflow:hidden">' +
-      '<thead><tr><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">דירוג</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">שחקן</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">עיר</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">נקודות</th><th style="padding:14px;text-align:right;color:#b5c8bf;font-size:12px">ניצחונות</th></tr></thead>' +
-      '<tbody>' + j.players.map((p, i) => `<tr style="border-top:1px solid rgba(212,255,58,.1)">
-        <td style="padding:12px;color:${i<3?'#ffd968':'#fff'};font-weight:900;font-size:${i<3?'18px':'14px'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</td>
-        <td style="padding:12px;color:#fff;font-weight:700">${esc(p.name)} ${i === 0 ? '(הוא שלי?) ' : ''}</td>
-        <td style="padding:12px;color:#b5c8bf">${esc(p.city)}</td>
-        <td style="padding:12px;color:#d4ff3a;font-weight:900">${p.points}</td>
-        <td style="padding:12px;color:#fff">${p.wins}</td>
+    const players = LEADERBOARD || (await (await fetch('/api/leaderboard')).json()).players;
+    if (!players || !players.length) { wrap.innerHTML = '<div class="empty">עדיין אין שחקנים מדורגים.</div>'; return; }
+    const myId = DATA && DATA.player ? DATA.player.id : null;
+    wrap.innerHTML = '<table class="lb-table"><thead><tr>' +
+      '<th>דירוג</th><th>שחקן</th><th>עיר</th><th>נקודות</th><th>ניצחונות</th></tr></thead><tbody>' +
+      players.map((p, i) => `<tr class="${p.id===myId?'me-row':''}">
+        <td style="color:${i<3?'#ffd968':'#fff'};font-weight:900;font-size:${i<3?'18px':'14px'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</td>
+        <td style="color:#fff;font-weight:700">${esc(p.name)}${p.id===myId?' <span style="color:var(--lime);font-size:11px">(זה/י אני)</span>':''}</td>
+        <td style="color:#b5c8bf">${esc(p.city||'—')}</td>
+        <td style="color:#d4ff3a;font-weight:900">${p.points||0}</td>
+        <td style="color:#fff">${p.wins||0}</td>
       </tr>`).join('') + '</tbody></table>';
   } catch { wrap.innerHTML = '<div class="empty">שגיאת רשת.</div>'; }
 }
@@ -301,7 +850,7 @@ function placeLabel(p) {
   if (p === 1) return '🥇 1';
   if (p === 2) return '🥈 2';
   if (p === 3) return '🥉 3';
-  return '#' + p;
+  return '#' + (p||'—');
 }
 function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

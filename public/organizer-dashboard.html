@@ -11,40 +11,153 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  .od-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 80px; }
-  .od-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
-  .od-head h1 { font-size: 26px; margin: 0; color: #fff; }
-  .od-head .muted { color: #b5c9bf; font-size: 14px; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(212,255,58,.15); padding-bottom: 0; }
-  .tab { padding: 10px 18px; background: transparent; border: 0; color: #b5c9bf; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+  :root { --lime:#d4ff3a; --teal:#7fe3a8; --teal2:#62e2b5; --ink:#062318; --muted:#b5c8bf; }
+  .od-wrap { max-width: 1240px; margin: 0 auto; padding: 24px 18px 80px; }
+
+  /* ====== Hero ====== */
+  .od-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    padding: 34px 32px;
+    background: linear-gradient(135deg,#0a3d2a,#062a1c);
+    border: 1px solid rgba(212,255,58,.18);
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04);
+    margin-bottom: 24px;
+  }
+  .od-hero::before {
+    content: ""; position: absolute; inset: -60px; pointer-events: none;
+    background:
+      radial-gradient(600px 300px at 90% -10%, rgba(212,255,58,.12), transparent 60%),
+      radial-gradient(500px 260px at 10% 110%, rgba(127,227,168,.10), transparent 60%);
+  }
+  .od-hero-grid { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .od-hero h1 { margin: 0 0 6px; font-size: 30px; color: #fff; letter-spacing: -.3px; font-weight: 800; }
+  .od-hero .sub { color: var(--muted); font-size: 14.5px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .od-hero .sub b { color: var(--teal); font-weight: 700; }
+  .od-hero .cta {
+    background: linear-gradient(135deg,#d4ff3a,#b6e620); color: #062a1c;
+    border: 0; border-radius: 14px; padding: 14px 22px; font-weight: 800; font-family: inherit; font-size: 15px;
+    cursor: pointer; box-shadow: 0 10px 30px -10px rgba(212,255,58,.6);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .od-hero .cta:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -12px rgba(212,255,58,.8); }
+  .od-hero-art { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); opacity: .18; pointer-events: none; }
+
+  /* ====== KPIs ====== */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .kpi {
+    position: relative; overflow: hidden;
+    background: linear-gradient(150deg, rgba(10,61,42,.65), rgba(6,42,28,.85));
+    border: 1px solid rgba(212,255,58,.14);
+    border-radius: 16px; padding: 18px;
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+  .kpi:hover { transform: translateY(-3px); border-color: rgba(212,255,58,.35); box-shadow: 0 18px 40px -24px rgba(0,0,0,.8); }
+  .kpi::after {
+    content:""; position:absolute; inset:0; background: linear-gradient(120deg, transparent 30%, rgba(212,255,58,.08) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform .8s ease;
+  }
+  .kpi:hover::after { transform: translateX(100%); }
+  .kpi-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .kpi-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 18px;
+    background: rgba(212,255,58,.12); color: var(--lime); border: 1px solid rgba(212,255,58,.2); }
+  .kpi-trend { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(127,227,168,.15); color: var(--teal); }
+  .kpi-trend.dn { background: rgba(255,107,107,.15); color:#ff8a8a; }
+  .kpi .n { font-size: 32px; font-weight: 900; color: #fff; line-height: 1; }
+  .kpi .lbl { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  /* ====== Charts grid ====== */
+  .charts-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-bottom: 24px; }
+  .card {
+    background: linear-gradient(150deg, rgba(10,61,42,.6), rgba(6,42,28,.8));
+    border: 1px solid rgba(212,255,58,.14);
+    border-radius: 18px; padding: 18px; position: relative; overflow: hidden;
+  }
+  .card h3 { margin: 0 0 14px; font-size: 15px; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card h3 .dot-lime { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+  .card .chart-box { position: relative; height: 260px; }
+  .c-6 { grid-column: span 6; }
+  .c-4 { grid-column: span 4; }
+  .c-8 { grid-column: span 8; }
+  .c-12 { grid-column: span 12; }
+  @media (max-width: 900px) { .c-6,.c-4,.c-8 { grid-column: span 12; } }
+
+  /* ====== Tabs ====== */
+  .tabs { display: flex; gap: 6px; margin: 10px 0 22px; border-bottom: 1px solid rgba(212,255,58,.15); padding-bottom: 0; flex-wrap: wrap; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; transition: color .2s ease; }
   .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
   .tab:hover { color: #fff; }
-  .t-row {
-    background: rgba(10,61,42,0.5);
-    border: 1px solid rgba(212,255,58,0.18);
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 12px;
-    display: flex; justify-content: space-between; align-items: center; gap: 16px;
-    flex-wrap: wrap;
+
+  /* ====== Tournament cards ====== */
+  .t-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .t-card {
+    background: linear-gradient(150deg, rgba(10,61,42,.6), rgba(6,42,28,.8));
+    border: 1px solid rgba(212,255,58,.14);
+    border-radius: 16px; padding: 18px;
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+    position: relative; overflow: hidden;
   }
-  .t-row h3 { margin: 0 0 4px; font-size: 18px; color: #fff; }
-  .t-row .sub { color: #b5c8bf; font-size: 13px; }
-  .t-row a { color: var(--lime); text-decoration: underline; font-size: 13px; }
+  .t-card:hover { transform: translateY(-4px); border-color: var(--lime); box-shadow: 0 20px 50px -24px rgba(0,0,0,.85); }
+  .t-card::after {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: linear-gradient(120deg, transparent 30%, rgba(212,255,58,.06) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform .9s ease;
+  }
+  .t-card:hover::after { transform: translateX(100%); }
+  .t-card h3 { margin: 0 0 6px; font-size: 17px; color: #fff; font-weight: 700; }
+  .t-card .meta { color: var(--muted); font-size: 12.5px; display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px; }
+  .pbar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; margin: 10px 0 6px; }
+  .pbar > span { display: block; height: 100%; width: 0; border-radius: inherit;
+    background: linear-gradient(90deg, var(--teal2), var(--lime));
+    transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+  .t-card .foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .t-card .btn-manage {
+    background: rgba(212,255,58,.12); color: var(--lime); border: 1px solid rgba(212,255,58,.3);
+    border-radius: 10px; padding: 7px 14px; font-weight: 700; font-family: inherit; font-size: 13px;
+    cursor: pointer; text-decoration: none; transition: background .2s ease;
+  }
+  .t-card .btn-manage:hover { background: rgba(212,255,58,.22); }
+
   .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-  .pill.pub { background: rgba(43,182,115,.25); color: #7fe3a8; }
+  .pill.pub { background: rgba(43,182,115,.25); color: var(--teal); }
   .pill.pnd { background: rgba(255,200,50,.2); color: #ffd968; }
-  .pill.drf { background: rgba(255,255,255,.1); color: #b5c8bf; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 22px; }
-  .stat { background: #12201a; border:1px solid #223128; border-radius: 14px; padding: 18px; }
-  .stat .n { font-size: 30px; font-weight: 900; color: var(--lime); line-height: 1; }
-  .stat .lbl { color: #b5c9bf; font-size: 13px; margin-top: 6px; }
-  .form-sect { background: rgba(10,61,42,0.55); border: 1px solid rgba(212,255,58,0.18); border-radius: 16px; padding: 24px; }
+  .pill.drf { background: rgba(255,255,255,.1); color: var(--muted); }
+  .pill.cmp { background: rgba(127,227,168,.2); color: var(--teal2); }
+
+  /* ====== Timeline ====== */
+  .timeline-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .timeline { display: flex; gap: 14px; min-width: min-content; position: relative; padding: 12px 4px 20px; }
+  .timeline::before {
+    content:""; position:absolute; left: 10px; right: 10px; top: 40px;
+    height: 2px; background: linear-gradient(90deg, transparent, rgba(212,255,58,.35), transparent);
+  }
+  .tl-item { min-width: 200px; position: relative; padding-top: 50px; }
+  .tl-item::before {
+    content:""; position:absolute; right: 50%; top: 32px; transform: translateX(50%);
+    width: 16px; height: 16px; border-radius: 50%; background: var(--lime);
+    box-shadow: 0 0 0 4px rgba(212,255,58,.18), 0 0 16px rgba(212,255,58,.6);
+  }
+  .tl-card { background: rgba(10,61,42,.5); border: 1px solid rgba(212,255,58,.18); border-radius: 12px; padding: 12px; text-align: center; }
+  .tl-card .dt { color: var(--lime); font-weight: 800; font-size: 12.5px; }
+  .tl-card .tt { color: #fff; font-weight: 600; font-size: 13.5px; margin-top: 4px; }
+  .tl-card .cl { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+
+  /* ====== Form section ====== */
+  .form-sect { background: rgba(10,61,42,0.55); border: 1px solid rgba(212,255,58,0.18); border-radius: 18px; padding: 24px; }
   .ok-box { background: rgba(212,255,58,0.12); border: 1px solid rgba(212,255,58,0.35); color: var(--lime); padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 14px; }
   .reg-table { width: 100%; border-collapse: collapse; background: #12201a; border-radius: 12px; overflow: hidden; }
   .reg-table th, .reg-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 13px; color: #d8e5dd; }
-  .reg-table th { background: #1a2a23; font-size: 11.5px; color: #b5c8bf; }
+  .reg-table th { background: #1a2a23; font-size: 11.5px; color: var(--muted); }
+
+  /* ====== Entrance animation ====== */
+  .fade-up { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+  .fade-up.in { opacity: 1; transform: translateY(0); }
+
+  .sect-title { color: #fff; font-size: 18px; font-weight: 700; margin: 8px 0 12px; display: flex; align-items: center; gap: 10px; }
+  .sect-title .bar { width: 4px; height: 18px; background: var(--lime); border-radius: 3px; box-shadow: 0 0 10px var(--lime); }
 </style>
 <link rel="stylesheet" href="/polish.css" />
 </head>
@@ -64,17 +177,69 @@
 </header>
 
 <main id="main" class="od-wrap">
-  <div class="od-head">
-    <div>
-      <h1>שלום, {{ORG_NAME}} 🎾</h1>
-      <div class="muted">דאשבורד מארגן · {{ORG_ID}}</div>
+
+  <!-- Hero -->
+  <section class="od-hero fade-up">
+    <svg class="od-hero-art" width="180" height="180" viewBox="0 0 180 180" aria-hidden="true">
+      <defs>
+        <linearGradient id="cup" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#d4ff3a"/><stop offset="1" stop-color="#7fe3a8"/>
+        </linearGradient>
+      </defs>
+      <path d="M60 30h60v30c0 22-13 40-30 40S60 82 60 60V30z" fill="none" stroke="url(#cup)" stroke-width="3"/>
+      <path d="M60 45H40c0 15 8 25 20 25" fill="none" stroke="url(#cup)" stroke-width="3"/>
+      <path d="M120 45h20c0 15-8 25-20 25" fill="none" stroke="url(#cup)" stroke-width="3"/>
+      <rect x="80" y="100" width="20" height="20" fill="none" stroke="url(#cup)" stroke-width="3"/>
+      <rect x="65" y="120" width="50" height="8" rx="2" fill="none" stroke="url(#cup)" stroke-width="3"/>
+      <circle cx="150" cy="140" r="14" fill="none" stroke="url(#cup)" stroke-width="2.5"/>
+      <path d="M140 132q10 8 20 0M140 148q10-8 20 0" fill="none" stroke="url(#cup)" stroke-width="2"/>
+    </svg>
+    <div class="od-hero-grid">
+      <div>
+        <h1>שלום, <span id="heroName">{{ORG_NAME}}</span> 🎾</h1>
+        <div class="sub">
+          <span>מזהה מארגן: <b id="heroId">{{ORG_ID}}</b></span>
+          <span>·</span>
+          <span><b id="heroCount">0</b> טורנירים במערכת</span>
+          <span>·</span>
+          <span id="heroBiz" style="color:var(--muted)"></span>
+        </div>
+      </div>
+      <button class="cta glow-pulse" id="newTBtn">+ טורניר חדש</button>
     </div>
-    <button class="btn btn-primary" id="newTBtn">+ טורניר חדש</button>
-  </div>
+  </section>
 
-  <div class="stats" id="stats"></div>
+  <!-- KPIs -->
+  <section class="kpis" id="kpis"></section>
 
-  <div class="tabs">
+  <!-- Charts -->
+  <section class="charts-grid">
+    <div class="card c-8 fade-up">
+      <h3><span class="dot-lime"></span>אכלוס לפי טורניר</h3>
+      <div class="chart-box"><canvas id="chartStack"></canvas></div>
+    </div>
+    <div class="card c-4 fade-up">
+      <h3><span class="dot-lime"></span>סטטוס טורנירים</h3>
+      <div class="chart-box"><canvas id="chartPie"></canvas></div>
+    </div>
+    <div class="card c-8 fade-up">
+      <h3><span class="dot-lime"></span>טורנירים לאורך זמן</h3>
+      <div class="chart-box"><canvas id="chartLine"></canvas></div>
+    </div>
+    <div class="card c-4 fade-up">
+      <h3><span class="dot-lime"></span>מגרשים מארחים מובילים</h3>
+      <div class="chart-box"><canvas id="chartClubs"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section class="fade-up" id="timelineSect" hidden>
+    <div class="sect-title"><span class="bar"></span>ציר זמן · הטורנירים הקרובים</div>
+    <div class="timeline-scroll"><div class="timeline" id="timeline"></div></div>
+  </section>
+
+  <!-- Tabs -->
+  <div class="tabs fade-up">
     <button class="tab active" data-tab="list">הטורנירים שלי</button>
     <button class="tab" data-tab="crm">🗂️ אנשי קשר (CRM)</button>
     <button class="tab" data-tab="log">📬 יומן פעילות</button>
@@ -129,7 +294,9 @@
 <script>
 const TOKEN = "{{TOKEN}}";
 let DATA = { tournaments: [], clubs: [], organizer: {} };
+const CHARTS = {};
 
+// באנר הדגמה (נשמר)
 if (TOKEN === 'demo') {
   const b = document.createElement('div');
   b.style.cssText = 'position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#d4ff3a,#7fe3a8);color:#062a1c;padding:10px 16px;text-align:center;font-weight:800;font-size:14px';
@@ -139,6 +306,7 @@ if (TOKEN === 'demo') {
 
 function el(id) { return document.getElementById(id); }
 
+// ====== Tabs ======
 el('newTBtn').addEventListener('click', () => switchTab('new'));
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 
@@ -151,7 +319,7 @@ function switchTab(name) {
   if (name === 'crm' || name === 'log') loadCrm();
 }
 
-// ============ CRM ============
+// ====== CRM (נשמר) ======
 let CRM = null;
 function statusHe(s) { return ({submitted:'נקלטה',awaiting_payment:'ממתין לתשלום',payment_under_review:'תשלום בבדיקה',paid_confirmed:'תשלום אושר',approved:'מאושר',waitlist:'רשימת המתנה',cancelled:'בוטל',refund_pending:'החזר בתהליך',refunded:'הוחזר'}[s]||s); }
 const typeHe = t => ({email_sent:'📧 מייל',wa_sent:'💬 WA',status_change:'🔄 סטטוס',note:'📝 הערה',manual_wa:'💬 WA ידני',manual_email:'📧 מייל ידני',call:'📞 שיחה'}[t]||t);
@@ -173,11 +341,11 @@ function renderCrm() {
   if (!CRM || !CRM.contacts.length) { wrap.innerHTML = '<div class="empty" style="text-align:center;color:#b5c9bf;padding:60px">עוד אין אנשי קשר.</div>'; return; }
   const s = CRM.stats;
   wrap.innerHTML = `
-    <div class="stats" style="margin-bottom:16px">
-      <div class="stat"><div class="n">${s.totalContacts}</div><div class="lbl">אנשי קשר</div></div>
-      <div class="stat"><div class="n">${s.repeatPlayers}</div><div class="lbl">חוזרים</div></div>
-      <div class="stat"><div class="n">₪${s.totalRevenue}</div><div class="lbl">הכנסה מצטברת</div></div>
-      <div class="stat"><div class="n">${s.activityCount}</div><div class="lbl">אירועי תקשורת</div></div>
+    <div class="kpis" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-head"><div class="kpi-icon">👥</div></div><div class="n">${s.totalContacts}</div><div class="lbl">אנשי קשר</div></div>
+      <div class="kpi"><div class="kpi-head"><div class="kpi-icon">🔁</div></div><div class="n">${s.repeatPlayers}</div><div class="lbl">חוזרים</div></div>
+      <div class="kpi"><div class="kpi-head"><div class="kpi-icon">💰</div></div><div class="n">₪${s.totalRevenue}</div><div class="lbl">הכנסה מצטברת</div></div>
+      <div class="kpi"><div class="kpi-head"><div class="kpi-icon">📨</div></div><div class="n">${s.activityCount}</div><div class="lbl">אירועי תקשורת</div></div>
     </div>
     <table class="reg-table">
       <thead><tr><th>שחקן/ית</th><th>קשר</th><th>טורנירים</th><th>שילם</th><th>לאחרונה</th><th>פעולות</th></tr></thead>
@@ -216,28 +384,91 @@ function renderLog() {
     </tr>`).join('')}</tbody></table>`;
 }
 
+// ====== Loader ראשי ======
 async function load() {
   const r = await fetch('/api/organizer/' + TOKEN + '/me');
   const j = await r.json();
   if (!r.ok || !j.ok) { document.body.innerHTML = '<p style="color:#fff;padding:40px;text-align:center">אין הרשאה.</p>'; return; }
   DATA = j;
-  renderStats();
+  renderHero();
+  renderKpis();
   renderList();
   renderClubs();
+  renderTimeline();
+  renderAllCharts();
+  initObserver();
 }
-function renderStats() {
-  const total = DATA.tournaments.length;
-  const published = DATA.tournaments.filter(t => t.visibility === 'public').length;
-  const pending = DATA.tournaments.filter(t => t.status === 'pending_review').length;
-  const regs = DATA.tournaments.reduce((s,t) => s + (t.capacity?.total || 0), 0);
-  const approved = DATA.tournaments.reduce((s,t) => s + (t.capacity?.approved || 0), 0);
-  el('stats').innerHTML = [
-    `<div class="stat"><div class="n">${total}</div><div class="lbl">סה"כ טורנירים</div></div>`,
-    `<div class="stat"><div class="n">${published}</div><div class="lbl">פעילים ציבורית</div></div>`,
-    `<div class="stat"><div class="n">${pending}</div><div class="lbl">ממתין לאישור</div></div>`,
-    `<div class="stat"><div class="n">${regs}</div><div class="lbl">הרשמות</div></div>`,
-    `<div class="stat"><div class="n">${approved}</div><div class="lbl">מאושרים</div></div>`
-  ].join('');
+
+// ====== Hero ======
+function renderHero() {
+  if (DATA.organizer?.name) el('heroName').textContent = DATA.organizer.name;
+  if (DATA.organizer?.id) el('heroId').textContent = DATA.organizer.id;
+  el('heroCount').textContent = DATA.tournaments.length;
+  const biz = DATA.organizer?.business;
+  if (biz) {
+    const parts = [];
+    if (biz.businessName) parts.push(biz.businessName);
+    if (biz.businessId) parts.push('ח.פ ' + biz.businessId);
+    el('heroBiz').textContent = parts.join(' · ');
+  }
+}
+
+// ====== KPIs עם אנימציית counter ======
+function renderKpis() {
+  const T = DATA.tournaments;
+  const active = T.filter(t => t.visibility === 'public').length;
+  const totalReg = T.reduce((s,t) => s + (t.capacity?.total || 0), 0);
+  const approved = T.reduce((s,t) => s + (t.capacity?.approved || 0), 0);
+  const pending = T.reduce((s,t) => s + Math.max(0, (t.capacity?.total || 0) - (t.capacity?.approved || 0)), 0);
+  let avgFill = 0;
+  const filled = T.map(t => {
+    const max = t.capacity?.max || 0; if (!max) return 0;
+    return Math.min(100, Math.round(((t.capacity?.reserved || 0) / max) * 100));
+  });
+  if (filled.length) avgFill = Math.round(filled.reduce((a,b)=>a+b,0) / filled.length);
+
+  const tiles = [
+    { icon:'🏆', lbl:'טורנירים פעילים', val: active, trend:'+', prefix:'' },
+    { icon:'📝', lbl:'רשומים סה"כ', val: totalReg, trend:'+', prefix:'' },
+    { icon:'✅', lbl:'מאושרים', val: approved, trend:'+', prefix:'' },
+    { icon:'⏳', lbl:'ממתינים', val: pending, trend: pending>0?'+':'', prefix:'' },
+    { icon:'📊', lbl:'% אכלוס ממוצע', val: avgFill, trend:'+', prefix:'', suffix:'%' },
+  ];
+  el('kpis').innerHTML = tiles.map((t,i) => `
+    <div class="kpi fade-up" style="transition-delay:${i*60}ms">
+      <div class="kpi-head">
+        <div class="kpi-icon">${t.icon}</div>
+        ${t.trend ? `<span class="kpi-trend">${t.trend}</span>` : ''}
+      </div>
+      <div class="n" data-count="${t.val}" data-suffix="${t.suffix||''}">0${t.suffix||''}</div>
+      <div class="lbl">${t.lbl}</div>
+    </div>`).join('');
+  // counter animation
+  setTimeout(() => {
+    document.querySelectorAll('.kpi .n[data-count]').forEach(node => animateCount(node, +node.dataset.count, node.dataset.suffix||''));
+  }, 250);
+}
+function animateCount(node, target, suffix) {
+  const dur = 900, start = performance.now(), from = 0;
+  function tick(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    node.textContent = Math.round(from + (target - from) * eased) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ====== רשימת טורנירים ======
+function statusPill(t) {
+  if (t.status === 'completed') return '<span class="pill cmp">הושלם</span>';
+  if (t.visibility === 'public') return '<span class="pill pub">פעיל</span>';
+  if (t.status === 'pending_review') return '<span class="pill pnd">ממתין לאישור</span>';
+  return '<span class="pill drf">טיוטה</span>';
+}
+function clubName(id) {
+  const c = (DATA.clubs||[]).find(x => x.id === id);
+  return c ? c.name : '—';
 }
 function renderList() {
   const wrap = el('viewList');
@@ -245,32 +476,278 @@ function renderList() {
     wrap.innerHTML = '<div class="empty" style="text-align:center;color:#b5c9bf;padding:60px">אין טורנירים עדיין. <a style="color:#d4ff3a;cursor:pointer" onclick="switchTab(\'new\')">צור טורניר ראשון</a>.</div>';
     return;
   }
-  wrap.innerHTML = DATA.tournaments.map(t => {
-    const pill = t.visibility === 'public' ? '<span class="pill pub">פעיל</span>'
-      : t.status === 'pending_review' ? '<span class="pill pnd">ממתין לאישור</span>'
-      : '<span class="pill drf">טיוטה</span>';
-    const pubLink = t.visibility === 'public'
-      ? `<a href="/tournaments/${t.slug}" target="_blank">דף ציבורי ↗</a>` : '';
-    return `<div class="t-row">
-      <div>
-        <h3>${escapeHtml(t.title)} ${pill}</h3>
-        <div class="sub">${t.capacity.reserved}/${t.capacity.max} זוגות · ${t.capacity.approved} מאושרים · ${t.capacity.total} הרשמות · ${pubLink}</div>
-      </div>
-    </div>`;
-  }).join('');
+  wrap.innerHTML = '<div class="sect-title"><span class="bar"></span>הטורנירים שלי</div><div class="t-grid">' +
+    DATA.tournaments.map(t => {
+      const max = t.capacity?.max || 0;
+      const res = t.capacity?.reserved || 0;
+      const pct = max ? Math.min(100, Math.round((res/max)*100)) : 0;
+      const pubLink = t.visibility === 'public'
+        ? `<a href="/tournaments/${t.slug}" target="_blank" class="btn-manage">דף ציבורי ↗</a>` : '';
+      return `<div class="t-card fade-up">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <h3>${escapeHtml(t.title)}</h3>
+          ${statusPill(t)}
+        </div>
+        <div class="meta">
+          <span>📅 ${escapeHtml(t.date || 'תאריך יפורסם')}</span>
+          <span>📍 ${escapeHtml(clubName(t.clubId))}</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted)">אכלוס: <b style="color:#fff">${res}/${max}</b> זוגות · ${t.capacity?.approved||0} מאושרים</div>
+        <div class="pbar"><span data-fill="${pct}"></span></div>
+        <div class="foot">
+          <span>${t.capacity?.total||0} הרשמות</span>
+          <span style="display:flex;gap:6px">
+            ${pubLink}
+            <a class="btn-manage" href="#" onclick="manageT('${t.id}');return false;">ניהול</a>
+          </span>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  // progress bars fill
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pbar > span[data-fill]').forEach(s => {
+      s.style.width = s.dataset.fill + '%';
+    });
+  });
 }
+function manageT(id) {
+  const t = DATA.tournaments.find(x => x.id === id);
+  if (!t) return;
+  if (t.slug) window.open('/tournaments/' + t.slug, '_blank');
+}
+
+// ====== Timeline ======
+function renderTimeline() {
+  const sect = el('timelineSect');
+  const wrap = el('timeline');
+  const list = DATA.tournaments
+    .map(t => ({ ...t, _ts: parseHebDate(t.date) || new Date(t.createdAt||0).getTime() }))
+    .sort((a,b) => a._ts - b._ts)
+    .slice(0, 5);
+  if (!list.length) { sect.hidden = true; return; }
+  sect.hidden = false;
+  wrap.innerHTML = list.map(t => `
+    <div class="tl-item">
+      <div class="tl-card">
+        <div class="dt">${escapeHtml(t.date || new Date(t.createdAt||Date.now()).toLocaleDateString('he-IL'))}</div>
+        <div class="tt">${escapeHtml(t.title)}</div>
+        <div class="cl">${escapeHtml(clubName(t.clubId))}</div>
+      </div>
+    </div>`).join('');
+}
+function parseHebDate(s) {
+  if (!s) return null;
+  const months = {'ינואר':0,'פברואר':1,'מרץ':2,'מרס':2,'אפריל':3,'מאי':4,'יוני':5,'יולי':6,'אוגוסט':7,'ספטמבר':8,'אוקטובר':9,'נובמבר':10,'דצמבר':11};
+  const m = String(s).match(/(\d{1,2}).{0,3}(ינואר|פברואר|מרץ|מרס|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר).{0,3}(\d{4})?/);
+  if (!m) return null;
+  const y = m[3] ? +m[3] : new Date().getFullYear();
+  return new Date(y, months[m[2]], +m[1]).getTime();
+}
+
+// ====== Clubs select (נשמר) ======
 function renderClubs() {
   const sel = el('clubSel');
   sel.innerHTML = '<option value="">-- בחר/י מגרש --</option>' +
     DATA.clubs.map(c => `<option value="${c.id}">${escapeHtml(c.name)} · ${escapeHtml(c.city)}</option>`).join('');
   if (!DATA.clubs.length) sel.innerHTML = '<option value="">אין מגרשים פעילים במערכת — פנה/י לאדמין</option>';
-  // מילוי אוטומטי של נמען bit אם יש
   const bitRecName = document.querySelector('[name=bitRecipientName]');
   if (DATA.organizer.name && !bitRecName.value) bitRecName.value = DATA.organizer.name;
   const bitRecPhone = document.querySelector('[name=bitRecipientPhone]');
   if (DATA.organizer.business?.bitPhone && !bitRecPhone.value) bitRecPhone.value = DATA.organizer.business.bitPhone;
 }
 
+// ====== Charts ======
+const CHART_COLORS = {
+  lime:'#d4ff3a', teal:'#7fe3a8', teal2:'#62e2b5', gold:'#ffd968', red:'#ff6b6b', gray:'rgba(255,255,255,.22)'
+};
+Chart.defaults.color = '#b5c8bf';
+Chart.defaults.font.family = 'Rubik, sans-serif';
+Chart.defaults.font.size = 11.5;
+Chart.defaults.borderColor = 'rgba(255,255,255,.05)';
+
+function destroyChart(key) { if (CHARTS[key]) { CHARTS[key].destroy(); delete CHARTS[key]; } }
+
+function renderAllCharts() {
+  drawStackChart();
+  drawPieChart();
+  drawLineChart();
+  drawClubsChart();
+}
+
+function emptyMsg(canvas, msg) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#b5c8bf'; ctx.font = '13px Rubik'; ctx.textAlign = 'center';
+  ctx.fillText(msg || 'אין נתונים', canvas.width/2, canvas.height/2);
+}
+
+function drawStackChart() {
+  destroyChart('stack');
+  const T = DATA.tournaments;
+  const ctx = el('chartStack');
+  if (!T.length) { emptyMsg(ctx, 'אין טורנירים להצגה'); return; }
+  const labels = T.map(t => t.title.length > 20 ? t.title.slice(0,18)+'…' : t.title);
+  const reserved = T.map(t => t.capacity?.reserved || 0);
+  const approved = T.map(t => t.capacity?.approved || 0);
+  const pending = T.map(t => Math.max(0, (t.capacity?.total||0) - (t.capacity?.approved||0)));
+  CHARTS.stack = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'ממתינים', data: pending, backgroundColor: CHART_COLORS.gray, borderRadius: 6, stack:'s' },
+        { label:'מאושרים', data: approved, backgroundColor: CHART_COLORS.teal, borderRadius: 6, stack:'s' },
+        { label:'שמורים', data: reserved, backgroundColor: CHART_COLORS.lime, borderRadius: 6, stack:'s' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels:{ boxWidth:12, padding:14 } } },
+      scales: {
+        x: { stacked: true, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#b5c8bf' } },
+        y: { stacked: true, beginAtZero:true, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#b5c8bf' } }
+      },
+      animation: { duration: 900, easing: 'easeOutCubic' }
+    }
+  });
+}
+
+function drawPieChart() {
+  destroyChart('pie');
+  const T = DATA.tournaments;
+  const ctx = el('chartPie');
+  if (!T.length) { emptyMsg(ctx, 'אין טורנירים להצגה'); return; }
+  const counts = { published:0, pending_review:0, completed:0, draft:0 };
+  T.forEach(t => {
+    if (t.status === 'completed') counts.completed++;
+    else if (t.status === 'pending_review') counts.pending_review++;
+    else if (t.visibility === 'public') counts.published++;
+    else counts.draft++;
+  });
+  CHARTS.pie = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['פורסם','ממתין לאישור','הושלם','טיוטה'],
+      datasets: [{
+        data: [counts.published, counts.pending_review, counts.completed, counts.draft],
+        backgroundColor: [CHART_COLORS.lime, CHART_COLORS.gold, CHART_COLORS.teal2, CHART_COLORS.gray],
+        borderColor: '#062a1c', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: { legend: { position: 'bottom', labels:{ boxWidth:12, padding:10 } } },
+      animation: { animateRotate: true, duration: 1100 }
+    }
+  });
+}
+
+function drawLineChart() {
+  destroyChart('line');
+  const T = DATA.tournaments;
+  const ctx = el('chartLine');
+  if (!T.length) { emptyMsg(ctx, 'אין טורנירים להצגה'); return; }
+  const now = new Date();
+  const buckets = []; // 6 חודשים אחרונים
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({ ts: d.getTime(), label: d.toLocaleDateString('he-IL', { month:'short', year:'2-digit' }), count: 0 });
+  }
+  T.forEach(t => {
+    const c = new Date(t.createdAt || 0);
+    if (isNaN(c)) return;
+    const key = new Date(c.getFullYear(), c.getMonth(), 1).getTime();
+    const b = buckets.find(x => x.ts === key);
+    if (b) b.count++;
+  });
+  CHARTS.line = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: buckets.map(b => b.label),
+      datasets: [{
+        label: 'טורנירים שנפתחו',
+        data: buckets.map(b => b.count),
+        borderColor: CHART_COLORS.lime,
+        backgroundColor: (c) => {
+          const { ctx, chartArea } = c.chart;
+          if (!chartArea) return 'rgba(212,255,58,.2)';
+          const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          g.addColorStop(0, 'rgba(212,255,58,.35)');
+          g.addColorStop(1, 'rgba(212,255,58,0)');
+          return g;
+        },
+        pointBackgroundColor: CHART_COLORS.lime,
+        pointBorderColor: '#062a1c',
+        pointRadius: 5, pointHoverRadius: 7,
+        tension: 0.35, fill: true, borderWidth: 2.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,.05)' } },
+        y: { beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:'rgba(255,255,255,.05)' } }
+      },
+      animation: { duration: 1000, easing: 'easeOutCubic' }
+    }
+  });
+}
+
+function drawClubsChart() {
+  destroyChart('clubs');
+  const ctx = el('chartClubs');
+  const counts = {};
+  DATA.tournaments.forEach(t => {
+    if (!t.clubId) return;
+    counts[t.clubId] = (counts[t.clubId] || 0) + 1;
+  });
+  const rows = Object.entries(counts)
+    .map(([id,n]) => ({ name: clubName(id), n }))
+    .sort((a,b) => b.n - a.n)
+    .slice(0, 5);
+  if (!rows.length) { emptyMsg(ctx, 'אין נתוני מגרשים'); return; }
+  CHARTS.clubs = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.name),
+      datasets: [{
+        label: 'טורנירים',
+        data: rows.map(r => r.n),
+        backgroundColor: (c) => {
+          const { ctx, chartArea } = c.chart;
+          if (!chartArea) return CHART_COLORS.teal;
+          const g = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+          g.addColorStop(0, CHART_COLORS.teal);
+          g.addColorStop(1, CHART_COLORS.lime);
+          return g;
+        },
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:'rgba(255,255,255,.05)' } },
+        y: { grid:{ display:false } }
+      },
+      animation: { duration: 900, easing: 'easeOutCubic' }
+    }
+  });
+}
+
+// ====== IntersectionObserver לאנימציות כניסה ======
+function initObserver() {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fade-up').forEach(n => io.observe(n));
+}
+
+// ====== טופס יצירה (נשמר) ======
 el('newTForm').addEventListener('submit', async e => {
   e.preventDefault();
   el('newTErr').hidden = true;

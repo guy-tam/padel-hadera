@@ -3,6 +3,9 @@ uploads/
 data/*
 !data/db.json
 .env
+.env.live
+.env.vercel
+.env.vercel.prod
 .claude/scheduled_tasks.lock
 *.log
 .vercel

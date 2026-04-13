@@ -50,40 +50,72 @@ if (!fs.existsSync(DB_PATH)) {
 }
 
 // --- DB (אטומי + גיבוי) ---
+// תמיכה ב-Supabase: אם SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY מוגדרים —
+// המצב נשמר בטבלת platform_state ב-Postgres (persistence אמיתי ב-serverless).
+// אחרת — fallback לקובץ JSON מקומי (dev).
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 try { if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true }); } catch {}
+
+let SB = null;
+try { SB = require('./lib/db-supabase'); } catch (e) { console.warn('[supabase adapter] not loaded:', e.message); }
+const USE_SUPABASE = !!(SB && SB.enabled);
+if (USE_SUPABASE) {
+  console.log('🗄  Persistence: Supabase Postgres');
+  // seed ראשוני מ-db.json אם השורה ריקה
+  (async () => {
+    try {
+      let seed = null;
+      if (fs.existsSync(SEED_DB_PATH)) seed = JSON.parse(fs.readFileSync(SEED_DB_PATH, 'utf8'));
+      await SB.initIfEmpty(seed);
+    } catch (e) { console.warn('[supabase seed]', e.message); }
+  })();
+} else if (IS_SERVERLESS) {
+  console.error('🚨🚨🚨  אזהרה קריטית: רץ ב-serverless ללא Supabase!');
+  console.error('🚨  כל הנתונים (הרשמות, טורנירים, קבצים) יאבדו בכל הפעלה מחדש של האינסטנס.');
+  console.error('🚨  הגדר SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY ב-Vercel env כדי לאפשר persistence אמיתי.');
+} else {
+  console.log('🗄  Persistence: Local JSON (dev mode). Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for production.');
+}
+
+// --- Health endpoint — שקיפות מלאה על מצב המערכת ---
+function persistenceMode() {
+  if (USE_SUPABASE) return 'supabase';
+  if (IS_SERVERLESS) return 'ephemeral-tmp-DANGER';
+  return 'local-json';
+}
+
 let DB_LOCK = Promise.resolve();
-function loadDB() {
+async function loadDB() {
+  if (USE_SUPABASE) return SB.loadDB();
   try {
     const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
     db.clubs ||= []; db.organizers ||= []; db.tournaments ||= []; db.registrations ||= [];
     db.applications ||= {}; db.applications.organizers ||= [];
     db.applications.clubs ||= []; db.applications.players ||= [];
+    db.activityLog ||= [];
     return db;
   } catch {
-    return { clubs: [], organizers: [], tournaments: [], registrations: [],
+    return { clubs: [], organizers: [], tournaments: [], registrations: [], activityLog: [],
              applications: { organizers: [], clubs: [], players: [] } };
   }
 }
-// כתיבה אטומית: temp file + rename + גיבוי יומי
-function saveDB(db) {
+async function saveDB(db) {
+  if (USE_SUPABASE) return SB.saveDB(db);
   const tmp = DB_PATH + '.tmp.' + process.pid;
   const json = JSON.stringify(db, null, 2);
   fs.writeFileSync(tmp, json, { encoding: 'utf8', flag: 'w' });
   fs.renameSync(tmp, DB_PATH);
-  // גיבוי יומי (שם לפי תאריך)
   const stamp = new Date().toISOString().slice(0,10);
   const bkp = path.join(BACKUP_DIR, `db-${stamp}.json`);
   if (!fs.existsSync(bkp)) {
     try { fs.writeFileSync(bkp, json, 'utf8'); } catch {}
   }
 }
-// עטיפה שסוררת שינויים במקביל
 async function withDB(fn) {
   DB_LOCK = DB_LOCK.then(async () => {
-    const db = loadDB();
+    const db = await loadDB();
     const result = await fn(db);
-    saveDB(db);
+    await saveDB(db);
     return result;
   }).catch(e => { console.error('[db]', e); throw e; });
   return DB_LOCK;
@@ -148,6 +180,84 @@ function buildTransport() {
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
   });
 }
+// כתובת בסיס ציבורית לקישורים בתוך אימיילים
+function getBaseUrl(req) {
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+  if (req) return `${req.protocol}://${req.get('host')}`;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'https://padel.platform';
+}
+// תבנית HTML אחידה ויפה למיילים (RTL, מותג)
+function mailShell(title, bodyHtml) {
+  return `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;padding:0;background:#062318;font-family:'Rubik','Heebo',Arial,sans-serif;color:#e9fbc4">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#062318;padding:30px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0a2b1e;border:1px solid rgba(212,255,58,0.2);border-radius:18px;overflow:hidden">
+        <tr><td style="padding:26px 28px;border-bottom:1px solid rgba(212,255,58,0.14)">
+          <div style="font-size:13px;color:#d4ff3a;letter-spacing:1px;font-weight:700">🎾 PADEL · PLATFORM</div>
+          <h1 style="margin:8px 0 0;font-size:22px;color:#ffffff;line-height:1.3">${title}</h1>
+        </td></tr>
+        <tr><td style="padding:24px 28px;font-size:15px;line-height:1.7;color:#d7e8df">${bodyHtml}</td></tr>
+        <tr><td style="padding:18px 28px;border-top:1px solid rgba(212,255,58,0.1);font-size:12px;color:#8fa69c;text-align:center">
+          הודעה זו נשלחה אוטומטית מהפלטפורמה.<br>אם זו טעות, אפשר פשוט להתעלם.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+  </body></html>`;
+}
+function mailBtn(href, text) {
+  return `<a href="${href}" style="display:inline-block;background:#d4ff3a;color:#062a1c;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:800;font-size:15px;margin:8px 0">${text}</a>`;
+}
+// =================================================================
+//  Activity log — יומן CRM לכל תקשורת/שינוי סטטוס
+//  נקרא ממקום אחד ומתועד גם ברשומת ההרשמה וגם בטבלה גלובלית
+// =================================================================
+function logActivity(db, entry) {
+  if (!db || !entry) return;
+  const row = {
+    id: 'a-' + crypto.randomBytes(3).toString('hex'),
+    at: new Date().toISOString(),
+    type: entry.type,              // email_sent | wa_sent | status_change | note | call | manual_wa | manual_email
+    channel: entry.channel || '',  // email | whatsapp | internal | manual
+    direction: entry.direction || 'out', // out | in (עתידי)
+    summary: entry.summary || '',
+    meta: entry.meta || null,
+    regId: entry.regId || null,
+    tournamentId: entry.tournamentId || null,
+    clubId: entry.clubId || null,
+    organizerId: entry.organizerId || null,
+    contactPhone: normalizePhone(entry.contactPhone || ''),
+    contactEmail: (entry.contactEmail || '').toLowerCase(),
+    by: entry.by || 'system'
+  };
+  if (!Array.isArray(db.activityLog)) db.activityLog = [];
+  db.activityLog.push(row);
+  // השאר קשור לרשומת ההרשמה לתצוגה מהירה
+  if (row.regId) {
+    const r = db.registrations.find(x => x.id === row.regId);
+    if (r) {
+      if (!Array.isArray(r.activity)) r.activity = [];
+      r.activity.push({ id: row.id, at: row.at, type: row.type, channel: row.channel, summary: row.summary, by: row.by });
+    }
+  }
+  return row;
+}
+function normalizePhone(p) {
+  const d = String(p || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('972')) return '0' + d.slice(3);
+  return d;
+}
+// כתיבה ליומן שלא דרך withDB — טוען ושומר עצמאית (לשימוש מחוץ לטרנזקציה)
+async function logActivityStandalone(entry) {
+  try {
+    const db = await loadDB();
+    logActivity(db, entry);
+    await saveDB(db);
+  } catch (e) { console.error('activity log err', e.message); }
+}
+
 async function notifyOrganizerWhatsApp(text) {
   const key = process.env.CALLMEBOT_API_KEY;
   const num = (process.env.ORGANIZER_WA_NUMBER || '').replace(/[^\d]/g, '');
@@ -275,24 +385,24 @@ function serveTemplate(res, filename, vars) {
 }
 
 // --- / · Platform homepage ---
-app.get('/', (_req, res) => {
-  const db = loadDB();
+app.get('/', async (_req, res) => {
+  const db = await loadDB();
   const featured = db.tournaments.filter(t => t.visibility === 'public' && t.featured)
     .map(t => tournamentCardHtml(t, db)).join('');
   serveTemplate(res, 'home.html', { FEATURED_TOURNAMENTS: featured });
 });
 
 // --- /tournaments · discovery ---
-app.get('/tournaments', (_req, res) => {
-  const db = loadDB();
+app.get('/tournaments', async (_req, res) => {
+  const db = await loadDB();
   const cards = db.tournaments.filter(t => t.visibility === 'public')
     .map(t => tournamentCardHtml(t, db)).join('');
   serveTemplate(res, 'tournaments.html', { TOURNAMENT_CARDS: cards || '<p class="empty">אין טורנירים פעילים כרגע.</p>' });
 });
 
 // --- /tournaments/:slug · dynamic tournament page ---
-app.get('/tournaments/:slug', (req, res) => {
-  const db = loadDB();
+app.get('/tournaments/:slug', async (req, res) => {
+  const db = await loadDB();
   const t = db.tournaments.find(x => x.slug === req.params.slug);
   if (!t) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><h1 style=font-family:sans-serif;text-align:center;padding:80px>טורניר לא נמצא</h1>');
   const club = db.clubs.find(c => c.id === t.clubId);
@@ -325,8 +435,8 @@ app.get('/tournaments/:slug', (req, res) => {
 });
 
 // --- /clubs · list ---
-app.get('/clubs', (_req, res) => {
-  const db = loadDB();
+app.get('/clubs', async (_req, res) => {
+  const db = await loadDB();
   const cards = db.clubs.map(c => clubCardHtml(c, db)).join('');
   serveTemplate(res, 'clubs.html', { CLUB_CARDS: cards });
 });
@@ -335,8 +445,8 @@ app.get('/clubs', (_req, res) => {
 app.get('/clubs/join', (_req, res) => serveTemplate(res, 'clubs-join.html', {}));
 
 // --- /clubs/:slug · detail ---
-app.get('/clubs/:slug', (req, res) => {
-  const db = loadDB();
+app.get('/clubs/:slug', async (req, res) => {
+  const db = await loadDB();
   const c = db.clubs.find(x => x.slug === req.params.slug);
   if (!c) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><h1 style=font-family:sans-serif;text-align:center;padding:80px>מועדון לא נמצא</h1>');
   const hosted = db.tournaments.filter(t => t.clubId === c.id && t.visibility === 'public');
@@ -366,8 +476,8 @@ app.get('/dashboard/organizer', (_req, res) => serveTemplate(res, 'dashboard-org
 app.get('/dashboard/club', (_req, res) => serveTemplate(res, 'dashboard-club.html', {}));
 
 // --- sitemap.xml דינמי ---
-app.get('/sitemap.xml', (req, res) => {
-  const db = loadDB();
+app.get('/sitemap.xml', async (req, res) => {
+  const db = await loadDB();
   const base = `${req.protocol}://${req.get('host')}`;
   const urls = [
     '/', '/tournaments', '/clubs', '/organizers/apply', '/clubs/join'
@@ -428,8 +538,21 @@ function clubCardHtml(c, db) {
 // =================================================================
 
 // קיבולת ציבורית
-app.get('/api/tournaments/:slug/capacity', (req, res) => {
-  const db = loadDB();
+app.get('/api/health', (_req, res) => {
+  res.json({
+    ok: true,
+    persistence: persistenceMode(),
+    serverless: IS_SERVERLESS,
+    supabase: USE_SUPABASE,
+    smtp: !!process.env.SMTP_USER,
+    admin_token_set: !!process.env.ADMIN_TOKEN,
+    node: process.version,
+    ts: new Date().toISOString()
+  });
+});
+
+app.get('/api/tournaments/:slug/capacity', async (req, res) => {
+  const db = await loadDB();
   const t = db.tournaments.find(x => x.slug === req.params.slug);
   if (!t) return res.status(404).json({ ok: false, error: 'not found' });
   const reserved = countReserved(db, t.id);
@@ -443,8 +566,8 @@ app.get('/api/tournaments/:slug/capacity', (req, res) => {
 });
 
 // תאימות אחורה לאתר הישן
-app.get('/api/capacity', (req, res) => {
-  const db = loadDB();
+app.get('/api/capacity', async (req, res) => {
+  const db = await loadDB();
   const t = db.tournaments.find(x => x.slug === 'hadera-2026');
   if (!t) return res.json({ maxPairs: 8, reserved: 0, approved: 0, remaining: 8, full: false });
   const reserved = countReserved(db, t.id);
@@ -457,8 +580,8 @@ app.get('/api/capacity', (req, res) => {
 });
 
 // הרשמה — לטורניר ספציפי
-app.post('/api/tournaments/:slug/register', (req, res) => {
-  const db = loadDB();
+app.post('/api/tournaments/:slug/register', async (req, res) => {
+  const db = await loadDB();
   const t = db.tournaments.find(x => x.slug === req.params.slug);
   if (!t) return res.status(404).json({ ok: false, errors: ['טורניר לא נמצא.'] });
 
@@ -496,6 +619,8 @@ app.post('/api/tournaments/:slug/register', (req, res) => {
     const id = 'HDR-' + Date.now().toString(36).toUpperCase()
       + '-' + crypto.randomBytes(2).toString('hex').toUpperCase();
 
+    const verifyToken = crypto.randomBytes(24).toString('hex');
+
     const record = {
       id,
       tournamentId: t.id,
@@ -512,12 +637,17 @@ app.post('/api/tournaments/:slug/register', (req, res) => {
         original: req.file.originalname, stored: req.file.filename, size: req.file.size
       } : null,
       paymentProof: null,
+      emailVerified: false,
+      verifyToken,
+      verifiedAt: null,
+      notifiedStatuses: [],
       history: [{ at: new Date().toISOString(), status: initialStatus, by: 'system' }]
     };
     db.registrations.push(record);
-    saveDB(db);
+    await saveDB(db);
 
-    sendRegistrationEmails(record, t).catch(e => console.error('mail err', e.message));
+    const baseUrl = getBaseUrl(req);
+    sendRegistrationEmails(record, t, baseUrl).catch(e => console.error('mail err', e.message));
     notifyOrganizerWhatsApp(
       `🎾 הרשמה חדשה · ${t.title}\n${record.fullName} (${record.phone}) · רמה ${record.level}\n` +
       (record.partnerName ? `שותף/ה: ${record.partnerName}\n` : '') +
@@ -529,19 +659,19 @@ app.post('/api/tournaments/:slug/register', (req, res) => {
 });
 
 // תאימות אחורה
-app.post('/api/register', (req, res, next) => {
+app.post('/api/register', async (req, res, next) => {
   req.url = '/api/tournaments/hadera-2026/register';
   next('route');
 });
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   // מועבר הלאה — הגדרנו את ה-handler האמיתי למעלה
 });
 
 // העלאת אסמכתת תשלום
-app.post('/api/payment-proof/:id', (req, res) => {
-  upload.single('paymentFile')(req, res, (err) => {
+app.post('/api/payment-proof/:id', async (req, res) => {
+  upload.single('paymentFile')(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, errors: [err.message] });
-    const db = loadDB();
+    const db = await loadDB();
     const r = db.registrations.find(x => x.id === req.params.id);
     if (!r) {
       if (req.file) fs.unlink(req.file.path, () => {});
@@ -562,7 +692,7 @@ app.post('/api/payment-proof/:id', (req, res) => {
       r.status = 'payment_under_review';
       r.history.push({ at: new Date().toISOString(), status: 'payment_under_review', by: 'user' });
     }
-    saveDB(db);
+    await saveDB(db);
     const t = db.tournaments.find(x => x.id === r.tournamentId);
     sendPaymentProofEmail(r, t).catch(e => console.error('mail err', e.message));
     notifyOrganizerWhatsApp(
@@ -573,16 +703,16 @@ app.post('/api/payment-proof/:id', (req, res) => {
 });
 
 // בדיקת סטטוס
-app.get('/api/status/:id', (req, res) => {
-  const db = loadDB();
+app.get('/api/status/:id', async (req, res) => {
+  const db = await loadDB();
   const r = db.registrations.find(x => x.id === req.params.id);
   if (!r) return res.status(404).json({ ok: false, error: 'הרשמה לא נמצאה' });
   res.json({ ok: true, id: r.id, status: r.status, fullName: r.fullName, hasPaymentProof: !!r.paymentProof });
 });
 
 // --- Applications: arganizers / clubs ---
-app.post('/api/applications/organizer', express.json(), (req, res) => {
-  const db = loadDB();
+app.post('/api/applications/organizer', express.json(), async (req, res) => {
+  const db = await loadDB();
   const { name, email, phone, city, experience, note,
           businessType, businessId, businessName, bitPhone, verifyAck } = req.body || {};
   const errs = [];
@@ -610,7 +740,7 @@ app.post('/api/applications/organizer', express.json(), (req, res) => {
     status: 'pending_verification'
   };
   db.applications.organizers.push(entry);
-  saveDB(db);
+  await saveDB(db);
   notifyOrganizerWhatsApp(`🆕 יזם/ית טורניר חדש/ה:\n${entry.name} · ${entry.phone}\nעסק: ${entry.business.type} (${entry.business.id})\n${entry.note || ''}`).catch(()=>{});
   res.json({ ok: true, id: entry.id });
 });
@@ -648,8 +778,8 @@ app.post('/api/applications/player', express.json(), async (req, res) => {
   res.json(result);
 });
 
-app.post('/api/applications/club', express.json(), (req, res) => {
-  const db = loadDB();
+app.post('/api/applications/club', express.json(), async (req, res) => {
+  const db = await loadDB();
   const name = clean(req.body?.name, 120);
   const city = clean(req.body?.city, 80);
   const contactPerson = clean(req.body?.contactPerson, 120);
@@ -670,7 +800,7 @@ app.post('/api/applications/club', express.json(), (req, res) => {
     courts, note, status: 'pending'
   };
   db.applications.clubs.push(entry);
-  saveDB(db);
+  await saveDB(db);
   notifyOrganizerWhatsApp(`🏟 מועדון חדש מעוניין להצטרף:\n${entry.name} · ${entry.city} · ${entry.phone}`).catch(()=>{});
   res.json({ ok: true, id: entry.id });
 });
@@ -685,8 +815,8 @@ function adminAuth(req, res, next) {
   next();
 }
 
-app.get('/api/admin/list', adminAuth, (_req, res) => {
-  const db = loadDB();
+app.get('/api/admin/list', adminAuth, async (_req, res) => {
+  const db = await loadDB();
   // עטיפה שתואמת ל-admin.html הישן (טורניר יחיד) וגם מאפשרת רב-טורנירים
   const mainT = db.tournaments[0];
   const tid = mainT?.id;
@@ -701,7 +831,19 @@ app.get('/api/admin/list', adminAuth, (_req, res) => {
       capacity: { max: t.format.maxPairs, reserved: countReserved(db, t.id), approved: countApproved(db, t.id) },
       registrations: regsForTournament(db, t.id).sort((a,b) => b.createdAt.localeCompare(a.createdAt))
     })),
-    applications: db.applications
+    applications: db.applications,
+    // מועדונים פעילים — לשכפול קישור דשבורד/הפקת טוקן
+    clubs: db.clubs.map(c => ({
+      id: c.id, slug: c.slug, name: c.name, city: c.city, status: c.status,
+      hasToken: !!c.dashboardToken,
+      dashboardUrl: c.dashboardToken ? `/club/${c.dashboardToken}` : null,
+      slotsCount: (c.slots || []).length
+    })),
+    organizers: db.organizers.map(o => ({
+      id: o.id, slug: o.slug, name: o.name, status: o.status,
+      hasToken: !!o.dashboardToken,
+      dashboardUrl: o.dashboardToken ? `/organizer/${o.dashboardToken}` : null
+    }))
   });
 });
 
@@ -709,36 +851,125 @@ app.post('/api/admin/status/:id', adminAuth, express.json(), async (req, res) =>
   const { status, note } = req.body;
   if (!STATUSES.includes(status)) return res.status(400).json({ ok: false, error: 'סטטוס לא חוקי' });
   try {
+    // אחרי שמירה נרצה לשלוח מיילים — נאסוף את הנתונים ל-side-effects
+    let updatedReg = null, updatedTournament = null, promotedWaiter = null;
+    let justConfirmedTournament = false, justAllPaid = false, paidRegs = [];
+
     const result = await withDB(db => {
       const r = db.registrations.find(x => x.id === req.params.id);
       if (!r) throw new Error('לא נמצא');
       const prev = r.status;
       r.status = status;
       r.history.push({ at: new Date().toISOString(), status, by: 'admin', note: note || '' });
+      logActivity(db, {
+        type: 'status_change', channel: 'internal',
+        summary: `סטטוס: ${statusHe(prev)} → ${statusHe(status)}${note ? ' · '+note : ''}`,
+        regId: r.id, tournamentId: r.tournamentId,
+        contactEmail: r.email, contactPhone: r.phone, by: 'admin', meta: { prev, next: status, note }
+      });
+
       if (RESERVING.has(prev) && !RESERVING.has(status)) {
         const waiter = db.registrations.find(x => x.tournamentId === r.tournamentId && x.status === 'waitlist');
         if (waiter) {
           waiter.status = 'awaiting_payment';
           waiter.history.push({ at: new Date().toISOString(), status: 'awaiting_payment', by: 'system', note: 'קודם מרשימת המתנה' });
+          promotedWaiter = waiter;
         }
       }
+
       // בדיקת קונפירמציה — האם הגענו למינימום זוגות בתשלום מאושר
       const t = db.tournaments.find(x => x.id === r.tournamentId);
       if (t) {
-        const paid = db.registrations.filter(x => x.tournamentId === t.id &&
-          (x.status === 'paid_confirmed' || x.status === 'approved')).length;
+        paidRegs = db.registrations.filter(x => x.tournamentId === t.id &&
+          (x.status === 'paid_confirmed' || x.status === 'approved'));
+        const paid = paidRegs.length;
         const needed = t.format?.minPaidPairs || t.format?.maxPairs || 8;
+        const max = t.format?.maxPairs || needed;
         if (!t.confirmed && paid >= needed) {
           t.confirmed = true;
           t.confirmedAt = new Date().toISOString();
+          justConfirmedTournament = true;
           notifyOrganizerWhatsApp(`🎉 האירוע "${t.title}" אושר! הגיעו ל-${paid} זוגות בתשלום.`).catch(()=>{});
         }
+        // כולם שילמו — הגיע ל-max
+        if (!t.allPaidAt && paid >= max) {
+          t.allPaidAt = new Date().toISOString();
+          justAllPaid = true;
+        }
+        updatedTournament = t;
       }
+      updatedReg = r;
       return { ok: true, status: r.status };
     });
+
+    // Side effects — מיילים (אחרי saveDB) ==============================
+    try {
+      if (updatedReg && updatedTournament) {
+        sendStatusUpdateEmail(updatedReg, updatedTournament, null, note)
+          .catch(e => console.error('status mail err', e.message))
+          .then(async () => { try { const db = await loadDB(); await saveDB(db); } catch(_){} });
+      }
+      if (promotedWaiter && updatedTournament) {
+        sendStatusUpdateEmail(promotedWaiter, updatedTournament, 'waitlist', 'קודמת מרשימת המתנה')
+          .catch(e => console.error('promo mail err', e.message));
+      }
+      if (justConfirmedTournament && updatedTournament) {
+        sendTournamentConfirmedEmails(updatedTournament, paidRegs)
+          .catch(e => console.error('confirm mail err', e.message))
+          .then(async () => { try { const db = await loadDB(); await saveDB(db); } catch(_){} });
+      }
+      if (justAllPaid && updatedTournament) {
+        sendAllPaidEmails(updatedTournament, paidRegs)
+          .catch(e => console.error('allpaid mail err', e.message));
+      }
+    } catch (e) { console.error('email side-effects err', e.message); }
+
     res.json(result);
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
+
+// --- אימות מייל של נרשם/ת ---
+app.get('/api/verify/:token', async (req, res) => {
+  const token = String(req.params.token || '');
+  if (!token || token.length < 20) return res.status(400).type('html').send(verifyPage('קישור לא תקין', 'הקישור פגום או ישן. אם ההרשמה קיימת — היא בתוקף.', false));
+  try {
+    const outcome = await withDB(db => {
+      const r = db.registrations.find(x => x.verifyToken === token);
+      if (!r) return { ok: false, msg: 'הקישור לא נמצא או שההרשמה בוטלה.' };
+      if (r.emailVerified) return { ok: true, already: true, r };
+      r.emailVerified = true;
+      r.verifiedAt = new Date().toISOString();
+      r.history.push({ at: r.verifiedAt, status: r.status, by: 'user', note: 'אומת מייל' });
+      const t = db.tournaments.find(x => x.id === r.tournamentId);
+      return { ok: true, r, t };
+    });
+    if (!outcome.ok) return res.status(404).type('html').send(verifyPage('קישור לא נמצא', outcome.msg, false));
+    const title = outcome.already ? 'כבר אומתת ✓' : 'האימות הושלם! ✅';
+    const msg = outcome.already
+      ? 'המייל שלך אומת בעבר. ההרשמה בתוקף.'
+      : 'תודה! זיהינו שזה באמת את/ה. נמשיך לעדכן אותך במייל בכל שינוי: אישור הרשמה, אימות תשלום, ואישור סופי של הטורניר.';
+    res.type('html').send(verifyPage(title, msg, true, outcome.r));
+  } catch (e) {
+    res.status(500).type('html').send(verifyPage('שגיאה', 'משהו לא עבד כצפוי. נסו שוב.', false));
+  }
+});
+
+function verifyPage(title, msg, ok, r) {
+  const color = ok ? '#d4ff3a' : '#ff9aa4';
+  return `<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+  <link rel="stylesheet" href="/platform.css">
+  <link rel="stylesheet" href="/polish.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <body style="background:#062318;color:#e9fbc4;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px">
+    <main style="max-width:520px;width:100%;background:#0a2b1e;border:1px solid rgba(212,255,58,0.25);border-radius:20px;padding:32px 28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.35)">
+      <div style="font-size:52px;line-height:1;margin-bottom:14px">${ok ? '✅' : '⚠️'}</div>
+      <h1 style="color:${color};font-size:26px;margin:0 0 10px">${escapeHtml(title)}</h1>
+      <p style="color:#d7e8df;font-size:16px;line-height:1.6">${escapeHtml(msg)}</p>
+      ${r ? `<p style="color:#b5c9bf;font-size:13px;margin-top:16px">מזהה הרשמה: <b style="color:#d4ff3a">${r.id}</b></p>` : ''}
+      <a href="/" class="btn btn-primary" style="margin-top:22px;display:inline-block">חזרה לדף הבית</a>
+    </main>
+  </body></html>`;
+}
 
 // ---------- אישור בקשות (applications → real entities) ----------
 app.post('/api/admin/applications/:kind/:id/approve', adminAuth, express.json(), async (req, res) => {
@@ -775,6 +1006,7 @@ app.post('/api/admin/applications/:kind/:id/approve', adminAuth, express.json(),
       }
       if (kind === 'club') {
         const cid = 'c-' + crypto.randomBytes(4).toString('hex');
+        const token = crypto.randomBytes(16).toString('hex');
         const baseSlug = slugify(app.name);
         const slug = uniqSlug(baseSlug, db.clubs.map(c => c.slug));
         db.clubs.push({
@@ -788,12 +1020,15 @@ app.post('/api/admin/applications/:kind/:id/approve', adminAuth, express.json(),
           contactEmail: app.email, contactPhone: app.phone,
           courts: app.courts || '',
           status: 'active',
+          dashboardToken: token,
+          slots: [],
           createdAt: new Date().toISOString()
         });
         app.status = 'approved';
         app.approvedAt = new Date().toISOString();
         app.clubId = cid;
-        return { ok: true, clubId: cid, slug };
+        app.dashboardToken = token;
+        return { ok: true, clubId: cid, slug, dashboardUrl: `/club/${token}` };
       }
       // player — מסומן מאושר בלבד (אין "ישות" שחקן אמיתי עדיין)
       app.status = 'approved';
@@ -848,6 +1083,272 @@ app.post('/api/admin/tournaments/:id/cancel-insufficient', adminAuth, async (req
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
 
+// =================================================================
+//  CRM — אגרגציית אנשי קשר, הערות ויומן פעילות, לכל תפקיד
+// =================================================================
+
+// עוזר: בונה פרופילי אנשי קשר מתוך רשימת הרשמות
+function buildContactsCRM(regs, tournamentMap, allActivity, contactsStore) {
+  const byKey = new Map();
+  const norm = p => normalizePhone(p);
+  for (const r of regs) {
+    const key = norm(r.phone) || (r.email || '').toLowerCase();
+    if (!key) continue;
+    const t = tournamentMap.get(r.tournamentId);
+    const rec = byKey.get(key) || {
+      key,
+      name: r.fullName,
+      phone: r.phone,
+      email: r.email,
+      level: r.level,
+      tournaments: 0,
+      paid: 0,
+      revenue: 0,
+      lastSeen: r.createdAt,
+      lastStatus: r.status,
+      partners: new Set(),
+      regs: []
+    };
+    rec.tournaments++;
+    if (['paid_confirmed', 'approved'].includes(r.status)) {
+      rec.paid++;
+      if (t?.pricing?.perPair) rec.revenue += Math.round(t.pricing.perPair / 2); // מחיר לאדם
+    }
+    if (r.createdAt > rec.lastSeen) {
+      rec.lastSeen = r.createdAt;
+      rec.lastStatus = r.status;
+      rec.level = r.level;
+      rec.name = r.fullName;
+    }
+    if (r.partnerName) rec.partners.add(r.partnerName);
+    rec.regs.push({
+      id: r.id, tournamentId: r.tournamentId,
+      tournamentTitle: t?.title || '', tournamentDate: t?.date || '',
+      status: r.status, createdAt: r.createdAt,
+      level: r.level, partnerName: r.partnerName, emailVerified: !!r.emailVerified
+    });
+    byKey.set(key, rec);
+  }
+  // שלב notes + activity
+  return Array.from(byKey.values()).map(c => {
+    const stored = (contactsStore || []).find(x => x.key === c.key);
+    const acts = (allActivity || []).filter(a =>
+      (a.contactPhone && a.contactPhone === c.key) ||
+      (a.contactEmail && a.contactEmail === c.key) ||
+      (a.contactPhone && norm(c.phone) === a.contactPhone)
+    ).sort((a,b) => b.at.localeCompare(a.at)).slice(0, 30);
+    return {
+      ...c,
+      partners: Array.from(c.partners).slice(0, 8),
+      notes: stored?.notes || '',
+      tags: stored?.tags || [],
+      activity: acts,
+      regs: c.regs.sort((a,b) => b.createdAt.localeCompare(a.createdAt))
+    };
+  }).sort((a,b) => b.lastSeen.localeCompare(a.lastSeen));
+}
+
+// CRM למועדון
+app.get('/api/club/:token/crm', async (req, res) => {
+  const db = await loadDB();
+  const club = findClubByToken(db, req.params.token);
+  if (!club) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
+  const clubTids = new Set(db.tournaments.filter(t => t.clubId === club.id).map(t => t.id));
+  const regs = db.registrations.filter(r => clubTids.has(r.tournamentId));
+  const tournamentMap = new Map(db.tournaments.map(t => [t.id, t]));
+  const allActivity = (db.activityLog || []).filter(a => a.clubId === club.id || clubTids.has(a.tournamentId));
+  if (!Array.isArray(club.contacts)) club.contacts = [];
+  const contacts = buildContactsCRM(regs, tournamentMap, allActivity, club.contacts);
+  // סטטיסטיקות CRM כלליות
+  const totalRevenue = contacts.reduce((s,c) => s + c.revenue, 0);
+  const repeatCount = contacts.filter(c => c.tournaments > 1).length;
+  res.json({
+    ok: true,
+    club: { id: club.id, name: club.name },
+    stats: {
+      totalContacts: contacts.length,
+      repeatPlayers: repeatCount,
+      totalRevenue,
+      activityCount: allActivity.length
+    },
+    contacts,
+    recentActivity: allActivity.slice().sort((a,b) => b.at.localeCompare(a.at)).slice(0, 50)
+  });
+});
+
+// CRM למארגן
+app.get('/api/organizer/:token/crm', async (req, res) => {
+  const db = await loadDB();
+  const org = findOrganizerByToken(db, req.params.token);
+  if (!org) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
+  const orgTids = new Set(db.tournaments.filter(t => t.organizerId === org.id).map(t => t.id));
+  const regs = db.registrations.filter(r => orgTids.has(r.tournamentId));
+  const tournamentMap = new Map(db.tournaments.map(t => [t.id, t]));
+  const allActivity = (db.activityLog || []).filter(a => a.organizerId === org.id || orgTids.has(a.tournamentId));
+  if (!Array.isArray(org.contacts)) org.contacts = [];
+  const contacts = buildContactsCRM(regs, tournamentMap, allActivity, org.contacts);
+  const totalRevenue = contacts.reduce((s,c) => s + c.revenue, 0);
+  const repeatCount = contacts.filter(c => c.tournaments > 1).length;
+  res.json({
+    ok: true,
+    organizer: { id: org.id, name: org.name },
+    stats: {
+      totalContacts: contacts.length,
+      repeatPlayers: repeatCount,
+      totalRevenue,
+      activityCount: allActivity.length
+    },
+    contacts,
+    recentActivity: allActivity.slice().sort((a,b) => b.at.localeCompare(a.at)).slice(0, 50)
+  });
+});
+
+// עדכון הערת CRM לאיש קשר (מועדון)
+app.post('/api/club/:token/contacts/:key/note', express.json(), async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const club = findClubByToken(db, req.params.token);
+      if (!club) throw new Error('אין הרשאה');
+      if (!Array.isArray(club.contacts)) club.contacts = [];
+      const key = req.params.key.toLowerCase();
+      let c = club.contacts.find(x => x.key === key);
+      if (!c) { c = { key, notes: '', tags: [] }; club.contacts.push(c); }
+      c.notes = String(req.body?.notes || '').slice(0, 2000);
+      c.tags = Array.isArray(req.body?.tags) ? req.body.tags.slice(0, 10).map(t => String(t).slice(0, 24)) : c.tags;
+      c.updatedAt = new Date().toISOString();
+      logActivity(db, {
+        type: 'note', channel: 'internal', clubId: club.id,
+        contactPhone: key, summary: 'הערת CRM עודכנה', by: 'club'
+      });
+      return { ok: true };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// תיעוד פעולה ידנית (שיחה/WA/מייל שנשלח ידנית)
+app.post('/api/club/:token/contacts/:key/activity', express.json(), async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const club = findClubByToken(db, req.params.token);
+      if (!club) throw new Error('אין הרשאה');
+      const { channel, summary } = req.body || {};
+      if (!summary || summary.length < 2) throw new Error('טקסט חסר');
+      logActivity(db, {
+        type: channel === 'whatsapp' ? 'manual_wa' : channel === 'email' ? 'manual_email' : channel === 'call' ? 'call' : 'note',
+        channel: channel || 'manual', clubId: club.id,
+        contactPhone: req.params.key.toLowerCase(),
+        summary: String(summary).slice(0, 500), by: 'club'
+      });
+      return { ok: true };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// אותו הדבר למארגן (endpoint מקביל — נוחות)
+app.post('/api/organizer/:token/contacts/:key/note', express.json(), async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const org = findOrganizerByToken(db, req.params.token);
+      if (!org) throw new Error('אין הרשאה');
+      if (!Array.isArray(org.contacts)) org.contacts = [];
+      const key = req.params.key.toLowerCase();
+      let c = org.contacts.find(x => x.key === key);
+      if (!c) { c = { key, notes: '', tags: [] }; org.contacts.push(c); }
+      c.notes = String(req.body?.notes || '').slice(0, 2000);
+      c.tags = Array.isArray(req.body?.tags) ? req.body.tags.slice(0, 10).map(t => String(t).slice(0, 24)) : c.tags;
+      c.updatedAt = new Date().toISOString();
+      logActivity(db, {
+        type: 'note', channel: 'internal', organizerId: org.id,
+        contactPhone: key, summary: 'הערת CRM עודכנה', by: 'organizer'
+      });
+      return { ok: true };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+app.post('/api/organizer/:token/contacts/:key/activity', express.json(), async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const org = findOrganizerByToken(db, req.params.token);
+      if (!org) throw new Error('אין הרשאה');
+      const { channel, summary } = req.body || {};
+      if (!summary || summary.length < 2) throw new Error('טקסט חסר');
+      logActivity(db, {
+        type: channel === 'whatsapp' ? 'manual_wa' : channel === 'email' ? 'manual_email' : channel === 'call' ? 'call' : 'note',
+        channel: channel || 'manual', organizerId: org.id,
+        contactPhone: req.params.key.toLowerCase(),
+        summary: String(summary).slice(0, 500), by: 'organizer'
+      });
+      return { ok: true };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// CRM מלא לשחקן — חיפוש לפי מזהה הרשמה או telephone/email
+app.get('/api/player/crm/:id', async (req, res) => {
+  const id = String(req.params.id || '').toUpperCase();
+  const db = await loadDB();
+  const base = db.registrations.find(x => x.id === id);
+  if (!base) return res.status(404).json({ ok: false, error: 'לא נמצא' });
+  // כל ההרשמות ששייכות לאיש הקשר — דדופליקציה לפי מייל/טלפון
+  const normEmail = (base.email || '').toLowerCase();
+  const normPh = normalizePhone(base.phone);
+  const allMine = db.registrations.filter(r =>
+    (r.email && r.email.toLowerCase() === normEmail) ||
+    (r.phone && normalizePhone(r.phone) === normPh)
+  );
+  const tournamentMap = new Map(db.tournaments.map(t => [t.id, t]));
+  const myRegs = allMine.map(r => {
+    const t = tournamentMap.get(r.tournamentId);
+    return {
+      id: r.id, status: r.status, createdAt: r.createdAt,
+      level: r.level, partnerName: r.partnerName, emailVerified: !!r.emailVerified,
+      hasPaymentProof: !!r.paymentProof,
+      tournament: t ? {
+        id: t.id, slug: t.slug, title: t.title, date: t.date, location: t.location,
+        confirmed: !!t.confirmed, allPaidAt: t.allPaidAt || null,
+        startDate: t.startDate || null, startTime: t.startTime || null
+      } : null,
+      activity: (r.activity || []).slice(-20).reverse()
+    };
+  }).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  // שותפים קבועים (מדדופלצים)
+  const partners = {};
+  for (const r of allMine) if (r.partnerName) {
+    const k = normalizePhone(r.partnerPhone) || r.partnerName;
+    partners[k] = partners[k] || { name: r.partnerName, phone: r.partnerPhone, times: 0 };
+    partners[k].times++;
+  }
+  res.json({
+    ok: true,
+    me: { name: base.fullName, phone: base.phone, email: base.email, level: base.level },
+    stats: {
+      total: myRegs.length,
+      paid: myRegs.filter(r => ['paid_confirmed','approved'].includes(r.status)).length,
+      upcoming: myRegs.filter(r => r.tournament?.confirmed && !r.tournament?.allPaidAt).length
+    },
+    registrations: myRegs,
+    partners: Object.values(partners).sort((a,b) => b.times - a.times)
+  });
+});
+
+// ייצור/רענון טוקן דשבורד למועדון קיים (למועדונים שהיו במערכת לפני שהופעלה התכונה)
+app.post('/api/admin/clubs/:id/generate-token', adminAuth, async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const c = db.clubs.find(x => x.id === req.params.id);
+      if (!c) throw new Error('מועדון לא נמצא');
+      c.dashboardToken = crypto.randomBytes(16).toString('hex');
+      if (!Array.isArray(c.slots)) c.slots = [];
+      return { ok: true, dashboardUrl: `/club/${c.dashboardToken}` };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
 app.post('/api/admin/tournaments/:id/publish', adminAuth, async (req, res) => {
   try {
     await withDB(db => {
@@ -884,8 +1385,8 @@ function findPlayerByEmailOrPhone(db, email, phone) {
   );
 }
 
-app.get('/player/:token', (req, res) => {
-  const db = loadDB();
+app.get('/player/:token', async (req, res) => {
+  const db = await loadDB();
   const p = findPlayerByToken(db, req.params.token);
   if (!p) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><link rel=stylesheet href="/platform.css"><div style="text-align:center;padding:80px;color:#fff"><h1>🔒 קישור לא תקף</h1><p>השתמש בקישור שקיבלת לאחר ההרשמה כשחקן.</p><a href="/players/join" style="color:#062a1c;background:#d4ff3a;padding:10px 20px;border-radius:999px;font-weight:700;display:inline-block;margin-top:20px">להרשמה כשחקן</a></div>');
   serveTemplate(res, 'player-dashboard.html', {
@@ -895,8 +1396,8 @@ app.get('/player/:token', (req, res) => {
   });
 });
 
-app.get('/api/player/:token/me', (req, res) => {
-  const db = loadDB();
+app.get('/api/player/:token/me', async (req, res) => {
+  const db = await loadDB();
   const p = findPlayerByToken(db, req.params.token);
   if (!p) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
   // מצטרף מידע על הרשמות שלי לטורנירים (by email match)
@@ -935,8 +1436,8 @@ app.get('/api/player/:token/me', (req, res) => {
 });
 
 // ranking גלובלי (Top N)
-app.get('/api/leaderboard', (_req, res) => {
-  const db = loadDB();
+app.get('/api/leaderboard', async (_req, res) => {
+  const db = await loadDB();
   const players = (db.applications.players || [])
     .filter(p => p.status === 'active' && (p.stats?.points || 0) > 0)
     .map(p => ({
@@ -1014,8 +1515,8 @@ function findOrganizerByToken(db, token) {
   return db.organizers.find(o => o.dashboardToken === token && o.status === 'active');
 }
 
-app.get('/organizer/:token', (req, res) => {
-  const db = loadDB();
+app.get('/organizer/:token', async (req, res) => {
+  const db = await loadDB();
   const org = findOrganizerByToken(db, req.params.token);
   if (!org) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><link rel=stylesheet href="/platform.css"><div style="text-align:center;padding:80px;color:#fff"><h1>🔒 קישור לא תקף</h1><p>פנה למארגני הפלטפורמה לקישור מעודכן.</p><a class=btn href="/" style="color:#062a1c;background:#d4ff3a;padding:10px 20px;border-radius:999px;font-weight:700;display:inline-block;margin-top:20px">חזרה לדף הבית</a></div>');
   serveTemplate(res, 'organizer-dashboard.html', {
@@ -1026,8 +1527,8 @@ app.get('/organizer/:token', (req, res) => {
 });
 
 // API — מארגן: רשימת טורנירים + יצירת טורניר חדש
-app.get('/api/organizer/:token/me', (req, res) => {
-  const db = loadDB();
+app.get('/api/organizer/:token/me', async (req, res) => {
+  const db = await loadDB();
   const org = findOrganizerByToken(db, req.params.token);
   if (!org) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
   const tournaments = db.tournaments.filter(t => t.organizerId === org.id)
@@ -1053,8 +1554,8 @@ app.get('/api/organizer/:token/me', (req, res) => {
   });
 });
 
-app.get('/api/organizer/:token/tournaments/:tid', (req, res) => {
-  const db = loadDB();
+app.get('/api/organizer/:token/tournaments/:tid', async (req, res) => {
+  const db = await loadDB();
   const org = findOrganizerByToken(db, req.params.token);
   if (!org) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
   const t = db.tournaments.find(x => x.id === req.params.tid && x.organizerId === org.id);
@@ -1066,7 +1567,7 @@ app.get('/api/organizer/:token/tournaments/:tid', (req, res) => {
 
 app.post('/api/organizer/:token/tournaments', express.json(), async (req, res) => {
   try {
-    const db0 = loadDB();
+    const db0 = await loadDB();
     const org0 = findOrganizerByToken(db0, req.params.token);
     if (!org0) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
 
@@ -1103,8 +1604,8 @@ app.post('/api/organizer/:token/tournaments', express.json(), async (req, res) =
           maxPairs: parseInt(b.maxPairs, 10),
           minPaidPairs: parseInt(b.minPaidPairs, 10) || parseInt(b.maxPairs, 10), // ברירת-מחדל: רק אם מלא
           levels: Array.isArray(b.levels) && b.levels.length ? b.levels : [
-            { code: '2.5', label: 'מתחילים — רמה 2.5' },
-            { code: '3', label: 'בינוניים — רמה 3' }
+            { code: '2.5', label: 'רמה א' },
+            { code: '3', label: 'רמה א+' }
           ],
           matchRules: clean(b.matchRules, 200) || 'מערכה אחת עד 6 משחקונים · מקס 20 דקות'
         },
@@ -1157,8 +1658,314 @@ app.patch('/api/organizer/:token/tournaments/:tid', express.json(), async (req, 
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
 
-app.get('/api/admin/file/:id/:kind', adminAuth, (req, res) => {
-  const db = loadDB();
+// =================================================================
+//  אזור אישי לשחקן — בדיקת סטטוס חי לפי מזהה הרשמה
+// =================================================================
+app.get('/my/:id', async (req, res) => {
+  const id = String(req.params.id || '').toUpperCase();
+  const db = await loadDB();
+  const r = db.registrations.find(x => x.id === id);
+  if (!r) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><body style="font-family:sans-serif;text-align:center;padding:80px;background:#062318;color:#fff"><h1>הרשמה לא נמצאה</h1><a style="color:#d4ff3a" href="/">חזרה לדף הבית</a></body>');
+  serveTemplate(res, 'player-crm.html', {
+    REG_ID: escapeHtml(r.id),
+    PLAYER_NAME: escapeHtml(r.fullName)
+  });
+});
+
+// =================================================================
+//  Club Dashboard — "לוח זמנים" עם יצירת טורניר אוטומטית
+// =================================================================
+function findClubByToken(db, token) {
+  return db.clubs.find(c => c.dashboardToken === token && c.status === 'active');
+}
+
+// SSR לדשבורד מועדון (מזריק טוקן לתבנית)
+app.get('/club/:token', async (req, res) => {
+  const db = await loadDB();
+  const club = findClubByToken(db, req.params.token);
+  if (!club) return res.status(404).type('html').send('<!doctype html><meta charset=utf-8><h1 style=font-family:sans-serif;text-align:center;padding:80px>דשבורד לא נמצא או פג תוקף</h1>');
+  serveTemplate(res, 'club-dashboard.html', {
+    TOKEN: req.params.token,
+    CLUB_NAME: escapeHtml(club.name),
+    CLUB_CITY: escapeHtml(club.city || ''),
+    CLUB_ID: escapeHtml(club.id)
+  });
+});
+
+// בסיס API: מועדון ניגש רק עם טוקן שנתן לו האדמין באישור
+app.get('/api/club/:token/me', async (req, res) => {
+  const db = await loadDB();
+  const c = findClubByToken(db, req.params.token);
+  if (!c) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
+  // כל הטורנירים של המועדון + מצב חי
+  const tournaments = db.tournaments
+    .filter(t => t.clubId === c.id)
+    .map(t => {
+      const regs = db.registrations.filter(r => r.tournamentId === t.id);
+      return {
+        id: t.id, slug: t.slug, title: t.title, date: t.date, location: t.location,
+        visibility: t.visibility, status: t.status, confirmed: !!t.confirmed,
+        confirmedAt: t.confirmedAt || null, allPaidAt: t.allPaidAt || null,
+        slotId: t.slotId || null,
+        capacity: {
+          max: t.format.maxPairs,
+          minPaid: t.format.minPaidPairs,
+          reserved: countReserved(db, t.id),
+          approved: countApproved(db, t.id),
+          paid: regs.filter(r => ['paid_confirmed','approved'].includes(r.status)).length,
+          total: regs.length
+        },
+        registrations: regs.map(r => ({
+          id: r.id, fullName: r.fullName, phone: r.phone, email: r.email,
+          level: r.level, partnerName: r.partnerName, partnerPhone: r.partnerPhone,
+          status: r.status, emailVerified: !!r.emailVerified,
+          createdAt: r.createdAt, hasPaymentProof: !!r.paymentProof
+        })).sort((a,b) => b.createdAt.localeCompare(a.createdAt))
+      };
+    });
+  res.json({
+    ok: true,
+    club: { id: c.id, name: c.name, city: c.city, slug: c.slug, courts: c.courts, contactEmail: c.contactEmail },
+    slots: c.slots || [],
+    tournaments
+  });
+});
+
+// יצירת slot חודשי — נוצר טורניר מייד ועולה לאוויר
+app.post('/api/club/:token/slots', express.json(), async (req, res) => {
+  try {
+    const b = req.body || {};
+    const errs = [];
+    if (!b.date || !/^\d{4}-\d{2}-\d{2}$/.test(b.date)) errs.push('תאריך לא תקין (נדרש YYYY-MM-DD).');
+    if (!b.startTime || !/^\d{2}:\d{2}$/.test(b.startTime)) errs.push('שעת התחלה חסרה.');
+    if (!b.endTime || !/^\d{2}:\d{2}$/.test(b.endTime)) errs.push('שעת סיום חסרה.');
+    const courts = parseInt(b.courts, 10);
+    if (!courts || courts < 1 || courts > 16) errs.push('מספר מגרשים 1-16.');
+    const pricePair = parseInt(b.pricePair, 10);
+    if (!pricePair || pricePair < 0) errs.push('מחיר לזוג חסר/לא תקין.');
+    if (!['2.5','3','both'].includes(b.level)) errs.push('יש לבחור רמה (א / א+ / מעורב).');
+    if (!b.bitRecipientPhone || !validPhone(b.bitRecipientPhone)) errs.push('מספר bit לא תקין.');
+    if (errs.length) return res.status(400).json({ ok: false, errors: errs });
+
+    const result = await withDB(db => {
+      const club = findClubByToken(db, req.params.token);
+      if (!club) throw new Error('אין הרשאה');
+      if (!Array.isArray(club.slots)) club.slots = [];
+
+      const slotId = 's-' + crypto.randomBytes(4).toString('hex');
+      // פורמט תאריך יפה בעברית
+      const niceDate = formatHebDate(b.date);
+      const levels = b.level === 'both'
+        ? [{ code: '2.5', label: 'רמה א' }, { code: '3', label: 'רמה א+' }]
+        : b.level === '2.5'
+          ? [{ code: '2.5', label: 'רמה א' }]
+          : [{ code: '3', label: 'רמה א+' }];
+
+      // 1 זוג למגרש (4 שחקנים) — ברירת מחדל סטנדרטית
+      const maxPairs = courts;
+      const minPaidPairs = Math.max(2, Math.floor(maxPairs * 0.75));
+
+      const title = (b.title && b.title.trim())
+        ? clean(b.title, 100)
+        : `${club.name} · ${niceDate}`;
+      const baseSlug = slugify(`${club.name}-${b.date}-${b.startTime}`);
+      const slug = uniqSlug(baseSlug, db.tournaments.map(t => t.slug));
+
+      const tournamentId = 't-' + crypto.randomBytes(4).toString('hex');
+      const t = {
+        id: tournamentId, slug,
+        title,
+        subtitle: `${b.startTime}–${b.endTime} · ${courts} מגרשים`,
+        clubId: club.id,
+        organizerId: null, // נוצר מהמועדון ישירות
+        slotId,
+        description: clean(b.description, 1500)
+          || `טורניר פאדל ב-${club.name}${club.city ? ' · ' + club.city : ''}. ${niceDate} בין ${b.startTime} ל-${b.endTime}. ${courts} מגרשים פעילים.`,
+        date: niceDate,
+        location: clean(b.location, 200) || `${club.name}${club.city ? ' · ' + club.city : ''}`,
+        startDate: b.date,    // ISO — לצורך ICS ומיון
+        startTime: b.startTime,
+        endTime: b.endTime,
+        format: {
+          pair: true,
+          maxPairs,
+          minPaidPairs,
+          levels,
+          matchRules: clean(b.matchRules, 200) || 'מערכה אחת עד 6 משחקונים · מקס 20 דקות'
+        },
+        confirmationDeadline: b.confirmationDeadline || '',
+        confirmed: false,
+        pricing: {
+          perPair: pricePair,
+          perPerson: Math.round(pricePair / 2),
+          currency: 'ILS'
+        },
+        payment: {
+          method: 'bit',
+          recipientName: clean(b.bitRecipientName, 100) || club.name,
+          recipientPhone: clean(b.bitRecipientPhone, 20),
+          groupLink: clean(b.bitGroupLink, 300)
+        },
+        refundPolicy: clean(b.refundPolicy, 500) || 'החזר מלא אם הטורניר לא מתמלא במועד. החזרים אחרים עד 7 ימים אחרי הטורניר.',
+        requireHealthDeclaration: b.requireHealthDeclaration !== false,
+        healthFormUrl: 'https://www.gov.il/blobFolder/generalpage/information-special-and-refund-requests/he/forms_doclib_62557516.pdf',
+        status: 'open',
+        visibility: 'public', // מועדון מאושר יכול לפרסם ישירות
+        featured: false,
+        heroVideo: '',
+        createdAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString(),
+        revenueSplit: { club: 90, platform: 10 }
+      };
+      db.tournaments.push(t);
+
+      // רשומת slot אצל המועדון
+      const slot = {
+        id: slotId,
+        tournamentId,
+        tournamentSlug: slug,
+        date: b.date,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        courts,
+        level: b.level,
+        pricePair,
+        status: 'open', // open → confirmed → completed / cancelled
+        createdAt: new Date().toISOString()
+      };
+      club.slots.push(slot);
+      return { ok: true, slot, tournament: { id: t.id, slug: t.slug, title: t.title } };
+    });
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
+// ביטול slot — מותר רק ללא הרשמות פעילות
+app.delete('/api/club/:token/slots/:slotId', async (req, res) => {
+  try {
+    const result = await withDB(db => {
+      const club = findClubByToken(db, req.params.token);
+      if (!club) throw new Error('אין הרשאה');
+      const slot = (club.slots || []).find(s => s.id === req.params.slotId);
+      if (!slot) throw new Error('לא נמצא');
+      const regs = db.registrations.filter(r => r.tournamentId === slot.tournamentId &&
+        !['cancelled','refunded'].includes(r.status));
+      if (regs.length > 0) throw new Error('לא ניתן לבטל — יש ' + regs.length + ' הרשמות פעילות');
+      // הסר טורניר (טיוטה שלא התפרסמה / ללא נרשמים)
+      const tIdx = db.tournaments.findIndex(t => t.id === slot.tournamentId);
+      if (tIdx >= 0) db.tournaments.splice(tIdx, 1);
+      slot.status = 'cancelled';
+      slot.cancelledAt = new Date().toISOString();
+      return { ok: true };
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// עדכון סטטוס הרשמה ע"י מועדון (רק לטורנירים שלו)
+app.post('/api/club/:token/registrations/:id/status', express.json(), async (req, res) => {
+  const { status, note } = req.body || {};
+  if (!STATUSES.includes(status)) return res.status(400).json({ ok: false, error: 'סטטוס לא חוקי' });
+  try {
+    let updatedReg = null, updatedT = null, justConfirmed = false, justAllPaid = false, paidRegs = [];
+    const result = await withDB(db => {
+      const club = findClubByToken(db, req.params.token);
+      if (!club) throw new Error('אין הרשאה');
+      const r = db.registrations.find(x => x.id === req.params.id);
+      if (!r) throw new Error('לא נמצא');
+      const t = db.tournaments.find(x => x.id === r.tournamentId && x.clubId === club.id);
+      if (!t) throw new Error('הטורניר לא שייך למועדון');
+      const prev = r.status;
+      r.status = status;
+      r.history.push({ at: new Date().toISOString(), status, by: 'club', note: note || '' });
+      logActivity(db, {
+        type: 'status_change', channel: 'internal',
+        summary: `סטטוס: ${statusHe(prev)} → ${statusHe(status)}${note ? ' · '+note : ''}`,
+        regId: r.id, tournamentId: r.tournamentId, clubId: club.id,
+        contactEmail: r.email, contactPhone: r.phone, by: 'club', meta: { prev, next: status, note }
+      });
+      // סנכרון confirmed / allPaid
+      paidRegs = db.registrations.filter(x => x.tournamentId === t.id &&
+        (x.status === 'paid_confirmed' || x.status === 'approved'));
+      const needed = t.format?.minPaidPairs || t.format?.maxPairs || 8;
+      const max = t.format?.maxPairs || needed;
+      if (!t.confirmed && paidRegs.length >= needed) {
+        t.confirmed = true;
+        t.confirmedAt = new Date().toISOString();
+        justConfirmed = true;
+      }
+      if (!t.allPaidAt && paidRegs.length >= max) {
+        t.allPaidAt = new Date().toISOString();
+        justAllPaid = true;
+      }
+      updatedReg = r; updatedT = t;
+      return { ok: true, status: r.status };
+    });
+    // מיילים
+    try {
+      if (updatedReg && updatedT) sendStatusUpdateEmail(updatedReg, updatedT, null, note).catch(()=>{});
+      if (justConfirmed && updatedT) sendTournamentConfirmedEmails(updatedT, paidRegs).catch(()=>{});
+      if (justAllPaid && updatedT) sendAllPaidEmails(updatedT, paidRegs).catch(()=>{});
+    } catch (_) {}
+    res.json(result);
+  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+
+// ---- ICS export לכל טורניר — שחקן יכול להוסיף ליומן ----
+app.get('/api/tournaments/:slug/calendar.ics', async (req, res) => {
+  const db = await loadDB();
+  const t = db.tournaments.find(x => x.slug === req.params.slug);
+  if (!t) return res.status(404).send('not found');
+  const uid = `${t.id}@padel.platform`;
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  // משתמשים ב-startDate + startTime/endTime אם קיים, אחרת תאריך יום שלם לפי t.date
+  let dtStart, dtEnd;
+  if (t.startDate && t.startTime) {
+    const [H, M] = t.startTime.split(':');
+    const [EH, EM] = (t.endTime || t.startTime).split(':');
+    const d = t.startDate.replace(/-/g, '');
+    dtStart = `${d}T${H}${M}00`;
+    dtEnd = `${d}T${EH}${EM}00`;
+  }
+  const desc = (t.description || '').replace(/\n/g, '\\n').slice(0, 500);
+  const loc = (t.location || '').replace(/,/g, '\\,');
+  const body = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Padel Platform//HE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${stamp.split('.')[0]}Z`,
+    dtStart ? `DTSTART;TZID=Asia/Jerusalem:${dtStart}` : null,
+    dtEnd ? `DTEND;TZID=Asia/Jerusalem:${dtEnd}` : null,
+    `SUMMARY:${t.title}`,
+    `DESCRIPTION:${desc}`,
+    `LOCATION:${loc}`,
+    `URL:${getBaseUrl(req)}/tournaments/${t.slug}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+  res.type('text/calendar; charset=utf-8');
+  res.set('Content-Disposition', `attachment; filename="${t.slug}.ics"`);
+  res.send(body);
+});
+
+// עזר לעיצוב תאריך עברי מבסיס YYYY-MM-DD
+function formatHebDate(iso) {
+  try {
+    const d = new Date(iso + 'T00:00:00');
+    const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+    const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    return `${d.getDate()} ב${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+  } catch { return iso; }
+}
+
+app.get('/api/admin/file/:id/:kind', adminAuth, async (req, res) => {
+  const db = await loadDB();
   const r = db.registrations.find(x => x.id === req.params.id);
   if (!r) return res.status(404).send('not found');
   const f = req.params.kind === 'health' ? r.healthFile : r.paymentProof;
@@ -1167,34 +1974,217 @@ app.get('/api/admin/file/:id/:kind', adminAuth, (req, res) => {
 });
 
 // --- Emails ---
-async function sendRegistrationEmails(r, t) {
+async function sendRegistrationEmails(r, t, baseUrl) {
   const tr = buildTransport();
   const admin = process.env.ADMIN_EMAIL;
-  if (!tr || !admin || admin === 'to_be_provided_by_user') return;
-  const html = `<div dir="rtl" style="font-family:Arial,sans-serif">
-    <h2>הרשמה חדשה · ${escapeHtml(t.title)}</h2>
-    <p><b>מזהה:</b> ${r.id} · <b>סטטוס:</b> ${statusHe(r.status)}</p>
-    <p><b>שם:</b> ${escapeHtml(r.fullName)} · ${escapeHtml(r.phone)} · ${escapeHtml(r.email)}</p>
-    <p><b>רמה:</b> ${r.level}${r.partnerName ? ` · <b>שותף/ה:</b> ${escapeHtml(r.partnerName)} (${escapeHtml(r.partnerPhone)})` : ''}</p>
-    ${r.notes ? `<p><b>הערות:</b> ${escapeHtml(r.notes)}</p>` : ''}
-  </div>`;
-  await tr.sendMail({
-    from: `"${t.title}" <${process.env.SMTP_USER}>`,
-    to: admin, subject: `הרשמה חדשה · ${r.fullName}`, html,
-    attachments: r.healthFile ? [{ filename: r.healthFile.original, path: path.join(UPLOAD_DIR, r.healthFile.stored) }] : []
-  });
+  if (!tr) return;
+  const base = baseUrl || getBaseUrl();
+  const verifyUrl = `${base}/api/verify/${r.verifyToken}`;
+
+  // מייל למנהל (כולל הצהרת בריאות כקובץ מצורף)
+  if (admin && admin !== 'to_be_provided_by_user') {
+    await tr.sendMail({
+      from: `"${t.title}" <${process.env.SMTP_USER}>`,
+      to: admin, subject: `הרשמה חדשה · ${r.fullName}`,
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif">
+        <h2>הרשמה חדשה · ${escapeHtml(t.title)}</h2>
+        <p><b>מזהה:</b> ${r.id} · <b>סטטוס:</b> ${statusHe(r.status)}</p>
+        <p><b>שם:</b> ${escapeHtml(r.fullName)} · ${escapeHtml(r.phone)} · ${escapeHtml(r.email)}</p>
+        <p><b>רמה:</b> ${r.level}${r.partnerName ? ` · <b>שותף/ה:</b> ${escapeHtml(r.partnerName)} (${escapeHtml(r.partnerPhone)})` : ''}</p>
+        ${r.notes ? `<p><b>הערות:</b> ${escapeHtml(r.notes)}</p>` : ''}
+      </div>`,
+      attachments: r.healthFile ? [{ filename: r.healthFile.original, path: path.join(UPLOAD_DIR, r.healthFile.stored) }] : []
+    });
+  }
+
+  // מייל לנרשם/ת — אימות זהות + פרטי ההרשמה
+  const body = `
+    <p>היי ${escapeHtml(r.fullName.split(' ')[0] || r.fullName)} 👋</p>
+    <p>קיבלנו את ההרשמה שלך ל<b>${escapeHtml(t.title)}</b>. כדי שנוכל לאשר שהכתובת באמת שלך, צריך רק אישור מהיר:</p>
+    <p style="text-align:center;margin:24px 0">${mailBtn(verifyUrl, '✅ זה באמת אני — אישור ההרשמה')}</p>
+    <p style="font-size:13px;color:#b5c9bf">או העתק/י את הקישור: <span style="color:#d4ff3a;word-break:break-all">${verifyUrl}</span></p>
+    <hr style="border:0;border-top:1px solid rgba(212,255,58,0.15);margin:22px 0">
+    <p><b>פרטי הרשמה</b></p>
+    <ul style="padding-inline-start:18px;margin:8px 0">
+      <li>מזהה: <b style="color:#d4ff3a">${r.id}</b></li>
+      <li>סטטוס נוכחי: <b>${statusHe(r.status)}</b></li>
+      <li>רמה: <b>${escapeHtml(r.level)}</b></li>
+      ${r.partnerName ? `<li>שותף/ה: <b>${escapeHtml(r.partnerName)}</b></li>` : ''}
+      ${t.date ? `<li>תאריך משוער: <b>${escapeHtml(t.date)}</b></li>` : ''}
+      ${t.location ? `<li>מיקום: <b>${escapeHtml(t.location)}</b></li>` : ''}
+    </ul>
+    <p style="font-size:13px;color:#b5c9bf">
+      ${r.status === 'awaiting_payment'
+        ? 'המקום יישמר סופית אחרי תשלום ב-bit ואישור המארגן. נעדכן אותך במייל בכל שינוי.'
+        : 'כרגע את/ה ברשימת המתנה. אם יתפנה מקום נעדכן אותך מייד.'}
+    </p>
+    <p style="font-size:13px;color:#b5c9bf">בנוסף — נשלח לך הודעות אוטומטיות כשההרשמה תאושר, כשהתשלום יאומת, וכשהטורניר יצא לדרך בפועל.</p>
+    <p style="text-align:center;margin:18px 0">${mailBtn(`${base}/my/${r.id}`, '👤 האזור האישי שלי')}</p>`;
+
   await tr.sendMail({
     from: `"${t.title}" <${process.env.SMTP_USER}>`,
     to: r.email,
-    subject: `אישור קליטת הרשמה · ${t.title}`,
-    html: `<div dir="rtl" style="font-family:Arial,sans-serif">
-      <h2>הרשמתך נקלטה! 🎾</h2>
-      <p>מזהה: <b>${r.id}</b></p>
-      <p>סטטוס: <b>${statusHe(r.status)}</b></p>
-      ${r.status === 'awaiting_payment' ? '<p>המקום יישמר סופית לאחר תשלום ב-bit ואישור.</p>' : '<p>הטורניר מלא כרגע — את/ה ברשימת המתנה.</p>'}
-    </div>`
+    subject: `אישור זהות · ${t.title}`,
+    html: mailShell('קיבלנו את ההרשמה שלך 🎾', body)
+  });
+  logActivityStandalone({
+    type: 'email_sent', channel: 'email', summary: `מייל אימות זהות נשלח · ${t.title}`,
+    regId: r.id, tournamentId: t.id, clubId: t.clubId, organizerId: t.organizerId,
+    contactEmail: r.email, contactPhone: r.phone, by: 'system'
   });
 }
+
+// מייל עדכון סטטוס לנרשם — כשהמארגן משנה את הסטטוס ידנית
+async function sendStatusUpdateEmail(r, t, prevStatus, note) {
+  const tr = buildTransport();
+  if (!tr || !r?.email) return;
+  // כותרת ומסר מותאם לפי הסטטוס החדש
+  const statusMeta = {
+    approved: {
+      title: 'הרשמתך אושרה! 🎉',
+      intro: 'המארגן אישר רשמית את ההרשמה שלך. המקום שמור.',
+      next: 'נעדכן אותך במייל נפרד כשהטורניר יאושר סופית (מינימום משתתפים).'
+    },
+    paid_confirmed: {
+      title: 'התשלום אומת ✅',
+      intro: 'קיבלנו וידאנו את התשלום שלך. ההרשמה סופית והמקום שמור.',
+      next: 'כשכל הזוגות ישלמו והטורניר יוצא לפועל — נשלח לך הודעת אישור אחרונה עם פרטים מלאים.'
+    },
+    payment_under_review: {
+      title: 'אסמכתת התשלום התקבלה',
+      intro: 'קיבלנו את הצילום של התשלום. זה בבדיקה — בדרך כלל זה לוקח עד 24 שעות.',
+      next: 'נעדכן אותך ברגע שהתשלום יאושר.'
+    },
+    waitlist: {
+      title: 'הועברת לרשימת המתנה',
+      intro: 'כרגע אין מקום פנוי. אם יתפנה — את/ה הבאים בתור.',
+      next: 'נעדכן אותך מייד אם תקודם/י.'
+    },
+    cancelled: {
+      title: 'ההרשמה בוטלה',
+      intro: 'ההרשמה שלך לטורניר הזה בוטלה.',
+      next: note ? `סיבה: ${escapeHtml(note)}` : 'אם יש שאלות — אפשר להשיב למייל הזה.'
+    },
+    refund_pending: {
+      title: 'החזר כספי בתהליך',
+      intro: 'אישרנו בקשת החזר — הכסף יחזור בקרוב.',
+      next: 'נשלח אישור נוסף כשההחזר יבוצע.'
+    },
+    refunded: {
+      title: 'ההחזר בוצע',
+      intro: 'ההחזר הכספי בוצע מצדנו.',
+      next: 'תודה על ההבנה, ונתראה בטורניר הבא!'
+    }
+  };
+  const m = statusMeta[r.status];
+  if (!m) return;
+  // מנע דופליקט — אל תשלח את אותו סטטוס פעמיים לאותה הרשמה
+  if (!Array.isArray(r.notifiedStatuses)) r.notifiedStatuses = [];
+  if (r.notifiedStatuses.includes(r.status)) return;
+  r.notifiedStatuses.push(r.status);
+
+  const body = `
+    <p>היי ${escapeHtml((r.fullName || '').split(' ')[0] || 'משתתף/ת')},</p>
+    <p>${m.intro}</p>
+    <p><b>טורניר:</b> ${escapeHtml(t.title)}</p>
+    <p><b>מזהה הרשמה:</b> <span style="color:#d4ff3a">${r.id}</span></p>
+    ${note ? `<p style="background:rgba(212,255,58,0.08);padding:10px 14px;border-radius:10px"><b>הערת מארגן:</b> ${escapeHtml(note)}</p>` : ''}
+    <hr style="border:0;border-top:1px solid rgba(212,255,58,0.15);margin:20px 0">
+    <p style="font-size:13.5px;color:#b5c9bf">${m.next}</p>
+    <p style="text-align:center;margin:16px 0">${mailBtn(`${getBaseUrl()}/my/${r.id}`, '👤 צפייה בסטטוס החי')}</p>`;
+
+  await tr.sendMail({
+    from: `"${t.title}" <${process.env.SMTP_USER}>`,
+    to: r.email,
+    subject: `${m.title} · ${t.title}`,
+    html: mailShell(m.title, body)
+  });
+  logActivityStandalone({
+    type: 'email_sent', channel: 'email', summary: `${m.title} · ${t.title}`,
+    regId: r.id, tournamentId: t.id, clubId: t.clubId, organizerId: t.organizerId,
+    contactEmail: r.email, contactPhone: r.phone, by: 'system'
+  });
+}
+
+// מייל אישור טורניר — לכל מי ששילם/אושר, ברגע שהטורניר יוצא לפועל
+async function sendTournamentConfirmedEmails(t, paidRegs) {
+  const tr = buildTransport();
+  if (!tr || !paidRegs?.length) return;
+  const subject = `הטורניר מתקיים! 🎾 ${t.title}`;
+  const body = (r) => `
+    <p>חדשות מצויינות ${escapeHtml((r.fullName || '').split(' ')[0] || '')}! 🔥</p>
+    <p>הגענו למינימום המשתתפים — <b>${escapeHtml(t.title)}</b> יוצא לפועל.</p>
+    <div style="background:rgba(212,255,58,0.08);border:1px solid rgba(212,255,58,0.25);padding:16px 18px;border-radius:14px;margin:18px 0">
+      ${t.date ? `<p style="margin:4px 0"><b>📅 תאריך:</b> ${escapeHtml(t.date)}</p>` : ''}
+      ${t.location ? `<p style="margin:4px 0"><b>📍 מיקום:</b> ${escapeHtml(t.location)}</p>` : ''}
+      <p style="margin:4px 0"><b>🆔 מזהה ההרשמה שלך:</b> <span style="color:#d4ff3a">${r.id}</span></p>
+      ${r.partnerName ? `<p style="margin:4px 0"><b>🤝 שותף/ה:</b> ${escapeHtml(r.partnerName)}</p>` : ''}
+    </div>
+    <p>מכאן — אנחנו רק מוודאים שכל הזוגות השלימו תשלום וסוגרים את הלו"ז הסופי. נשלח מייל אחרון עם כל הפרטים המלאים (שעת התייצבות, לוח משחקים, הוראות הגעה) יום-יומיים לפני האירוע.</p>
+    <p style="text-align:center;margin:18px 0">
+      ${mailBtn(`${getBaseUrl()}/api/tournaments/${t.slug}/calendar.ics`, '📅 הוסף ליומן')}
+      &nbsp;
+      ${mailBtn(`${getBaseUrl()}/my/${r.id}`, '👤 אזור אישי')}
+    </p>
+    <p style="font-size:13px;color:#b5c9bf">אם יש שינוי אצלך — אפשר להשיב למייל הזה.</p>`;
+
+  for (const r of paidRegs) {
+    if (!r.email) continue;
+    if (Array.isArray(r.notifiedStatuses) && r.notifiedStatuses.includes('tournament_confirmed')) continue;
+    try {
+      await tr.sendMail({
+        from: `"${t.title}" <${process.env.SMTP_USER}>`,
+        to: r.email,
+        subject,
+        html: mailShell('הטורניר יוצא לדרך! 🎾', body(r))
+      });
+      r.notifiedStatuses = r.notifiedStatuses || [];
+      r.notifiedStatuses.push('tournament_confirmed');
+      logActivityStandalone({
+        type: 'email_sent', channel: 'email', summary: `הטורניר יוצא לדרך · ${t.title}`,
+        regId: r.id, tournamentId: t.id, clubId: t.clubId, organizerId: t.organizerId,
+        contactEmail: r.email, contactPhone: r.phone, by: 'system'
+      });
+    } catch (e) { console.error('confirm mail err', r.id, e.message); }
+  }
+}
+
+// מייל אחרון — כולם שילמו, הטורניר נעול
+async function sendAllPaidEmails(t, paidRegs) {
+  const tr = buildTransport();
+  if (!tr || !paidRegs?.length) return;
+  const subject = `כל הזוגות שילמו — נתראה בטורניר! · ${t.title}`;
+  const body = (r) => `
+    <p>הגיע הרגע 💪</p>
+    <p>כל הזוגות ב<b>${escapeHtml(t.title)}</b> השלימו תשלום. האירוע נעול סופית.</p>
+    <div style="background:rgba(212,255,58,0.08);border:1px solid rgba(212,255,58,0.25);padding:16px 18px;border-radius:14px;margin:18px 0">
+      ${t.date ? `<p style="margin:4px 0"><b>📅 תאריך:</b> ${escapeHtml(t.date)}</p>` : ''}
+      ${t.location ? `<p style="margin:4px 0"><b>📍 מיקום:</b> ${escapeHtml(t.location)}</p>` : ''}
+      <p style="margin:4px 0"><b>🆔 מזהה ההרשמה שלך:</b> <span style="color:#d4ff3a">${r.id}</span></p>
+    </div>
+    <p>קחו כדור, נעליים, בקבוק מים ומצב רוח טוב 🎾</p>
+    <p style="font-size:13px;color:#b5c9bf">לכל שאלה אפשר להשיב למייל הזה.</p>`;
+
+  for (const r of paidRegs) {
+    if (!r.email) continue;
+    if (Array.isArray(r.notifiedStatuses) && r.notifiedStatuses.includes('all_paid')) continue;
+    try {
+      await tr.sendMail({
+        from: `"${t.title}" <${process.env.SMTP_USER}>`,
+        to: r.email, subject,
+        html: mailShell('כולם שילמו · מוכנים לטורניר 🎾', body(r))
+      });
+      r.notifiedStatuses = r.notifiedStatuses || [];
+      r.notifiedStatuses.push('all_paid');
+      logActivityStandalone({
+        type: 'email_sent', channel: 'email', summary: `כולם שילמו — סגירה סופית · ${t.title}`,
+        regId: r.id, tournamentId: t.id, clubId: t.clubId, organizerId: t.organizerId,
+        contactEmail: r.email, contactPhone: r.phone, by: 'system'
+      });
+    } catch (e) { console.error('all-paid mail err', r.id, e.message); }
+  }
+}
+
 async function sendPaymentProofEmail(r, t) {
   const tr = buildTransport();
   const admin = process.env.ADMIN_EMAIL;

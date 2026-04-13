@@ -36,18 +36,30 @@
       <div class="aud">
         <div class="aud-tag">⚡ מהיר</div>
         <h3>הקמה בדקות</h3>
-        <p>טורניר חדש עולה לאוויר תוך חצי שעה — עם דף פומבי, הרשמה ותשלום.</p>
+        <p>טורניר חדש עולה לאוויר תוך חצי שעה — עם דף פומבי, הרשמה וניהול מלא.</p>
       </div>
       <div class="aud">
-        <div class="aud-tag">💰 הכנסה</div>
-        <h3>חלוקת רווחים</h3>
-        <p>מודל חלוקה שקוף: מארגן · מועדון · פלטפורמה. אתם רואים כל שקל.</p>
+        <div class="aud-tag">💵 תשלום ישיר</div>
+        <h3>הכסף עובר אליך</h3>
+        <p>השחקנים משלמים אליך ישירות ב-bit. הפלטפורמה לא מחזיקה כספים — אתה שולט, אתה מוציא קבלה, אתה מדווח למע"מ.</p>
       </div>
       <div class="aud">
         <div class="aud-tag">📊 שליטה</div>
         <h3>דשבורד תפעולי</h3>
-        <p>רואים כל נרשם, כל תשלום, כל סטטוס — בזמן אמת, בכל מכשיר.</p>
+        <p>רואים כל נרשם, כל אסמכתא, כל סטטוס — בזמן אמת, בכל מכשיר.</p>
       </div>
+    </div>
+
+    <div class="form-card" style="margin-bottom:30px; border-color:rgba(255,200,50,0.3); background:rgba(255,200,50,0.05)">
+      <h3 style="color:#ffd968; margin-top:0">⚖️ דרישות רגולטוריות</h3>
+      <p>לפי רגולציית שירותי תשלום בישראל, כדי להפעיל טורנירים בתשלום דרך הפלטפורמה, תזדקק/י ל:</p>
+      <ul style="color:#d8e5dd; line-height:1.8">
+        <li><b>תיק עוסק פעיל</b> (עוסק פטור / עוסק מורשה / חברה בע"מ)</li>
+        <li><b>מספר ח.פ. / ע.מ.</b> לאימות</li>
+        <li><b>חשבון bit עסקי</b> או דרך תשלום אחרת על שם העסק</li>
+        <li><b>יכולת להוציא קבלות / חשבוניות מס</b> לשחקנים</li>
+      </ul>
+      <p style="margin-bottom:0">הצוות שלנו מוודא את הפרטים לפני הפעלת הטורניר הראשון שלך. התהליך קצר (1-2 ימי עסקים).</p>
     </div>
 
     <form id="orgForm" class="form-card" novalidate>
@@ -56,11 +68,28 @@
         מלא/י את הפרטים. ניצור איתך קשר תוך 48 שעות לסגירת התשתית שלך על הפלטפורמה.
       </p>
       <div class="grid-2">
-        <label class="field"><span>שם מלא *</span><input name="name" required /></label>
-        <label class="field"><span>טלפון *</span><input name="phone" type="tel" placeholder="05X-XXXXXXX" required /></label>
-        <label class="field"><span>מייל *</span><input name="email" type="email" required /></label>
+        <label class="field"><span>שם מלא *</span><input name="name" required autocomplete="name" /></label>
+        <label class="field"><span>טלפון *</span><input name="phone" type="tel" placeholder="05X-XXXXXXX" required autocomplete="tel" /></label>
+        <label class="field"><span>מייל *</span><input name="email" type="email" required autocomplete="email" /></label>
         <label class="field"><span>עיר / אזור</span><input name="city" /></label>
       </div>
+
+      <h3 style="color:#d4ff3a;margin:22px 0 6px;font-size:18px">פרטי עסק (לאימות רגולטורי)</h3>
+      <div class="grid-2">
+        <label class="field"><span>סוג תיק עוסק *</span>
+          <select name="businessType" required>
+            <option value="">-- בחר/י --</option>
+            <option value="osek_patur">עוסק פטור</option>
+            <option value="osek_murshe">עוסק מורשה</option>
+            <option value="company">חברה בע"מ</option>
+            <option value="none">אין עדיין — אני רוצה לדעת מה צריך</option>
+          </select>
+        </label>
+        <label class="field"><span>מספר ח.פ. / ע.מ. *</span><input name="businessId" placeholder="9 ספרות" pattern="^\d{9}$" /></label>
+        <label class="field"><span>שם עסקי / שם מסחרי</span><input name="businessName" /></label>
+        <label class="field"><span>bit עסקי (טלפון לקבלת תשלום)</span><input name="bitPhone" type="tel" placeholder="05X-XXXXXXX" /></label>
+      </div>
+
       <label class="field"><span>ניסיון בארגון טורנירים</span>
         <select name="experience">
           <option value="">-- בחר/י --</option>
@@ -71,6 +100,11 @@
         </select>
       </label>
       <label class="field"><span>הערות / מה תרצה להפעיל</span><textarea name="note" rows="3" placeholder="לדוגמה: 2 טורנירים בחודש בקריות, 16 זוגות כל אחד"></textarea></label>
+
+      <label class="check" style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:14px;color:#b5c8bf">
+        <input type="checkbox" name="verifyAck" required style="margin-top:4px" />
+        <span>אני מבין/ה שהתשלומים עוברים ישירות אליי (הפלטפורמה אינה מחזיקה כספים), ושעליי להוציא קבלה / חשבונית מס לכל משתתף/ת לפי הדין.</span>
+      </label>
       <div id="orgErr" class="form-errors" hidden></div>
       <div id="orgOk" class="form-ok" hidden>
         ✓ הבקשה התקבלה! ניצור קשר תוך 48 שעות.

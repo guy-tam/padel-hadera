@@ -105,28 +105,48 @@ html { font-size: calc(16px * var(--a11y-font-scale)); }
 
 /* ---- סוגי תצוגה מיוחדים ---- */
 
-/* ניגודיות גבוהה */
-.a11y-c-high, .a11y-c-high body {
+/* ניגודיות גבוהה — שחור/צהוב, שמירה על מבנה ועל כפתורים נראים */
+.a11y-c-high body { background: #000 !important; color: #fff !important; }
+.a11y-c-high h1, .a11y-c-high h2, .a11y-c-high h3, .a11y-c-high h4,
+.a11y-c-high p, .a11y-c-high li, .a11y-c-high span, .a11y-c-high label,
+.a11y-c-high td, .a11y-c-high th { color: #fff !important; }
+.a11y-c-high section, .a11y-c-high .section, .a11y-c-high .wrap,
+.a11y-c-high .phero, .a11y-c-high .hero, .a11y-c-high .p-hero,
+.a11y-c-high footer, .a11y-c-high header {
   background: #000 !important;
+  background-image: none !important;
+}
+.a11y-c-high .card, .a11y-c-high .aud, .a11y-c-high .four-card,
+.a11y-c-high .t-card, .a11y-c-high .club-card, .a11y-c-high .bring-item,
+.a11y-c-high .form-card, .a11y-c-high .cat, .a11y-c-high .steps li,
+.a11y-c-high .health-step, .a11y-c-high .contact-card, .a11y-c-high .price-card {
+  background: #111 !important;
+  border: 2px solid #ffff00 !important;
   color: #fff !important;
 }
-.a11y-c-high * {
-  background-color: transparent !important;
-  color: #fff !important;
-  border-color: #fff !important;
+.a11y-c-high a, .a11y-c-high a * { color: #ffff00 !important; text-decoration: underline !important; }
+.a11y-c-high button, .a11y-c-high .btn, .a11y-c-high .pnav-cta,
+.a11y-c-high input[type="submit"], .a11y-c-high .cta-mini {
+  background: #ffff00 !important;
+  color: #000 !important;
+  border: 2px solid #ffff00 !important;
+  text-decoration: none !important;
+  font-weight: 800 !important;
 }
-.a11y-c-high a, .a11y-c-high a * { color: #ffff00 !important; }
-.a11y-c-high button, .a11y-c-high .btn, .a11y-c-high .pnav-cta {
-  background: #fff !important; color: #000 !important;
+.a11y-c-high input, .a11y-c-high select, .a11y-c-high textarea {
+  background: #000 !important; color: #fff !important;
+  border: 2px solid #fff !important;
 }
-.a11y-c-high img, .a11y-c-high video, .a11y-c-high iframe, .a11y-c-high svg {
-  filter: grayscale(1) contrast(1.3);
-}
+.a11y-c-high .eyebrow { color: #ffff00 !important; }
+.a11y-c-high video, .a11y-c-high iframe { opacity: 0.3 !important; }
+.a11y-c-high .hero-video, .a11y-c-high .p-hero-video { display: none !important; }
 
-/* ניגודיות הפוכה */
-.a11y-c-reverse { filter: invert(1) hue-rotate(180deg); }
+/* ניגודיות הפוכה — invert רק על הגוף, לא על מדיה */
+.a11y-c-reverse body { filter: invert(1) hue-rotate(180deg); background: #fff; }
 .a11y-c-reverse img, .a11y-c-reverse video, .a11y-c-reverse iframe,
-.a11y-c-reverse picture { filter: invert(1) hue-rotate(180deg); }
+.a11y-c-reverse picture, .a11y-c-reverse svg {
+  filter: invert(1) hue-rotate(180deg);
+}
 
 /* גווני אפור */
 .a11y-grayscale, .a11y-grayscale body { filter: grayscale(1); }

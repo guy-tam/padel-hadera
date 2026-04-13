@@ -513,21 +513,35 @@ app.get('/api/status/:id', (req, res) => {
 // --- Applications: arganizers / clubs ---
 app.post('/api/applications/organizer', express.json(), (req, res) => {
   const db = loadDB();
-  const { name, email, phone, city, experience, note } = req.body || {};
+  const { name, email, phone, city, experience, note,
+          businessType, businessId, businessName, bitPhone, verifyAck } = req.body || {};
   const errs = [];
   if (!name || name.trim().length < 2) errs.push('שם חסר.');
   if (!validEmail(email)) errs.push('מייל לא תקין.');
   if (!validPhone(phone)) errs.push('טלפון לא תקין.');
+  if (!['osek_patur','osek_murshe','company','none'].includes(businessType)) errs.push('סוג תיק עוסק חסר.');
+  if (businessType && businessType !== 'none' && !/^\d{9}$/.test(String(businessId || ''))) errs.push('מספר ח.פ./ע.מ. חסר או לא תקין (9 ספרות).');
+  if (!verifyAck) errs.push('יש לאשר את תנאי התשלום הישיר.');
   if (errs.length) return res.status(400).json({ ok: false, errors: errs });
   const entry = {
     id: 'ORG-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
     createdAt: new Date().toISOString(),
-    name, email, phone, city: city || '', experience: experience || '', note: note || '',
-    status: 'pending'
+    name: clean(name, 100), email: clean(email, 100), phone: clean(phone, 20),
+    city: clean(city, 60),
+    experience: clean(experience, 60), note: cleanLong(note, 500),
+    business: {
+      type: businessType,
+      id: clean(businessId, 15),
+      name: clean(businessName, 100),
+      bitPhone: clean(bitPhone, 20),
+      verified: false,
+      verifiedAt: null
+    },
+    status: 'pending_verification'
   };
   db.applications.organizers.push(entry);
   saveDB(db);
-  notifyOrganizerWhatsApp(`🆕 מארגן/ת חדש/ה מעוניין/ת להצטרף:\n${entry.name} · ${entry.phone} · ${entry.email}\n${entry.note || ''}`).catch(()=>{});
+  notifyOrganizerWhatsApp(`🆕 יזם/ית טורניר חדש/ה:\n${entry.name} · ${entry.phone}\nעסק: ${entry.business.type} (${entry.business.id})\n${entry.note || ''}`).catch(()=>{});
   res.json({ ok: true, id: entry.id });
 });
 

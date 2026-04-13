@@ -24,22 +24,34 @@ if (!process.env.ADMIN_TOKEN && process.env.NODE_ENV === 'production') {
 }
 
 // --- תיקיות ---
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-const DATA_DIR = path.join(__dirname, 'data');
+// על Vercel ה-FS ב-__dirname read-only; חייבים /tmp לדברים שנכתבים.
+const IS_SERVERLESS = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const WRITABLE_ROOT = IS_SERVERLESS ? '/tmp' : __dirname;
+const UPLOAD_DIR = path.join(WRITABLE_ROOT, 'uploads');
+const DATA_DIR = path.join(WRITABLE_ROOT, 'data');
 const DB_PATH = path.join(DATA_DIR, 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+// seed DB שארוז ב-repo (לקריאה בלבד) — משמש כ-fallback באתחול ראשון ב-serverless
+const SEED_DB_PATH = path.join(__dirname, 'data', 'db.json');
 
-for (const d of [UPLOAD_DIR, DATA_DIR]) if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+try {
+  for (const d of [UPLOAD_DIR, DATA_DIR]) if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+} catch (e) {
+  console.warn('[WARN] could not create data dirs:', e.message);
+}
 if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({
+  let seed = null;
+  try { if (fs.existsSync(SEED_DB_PATH)) seed = fs.readFileSync(SEED_DB_PATH, 'utf8'); } catch {}
+  const initial = seed || JSON.stringify({
     clubs: [], organizers: [], tournaments: [], registrations: [],
-    applications: { organizers: [], clubs: [] }
-  }, null, 2));
+    applications: { organizers: [], clubs: [], players: [] }
+  }, null, 2);
+  try { fs.writeFileSync(DB_PATH, initial); } catch (e) { console.warn('[WARN] could not write initial DB:', e.message); }
 }
 
 // --- DB (אטומי + גיבוי) ---
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
-if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+try { if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true }); } catch {}
 let DB_LOCK = Promise.resolve();
 function loadDB() {
   try {

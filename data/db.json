@@ -1,0 +1,405 @@
+{
+  "clubs": [
+    {
+      "id": "c-padel-hadera",
+      "slug": "padel-hadera",
+      "name": "פאדל חדרה",
+      "city": "חדרה",
+      "description": "מועדון הפאדל המקומי של חדרה והסביבה. מגרשים מקצועיים, אווירה קהילתית, ומסלול משחק קבוע לכל רמה.",
+      "shortDescription": "הבית של קהילת הפאדל בחדרה",
+      "image": "/img/padel-court.jpg",
+      "contactEmail": "xrptam2@gmail.com",
+      "contactPhone": "054-6911225",
+      "status": "active",
+      "createdAt": "2026-04-01T00:00:00Z"
+    },
+    {
+      "id": "c-padel-ta",
+      "slug": "padel-ta",
+      "name": "פאדל תל אביב",
+      "city": "תל אביב",
+      "description": "מועדון הפאדל הגדול של גוש דן. 6 מגרשים מקצועיים, תאורה מלאה, קפה-בר, ולוח טורנירים עמוס כל השנה.",
+      "shortDescription": "הפאדל של המרכז",
+      "image": "/img/padel-action.jpg",
+      "contactEmail": "info@padel-ta.co.il",
+      "contactPhone": "03-5550000",
+      "status": "active",
+      "createdAt": "2026-04-01T00:00:00Z"
+    },
+    {
+      "id": "c-padel-bs",
+      "slug": "padel-bs",
+      "name": "פאדל באר שבע",
+      "city": "באר שבע",
+      "description": "המרכז הדרומי של הפאדל בישראל. 4 מגרשים, קהילה גדלה, ומחויבות לפיתוח שחקנים חדשים בכל רמה.",
+      "shortDescription": "הדרום עולה על המגרש",
+      "image": "/img/padel-hero.jpg",
+      "contactEmail": "info@padel-bs.co.il",
+      "contactPhone": "08-6111222",
+      "status": "active",
+      "createdAt": "2026-04-01T00:00:00Z"
+    }
+  ],
+  "organizers": [
+    {
+      "id": "o-tam",
+      "slug": "tam-events",
+      "name": "צוות טורניר פאדל חדרה",
+      "contactPerson": "גיא לויתם",
+      "email": "xrptam2@gmail.com",
+      "phone": "054-6911225",
+      "whatsapp": "972546911225",
+      "business": {
+        "type": "osek_patur",
+        "id": "",
+        "name": "",
+        "bitPhone": "054-6911225",
+        "verified": true,
+        "verifiedAt": "2026-04-01T00:00:00Z"
+      },
+      "status": "active",
+      "createdAt": "2026-04-01T00:00:00Z"
+    },
+    {
+      "id": "o-8c82d82c",
+      "slug": "טסט",
+      "name": "טסט",
+      "contactPerson": "טסט",
+      "email": "t@t.com",
+      "phone": "0501234567",
+      "whatsapp": "972501234567",
+      "business": {
+        "type": "osek_murshe",
+        "id": "123456789",
+        "name": "",
+        "bitPhone": "",
+        "verified": true,
+        "verifiedAt": "2026-04-13T00:50:25.865Z"
+      },
+      "status": "active",
+      "dashboardToken": "e91e2e82decb534c3b02a95562b13c65",
+      "createdAt": "2026-04-13T00:50:25.865Z"
+    }
+  ],
+  "tournaments": [
+    {
+      "id": "t-hadera-2026",
+      "slug": "hadera-2026",
+      "title": "טורניר פאדל חדרה",
+      "subtitle": "חדרה עולה על המגרש",
+      "clubId": "c-padel-hadera",
+      "organizerId": "o-tam",
+      "description": "האירוע המקומי של קהילת הפאדל בחדרה. מתחילים שמחפשים את התחרות הראשונה שלהם, ובינוניים שמחפשים משחקים ברמה טובה — כולם נפגשים על אותם מגרשים.",
+      "date": "",
+      "location": "חדרה · המיקום המדויק יישלח לנרשמים",
+      "format": {
+        "pair": true,
+        "maxPairs": 8,
+        "levels": [
+          {
+            "code": "2.5",
+            "label": "מתחילים — רמה 2.5"
+          },
+          {
+            "code": "3",
+            "label": "בינוניים — רמה 3"
+          }
+        ],
+        "matchRules": "מערכה אחת עד 6 משחקונים · מקסימום 20 דקות למשחק"
+      },
+      "pricing": {
+        "perPair": 500,
+        "perPerson": 250,
+        "currency": "ILS"
+      },
+      "payment": {
+        "method": "bit",
+        "recipientName": "צוות טורניר פאדל חדרה",
+        "recipientPhone": "054-6911225",
+        "groupLink": ""
+      },
+      "refundPolicy": "החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר",
+      "requireHealthDeclaration": true,
+      "healthFormUrl": "https://www.gov.il/blobFolder/generalpage/information-special-and-refund-requests/he/forms_doclib_62557516.pdf",
+      "status": "completed",
+      "visibility": "public",
+      "featured": true,
+      "heroVideo": "https://www.youtube-nocookie.com/embed/ThHNRDhXfmw",
+      "createdAt": "2026-04-01T00:00:00Z",
+      "revenueSplit": {
+        "organizer": 70,
+        "club": 20,
+        "platform": 10
+      },
+      "results": [
+        {
+          "regId": "HDR-MNWD339N-5B6D",
+          "place": 1
+        }
+      ],
+      "finalizedAt": "2026-04-13T01:01:55.903Z"
+    },
+    {
+      "id": "t-70da1df6",
+      "slug": "טורניר-קריות-מאי",
+      "title": "טורניר קריות מאי",
+      "subtitle": "",
+      "clubId": "c-padel-hadera",
+      "organizerId": "o-8c82d82c",
+      "description": "טורניר מקומי ראשון בקריות",
+      "date": "",
+      "location": "חדרה · המיקום המדויק יישלח לנרשמים",
+      "format": {
+        "pair": true,
+        "maxPairs": 8,
+        "minPaidPairs": 8,
+        "levels": [
+          {
+            "code": "2.5",
+            "label": "מתחילים — רמה 2.5"
+          },
+          {
+            "code": "3",
+            "label": "בינוניים — רמה 3"
+          }
+        ],
+        "matchRules": "מערכה עד 6"
+      },
+      "confirmationDeadline": "",
+      "confirmed": false,
+      "pricing": {
+        "perPair": 500,
+        "perPerson": 250,
+        "currency": "ILS"
+      },
+      "payment": {
+        "method": "bit",
+        "recipientName": "צוות קריות",
+        "recipientPhone": "0501234567",
+        "groupLink": ""
+      },
+      "refundPolicy": "החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר",
+      "requireHealthDeclaration": true,
+      "healthFormUrl": "https://www.gov.il/blobFolder/generalpage/information-special-and-refund-requests/he/forms_doclib_62557516.pdf",
+      "status": "pending_review",
+      "visibility": "private",
+      "featured": false,
+      "heroVideo": "",
+      "createdAt": "2026-04-13T00:50:37.904Z",
+      "revenueSplit": {
+        "organizer": 70,
+        "club": 20,
+        "platform": 10
+      }
+    },
+    {
+      "id": "t-tlv-summer-2026",
+      "slug": "tlv-summer-2026",
+      "title": "פתיחת עונת קיץ · תל אביב",
+      "subtitle": "אירוע הפתיחה של הקיץ",
+      "clubId": "c-padel-ta",
+      "organizerId": "o-tam",
+      "description": "אירוע הפתיחה של עונת הקיץ בפאדל תל אביב. שחקנים מרחבי גוש דן נפגשים על המגרש למערכות צמודות, אחרי-משחקים חברתי וקהילה שגדלה.",
+      "date": "14 ביוני 2026, שבת",
+      "location": "תל אביב · המיקום המדויק יישלח לנרשמים",
+      "format": {
+        "pair": true,
+        "maxPairs": 12,
+        "minPaidPairs": 8,
+        "levels": [
+          {
+            "code": "2.5",
+            "label": "מתחילים — רמה 2.5"
+          },
+          {
+            "code": "3",
+            "label": "בינוניים — רמה 3"
+          }
+        ],
+        "matchRules": "מערכה אחת עד 6 משחקונים · מקסימום 20 דקות למשחק"
+      },
+      "pricing": {
+        "perPair": 600,
+        "perPerson": 300,
+        "currency": "ILS"
+      },
+      "payment": {
+        "method": "bit",
+        "recipientName": "פאדל תל אביב",
+        "recipientPhone": "050-5550000",
+        "groupLink": ""
+      },
+      "refundPolicy": "החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר",
+      "requireHealthDeclaration": true,
+      "healthFormUrl": "https://www.gov.il/blobFolder/generalpage/information-special-and-refund-requests/he/forms_doclib_62557516.pdf",
+      "status": "open",
+      "visibility": "public",
+      "featured": true,
+      "heroVideo": "",
+      "createdAt": "2026-04-10T00:00:00Z",
+      "revenueSplit": {
+        "organizer": 70,
+        "club": 20,
+        "platform": 10
+      }
+    },
+    {
+      "id": "t-negev-2026",
+      "slug": "negev-2026",
+      "title": "אליפות הנגב · באר שבע",
+      "subtitle": "הטורניר הדרומי הגדול",
+      "clubId": "c-padel-bs",
+      "organizerId": "o-tam",
+      "description": "אליפות הנגב השנתית. שחקני הדרום נפגשים בבאר שבע למערכות ברמה גבוהה, עם פרסים לזוגות המנצחים ואווירה אמיתית של פאדל דרומי.",
+      "date": "28 ביוני 2026, שבת",
+      "location": "באר שבע · המיקום המדויק יישלח לנרשמים",
+      "format": {
+        "pair": true,
+        "maxPairs": 10,
+        "minPaidPairs": 6,
+        "levels": [
+          {
+            "code": "2.5",
+            "label": "מתחילים — רמה 2.5"
+          },
+          {
+            "code": "3",
+            "label": "בינוניים — רמה 3"
+          }
+        ],
+        "matchRules": "מערכה אחת עד 6 משחקונים · מקסימום 20 דקות למשחק"
+      },
+      "pricing": {
+        "perPair": 450,
+        "perPerson": 225,
+        "currency": "ILS"
+      },
+      "payment": {
+        "method": "bit",
+        "recipientName": "פאדל באר שבע",
+        "recipientPhone": "050-6111222",
+        "groupLink": ""
+      },
+      "refundPolicy": "החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר",
+      "requireHealthDeclaration": true,
+      "healthFormUrl": "https://www.gov.il/blobFolder/generalpage/information-special-and-refund-requests/he/forms_doclib_62557516.pdf",
+      "status": "open",
+      "visibility": "public",
+      "featured": true,
+      "heroVideo": "",
+      "createdAt": "2026-04-12T00:00:00Z",
+      "revenueSplit": {
+        "organizer": 65,
+        "club": 25,
+        "platform": 10
+      }
+    }
+  ],
+  "registrations": [
+    {
+      "id": "HDR-MNWD339N-5B6D",
+      "createdAt": "2026-04-12T22:55:00.684Z",
+      "status": "approved",
+      "fullName": "Xrp Tam2",
+      "phone": "0548344577",
+      "email": "xrptam2@gmail.com",
+      "level": "3",
+      "partnerName": "גיא",
+      "partnerPhone": "0548344577",
+      "notes": "מה אומר ",
+      "healthFile": {
+        "original": "×××× ×××.jpg",
+        "stored": "1776034500680-0637c5d3-________ ______.jpg",
+        "size": 10563
+      },
+      "paymentProof": null,
+      "history": [
+        {
+          "at": "2026-04-12T22:55:00.684Z",
+          "status": "awaiting_payment",
+          "by": "system"
+        },
+        {
+          "at": "2026-04-12T23:09:32.673Z",
+          "status": "payment_under_review",
+          "by": "admin",
+          "note": "בדיקה"
+        },
+        {
+          "at": "2026-04-12T23:43:13.170Z",
+          "status": "approved",
+          "by": "admin",
+          "note": ""
+        }
+      ],
+      "tournamentId": "t-hadera-2026",
+      "result": {
+        "place": 1,
+        "points": 25,
+        "tournamentId": "t-hadera-2026"
+      }
+    }
+  ],
+  "applications": {
+    "organizers": [
+      {
+        "id": "ORG-904F1809",
+        "createdAt": "2026-04-13T00:38:38.367Z",
+        "name": "טסט",
+        "email": "t@t.com",
+        "phone": "0501234567",
+        "city": "",
+        "experience": "",
+        "note": "",
+        "business": {
+          "type": "osek_murshe",
+          "id": "123456789",
+          "name": "",
+          "bitPhone": "",
+          "verified": false,
+          "verifiedAt": null
+        },
+        "status": "approved",
+        "approvedAt": "2026-04-13T00:50:25.865Z",
+        "organizerId": "o-8c82d82c",
+        "dashboardToken": "e91e2e82decb534c3b02a95562b13c65"
+      }
+    ],
+    "clubs": [],
+    "players": [
+      {
+        "id": "PL-10EEC1C5",
+        "createdAt": "2026-04-13T00:33:34.121Z",
+        "name": "טסט שחקן",
+        "email": "t@t.com",
+        "phone": "0501234567",
+        "city": "תל אביב",
+        "level": "3",
+        "partnerName": "",
+        "note": "",
+        "status": "active"
+      },
+      {
+        "id": "PL-D064FDAE",
+        "dashboardToken": "54a29c3293f9db35429109a7d19eb2fb",
+        "createdAt": "2026-04-13T01:01:55.783Z",
+        "name": "דן לוי",
+        "email": "dan@test.com",
+        "phone": "0541111222",
+        "city": "חדרה",
+        "level": "3",
+        "partnerName": "",
+        "note": "",
+        "stats": {
+          "points": 0,
+          "tournaments": 0,
+          "wins": 0,
+          "finals": 0,
+          "semifinals": 0
+        },
+        "history": [],
+        "status": "active"
+      }
+    ]
+  }
+}

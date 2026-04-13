@@ -1,6 +1,8 @@
 node_modules/
 uploads/
-data/
+data/*
+!data/db.json
 .env
 .claude/scheduled_tasks.lock
 *.log
+.vercel

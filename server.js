@@ -190,13 +190,18 @@ function statusHe(s) {
 //  SSR PAGES
 // =================================================================
 
-// מגיש HTML עם חיתוך templating פשוט
+// מגיש HTML עם חיתוך templating פשוט + הזרקת widget נגישות
+const A11Y_INJECT = `<link rel="stylesheet" href="/a11y.css"><script src="/a11y.js" defer></script></body>`;
 function serveTemplate(res, filename, vars) {
   const filePath = path.join(PUBLIC_DIR, filename);
   fs.readFile(filePath, 'utf8', (err, html) => {
     if (err) return res.status(500).send('Template error');
-    const rendered = html.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    let rendered = html.replace(/\{\{(\w+)\}\}/g, (_, k) =>
       vars[k] !== undefined ? vars[k] : '');
+    // הזרקה רק אם לא קיים כבר
+    if (!rendered.includes('/a11y.css')) {
+      rendered = rendered.replace('</body>', A11Y_INJECT);
+    }
     res.type('html').send(rendered);
   });
 }
@@ -278,8 +283,12 @@ app.get('/clubs/:slug', (req, res) => {
   });
 });
 
-// --- /organizers/apply ---
+// --- /organizers/apply + /players/join ---
 app.get('/organizers/apply', (_req, res) => serveTemplate(res, 'organizers-apply.html', {}));
+app.get('/players/join', (_req, res) => serveTemplate(res, 'players-join.html', {}));
+
+// --- /accessibility · הצהרת נגישות ---
+app.get('/accessibility', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'accessibility.html')));
 
 // --- Dashboards (מינימליים) ---
 app.get('/dashboard', (_req, res) => serveTemplate(res, 'dashboard.html', {}));
@@ -519,6 +528,34 @@ app.post('/api/applications/organizer', express.json(), (req, res) => {
   db.applications.organizers.push(entry);
   saveDB(db);
   notifyOrganizerWhatsApp(`🆕 מארגן/ת חדש/ה מעוניין/ת להצטרף:\n${entry.name} · ${entry.phone} · ${entry.email}\n${entry.note || ''}`).catch(()=>{});
+  res.json({ ok: true, id: entry.id });
+});
+
+// שחקנים
+app.post('/api/applications/player', express.json(), (req, res) => {
+  const db = loadDB();
+  const { name, email, phone, city, level, partnerName, note, consent } = req.body || {};
+  const errs = [];
+  if (!name || name.trim().length < 2) errs.push('שם חסר.');
+  if (!validEmail(email)) errs.push('מייל לא תקין.');
+  if (!validPhone(phone)) errs.push('טלפון לא תקין.');
+  if (!city || city.trim().length < 2) errs.push('עיר חסרה.');
+  if (!['2.5','3','unknown'].includes(level)) errs.push('רמה לא תקינה.');
+  if (!consent) errs.push('יש לאשר תנאי שימוש.');
+  if (errs.length) return res.status(400).json({ ok: false, errors: errs });
+  const entry = {
+    id: 'PL-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
+    createdAt: new Date().toISOString(),
+    name: clean(name, 100), email: clean(email, 100), phone: clean(phone, 20),
+    city: clean(city, 60), level,
+    partnerName: clean(partnerName, 100),
+    note: cleanLong(note, 500),
+    status: 'active'
+  };
+  if (!db.applications.players) db.applications.players = [];
+  db.applications.players.push(entry);
+  saveDB(db);
+  notifyOrganizerWhatsApp(`🎾 שחקן/ית חדש/ה ברשת:\n${entry.name} · ${entry.phone} · רמה ${entry.level} · ${entry.city}`).catch(()=>{});
   res.json({ ok: true, id: entry.id });
 });
 

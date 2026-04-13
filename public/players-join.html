@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>הצטרפות כשחקן — Padel Platform</title>
+<meta name="description" content="הירשמו כשחקנים ברשת הפאדל — קבלו התראות על טורנירים ברמה שלכם, בעיר שלכם, אצל המגרשים הקרובים." />
+<link rel="stylesheet" href="/platform.css" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links" aria-label="תפריט ראשי">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">המגרשים שלנו</a>
+      <a href="/organizers/apply">יזמי טורניר</a>
+      <a href="/clubs/join">מגרשים מארחים</a>
+      <a href="/players/join" class="active">שחקנים</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">🎾 הצטרפות כשחקן</span>
+    <h2>שחק יותר. חפש פחות.</h2>
+    <p class="lead">
+      הירשם לרשת השחקנים של פאדל. מעכשיו — טורנירים חדשים שמתאימים לרמה ולאזור שלך מגיעים ישר אליך. בלי לחפש, בלי לפספס.
+    </p>
+
+    <div class="grid-3" style="margin:20px 0 40px">
+      <div class="aud">
+        <div class="aud-tag">🔔 התראות</div>
+        <h3>טורנירים ברמה שלך</h3>
+        <p>התראות מיידיות כשנפתח טורניר חדש ברמה 2.5 או 3 באזור שלך.</p>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">📍 קרוב אליך</div>
+        <h3>פילטר לפי עיר</h3>
+        <p>רק טורנירים בעיר שלך או בערים קרובות — לפי העדפה שלך.</p>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">⚡ מהיר</div>
+        <h3>הרשמה בקליק</h3>
+        <p>הפרטים שלך כבר אצלנו. הרשמה לטורניר הבא — שני קליקים בלבד.</p>
+      </div>
+    </div>
+
+    <form id="playerForm" class="form-card" novalidate>
+      <h2 style="font-size:24px">פרטי שחקן</h2>
+      <p class="lead" style="font-size:15px; margin-bottom:22px">נרשמים פעם אחת — ומקבלים התראות על כל הטורנירים הרלוונטיים.</p>
+      <div class="grid-2">
+        <label class="field"><span>שם מלא *</span><input name="name" required autocomplete="name" /></label>
+        <label class="field"><span>טלפון *</span><input name="phone" type="tel" placeholder="05X-XXXXXXX" required autocomplete="tel" /></label>
+        <label class="field"><span>מייל *</span><input name="email" type="email" required autocomplete="email" /></label>
+        <label class="field"><span>עיר / אזור *</span><input name="city" required /></label>
+        <label class="field">
+          <span>רמה משוערת *</span>
+          <select name="level" required>
+            <option value="">-- בחר/י רמה --</option>
+            <option value="2.5">מתחילים · 2.5</option>
+            <option value="3">בינוניים · 3</option>
+            <option value="unknown">עדיין לא יודע/ת</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>שותף/ה קבוע/ה (לא חובה)</span>
+          <input name="partnerName" autocomplete="off" />
+        </label>
+      </div>
+      <label class="field"><span>הערות</span><textarea name="note" rows="3" placeholder="ימים/שעות מועדפים, העדפות מיוחדות"></textarea></label>
+      <label class="check" style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px">
+        <input type="checkbox" name="consent" required style="margin-top:4px" />
+        <span>אני מסכים/ה לקבל התראות על טורנירים חדשים רלוונטיים ולקבל עדכונים מהפלטפורמה.</span>
+      </label>
+      <div id="playerErr" class="form-errors" hidden></div>
+      <div id="playerOk" class="form-ok" hidden>
+        ✓ נרשמת בהצלחה! תקבל/י התראה בטורניר הבא שמתאים לך.
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">סיום הרשמה</button>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner">
+    <div><b>🎾 padel.platform</b></div>
+    <div>
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">המגרשים</a>
+      <a href="/accessibility">נגישות</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const form = document.getElementById('playerForm');
+const errBox = document.getElementById('playerErr');
+const okBox = document.getElementById('playerOk');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  errBox.hidden = true;
+  if (!form.consent.checked) {
+    errBox.textContent = 'יש לאשר את תנאי השימוש.';
+    errBox.hidden = false; return;
+  }
+  const data = Object.fromEntries(new FormData(form));
+  try {
+    const r = await fetch('/api/applications/player', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      errBox.innerHTML = '<ul>' + (j.errors || ['שגיאה']).map(e => '<li>' + e + '</li>').join('') + '</ul>';
+      errBox.hidden = false; return;
+    }
+    form.hidden = true;
+    okBox.hidden = false;
+    okBox.scrollIntoView({behavior:'smooth', block:'center'});
+  } catch {
+    errBox.textContent = 'שגיאת רשת. נסה/י שוב.';
+    errBox.hidden = false;
+  }
+});
+</script>
+</body>
+</html>

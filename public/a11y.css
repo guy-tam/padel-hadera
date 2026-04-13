@@ -1,0 +1,216 @@
+/* Padel Platform — Accessibility widget + global a11y styles */
+
+/* ---- גודל טקסט גלובלי ---- */
+:root { --a11y-font-scale: 1; }
+html { font-size: calc(16px * var(--a11y-font-scale)); }
+
+/* ---- skip link ---- */
+.skip-to-main {
+  position: fixed; top: -120px; right: 12px; z-index: 10000;
+  background: #d4ff3a; color: #062a1c;
+  padding: 12px 20px; border-radius: 0 0 10px 10px;
+  font-weight: 800; text-decoration: none;
+  transition: top .2s;
+}
+.skip-to-main:focus { top: 0; outline: 3px solid #062a1c; outline-offset: 2px; }
+
+/* ---- FAB ---- */
+#a11y-fab {
+  position: fixed; bottom: 20px; left: 20px; z-index: 9998;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: #0a3d2a; color: #d4ff3a;
+  border: 2px solid #d4ff3a;
+  font-size: 28px; line-height: 1; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s, background .2s;
+}
+#a11y-fab:hover, #a11y-fab:focus { background: #d4ff3a; color: #062a1c; transform: scale(1.05); outline: none; }
+@media (max-width: 720px) { #a11y-fab { width: 46px; height: 46px; font-size: 22px; bottom: 14px; left: 14px; } }
+
+/* ---- פאנל ---- */
+#a11y-panel {
+  position: fixed; bottom: 90px; left: 20px; z-index: 9999;
+  width: 340px; max-width: calc(100vw - 30px); max-height: 80vh; overflow: auto;
+  background: #0a3d2a;
+  color: #e8efe9;
+  border: 2px solid #d4ff3a;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  font-family: 'Rubik', 'Heebo', sans-serif;
+  direction: rtl;
+}
+#a11y-panel[hidden] { display: none; }
+.a11y-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(212,255,58,.25);
+}
+.a11y-head h2 { color: #d4ff3a; margin: 0; font-size: 18px; }
+.a11y-close {
+  background: transparent; border: 0; color: #e8efe9;
+  font-size: 20px; cursor: pointer; padding: 4px 8px;
+  border-radius: 6px;
+}
+.a11y-close:hover, .a11y-close:focus { background: rgba(255,255,255,.1); outline: 2px solid #d4ff3a; }
+.a11y-body { padding: 14px 18px 18px; }
+.a11y-row { margin-bottom: 14px; }
+.a11y-row > label {
+  display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px;
+  color: #d4ff3a;
+}
+.a11y-seg {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px;
+}
+.a11y-seg button, .a11y-toggles button {
+  background: rgba(0,0,0,.3);
+  color: #e8efe9;
+  border: 1.5px solid rgba(212,255,58,.25);
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.a11y-seg button:hover, .a11y-toggles button:hover,
+.a11y-seg button:focus, .a11y-toggles button:focus {
+  background: rgba(212,255,58,.15);
+  outline: 2px solid #d4ff3a;
+}
+.a11y-seg button.on, .a11y-toggles button.on {
+  background: #d4ff3a;
+  color: #062a1c;
+  border-color: #d4ff3a;
+}
+.a11y-toggles {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  margin-bottom: 14px;
+}
+.a11y-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid rgba(212,255,58,.25);
+  padding-top: 12px;
+  font-size: 13px;
+}
+.a11y-reset {
+  background: transparent; color: #ffb3b3;
+  border: 1.5px solid rgba(255,100,100,.35);
+  padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; font-family: inherit; font-weight: 600;
+}
+.a11y-reset:hover, .a11y-reset:focus { background: rgba(255,100,100,.15); outline: 2px solid #ff6b6b; }
+.a11y-statement { color: #d4ff3a; text-decoration: underline; }
+
+/* ---- סוגי תצוגה מיוחדים ---- */
+
+/* ניגודיות גבוהה */
+.a11y-c-high, .a11y-c-high body {
+  background: #000 !important;
+  color: #fff !important;
+}
+.a11y-c-high * {
+  background-color: transparent !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+.a11y-c-high a, .a11y-c-high a * { color: #ffff00 !important; }
+.a11y-c-high button, .a11y-c-high .btn, .a11y-c-high .pnav-cta {
+  background: #fff !important; color: #000 !important;
+}
+.a11y-c-high img, .a11y-c-high video, .a11y-c-high iframe, .a11y-c-high svg {
+  filter: grayscale(1) contrast(1.3);
+}
+
+/* ניגודיות הפוכה */
+.a11y-c-reverse { filter: invert(1) hue-rotate(180deg); }
+.a11y-c-reverse img, .a11y-c-reverse video, .a11y-c-reverse iframe,
+.a11y-c-reverse picture { filter: invert(1) hue-rotate(180deg); }
+
+/* גווני אפור */
+.a11y-grayscale, .a11y-grayscale body { filter: grayscale(1); }
+
+/* הדגשת קישורים */
+.a11y-link-underline a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px !important;
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+
+/* פונט קריא */
+.a11y-readable, .a11y-readable * {
+  font-family: 'Arial', 'Rubik', sans-serif !important;
+  letter-spacing: 0.02em !important;
+  word-spacing: 0.05em !important;
+  line-height: 1.75 !important;
+}
+
+/* עצירת אנימציות */
+.a11y-stop-anim *,
+.a11y-stop-anim *::before,
+.a11y-stop-anim *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+.a11y-stop-anim video, .a11y-stop-anim iframe { opacity: 0 !important; }
+
+/* סמן מוגדל */
+.a11y-big-cursor, .a11y-big-cursor * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M2 2 L2 30 L10 22 L14 30 L18 28 L14 20 L24 20 Z' fill='%23d4ff3a' stroke='%23000' stroke-width='2'/></svg>") 2 2, auto !important;
+}
+
+/* הדגשת מוקד מקלדת */
+.a11y-focus-highlight *:focus {
+  outline: 4px solid #d4ff3a !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px rgba(212,255,58,.3) !important;
+}
+
+/* --- focus visible בסיסי (תמיד פעיל) --- */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 3px solid #d4ff3a;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* --- כפתור חזרה לתפריט ראשי --- */
+#back-home-fab {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9997;
+  background: #0a3d2a;
+  color: #d4ff3a;
+  border: 2px solid #d4ff3a;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: 'Rubik', 'Heebo', sans-serif;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transition: background .2s, color .2s, transform .2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+#back-home-fab:hover, #back-home-fab:focus {
+  background: #d4ff3a; color: #062a1c;
+  transform: translateY(-2px);
+  outline: none;
+}
+@media (max-width: 720px) {
+  #back-home-fab {
+    bottom: 14px; right: 14px;
+    padding: 8px 14px; font-size: 13px;
+  }
+}
+
+/* --- srOnly --- */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}

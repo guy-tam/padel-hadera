@@ -132,11 +132,19 @@
   <div class="tabs">
     <button class="tab active" data-tab="list">הרשמות</button>
     <button class="tab" data-tab="pending">ממתינים לאישור</button>
+    <button class="tab" data-tab="tournaments">טורנירים</button>
+    <button class="tab" data-tab="apps-organizers">בקשות יזמים <span id="badgeOrg"></span></button>
+    <button class="tab" data-tab="apps-clubs">בקשות מגרשים <span id="badgeClub"></span></button>
+    <button class="tab" data-tab="apps-players">שחקנים</button>
     <button class="tab" data-tab="timeline">פעילות אחרונה</button>
   </div>
 
   <div id="viewList"></div>
   <div id="viewPending" hidden></div>
+  <div id="viewTournaments" hidden></div>
+  <div id="viewApps-organizers" hidden></div>
+  <div id="viewApps-clubs" hidden></div>
+  <div id="viewApps-players" hidden></div>
   <div id="viewTimeline" hidden></div>
 </div>
 
@@ -242,7 +250,111 @@ function render() {
   renderCap();
   renderList();
   renderPending();
+  renderTournaments();
+  renderApplications('organizers');
+  renderApplications('clubs');
+  renderApplications('players');
   renderTimeline();
+  // badges
+  const apps = LAST_DATA.applications || {};
+  const pendOrg = (apps.organizers||[]).filter(a=>['pending','pending_verification'].includes(a.status)).length;
+  const pendClub = (apps.clubs||[]).filter(a=>a.status==='pending').length;
+  document.getElementById('badgeOrg').innerHTML = pendOrg ? ` <span style="background:#ffd968;color:#062a1c;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">${pendOrg}</span>` : '';
+  document.getElementById('badgeClub').innerHTML = pendClub ? ` <span style="background:#ffd968;color:#062a1c;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">${pendClub}</span>` : '';
+}
+
+function renderTournaments() {
+  const rows = LAST_DATA.tournaments || [];
+  const wrap = document.getElementById('viewTournaments');
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">אין טורנירים</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>כותרת</th><th>קיבולת</th><th>סטטוס</th><th>גלוי</th><th>פעולות</th></tr></thead><tbody>' +
+    rows.map(t => {
+      const cap = t.capacity || {};
+      return `<tr>
+        <td><b class="name">${esc(t.title || '')}</b><div class="sub">${esc(t.slug)} · ${esc(t.id)}</div></td>
+        <td>${cap.reserved||0}/${cap.max||0} · ${cap.approved||0} מאושרים</td>
+        <td><span class="pill ${t.status==='open'?'pill-ok':t.status==='pending_review'?'pill-warn':'pill-muted'}">${esc(t.status||'')}</span></td>
+        <td><span class="pill ${t.visibility==='public'?'pill-ok':'pill-muted'}">${t.visibility==='public'?'ציבורי':'פרטי'}</span></td>
+        <td class="actions">
+          ${t.visibility!=='public' ? `<button class="mini-btn ok" data-tpub="${t.id}">✓ פרסם</button>` : `<button class="mini-btn" data-tunpub="${t.id}">הסתר</button>`}
+          <button class="mini-btn err" data-tcancel="${t.id}">✗ בטל (אי-מינימום)</button>
+          ${t.visibility==='public' ? `<a class="mini-btn" target="_blank" href="/tournaments/${t.slug}">דף ציבורי ↗</a>` : ''}
+        </td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  wrap.querySelectorAll('[data-tpub]').forEach(b => b.addEventListener('click', () => callTournament(b.dataset.tpub, 'publish')));
+  wrap.querySelectorAll('[data-tunpub]').forEach(b => b.addEventListener('click', () => callTournament(b.dataset.tunpub, 'unpublish')));
+  wrap.querySelectorAll('[data-tcancel]').forEach(b => b.addEventListener('click', () => confirm('לבטל את הטורניר ולהחזיר כסף לכולם?') && callTournament(b.dataset.tcancel, 'cancel-insufficient')));
+}
+
+async function callTournament(id, action) {
+  const r = await fetch(`/api/admin/tournaments/${id}/${action}`, {
+    method: 'POST', headers: { 'x-admin-token': TOKEN }
+  });
+  const j = await r.json();
+  if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
+  toast('בוצע');
+  loadList();
+}
+
+function renderApplications(kind) {
+  const apps = (LAST_DATA.applications && LAST_DATA.applications[kind]) || [];
+  const wrap = document.getElementById('viewApps-' + kind);
+  if (!apps.length) { wrap.innerHTML = '<div class="empty">אין בקשות</div>'; return; }
+  const kindSingular = kind.slice(0, -1); // organizers → organizer
+  wrap.innerHTML = '<table><thead><tr><th>זמן</th><th>שם</th><th>פרטים</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>' +
+    apps.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||'')).map(a => {
+      const d = new Date(a.createdAt);
+      const isPending = ['pending','pending_verification'].includes(a.status);
+      const businessLine = a.business ? `<div class="sub">עסק: ${esc(a.business.type)} · ח.פ.: ${esc(a.business.id||'')}</div>` : '';
+      const extra = kind === 'players' ? `<div class="sub">רמה: ${esc(a.level||'')} · ${esc(a.city||'')}</div>`
+                  : kind === 'clubs' ? `<div class="sub">עיר: ${esc(a.city||'')} · מגרשים: ${esc(a.courts||'')}</div>`
+                  : businessLine;
+      return `<tr>
+        <td class="sub" style="font-family:monospace">${d.toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})}<br/>${esc(a.id)}</td>
+        <td><b class="name">${esc(a.name)}</b>
+          <div class="sub"><a href="tel:${esc(a.phone)}">${esc(a.phone)}</a> · <a href="mailto:${esc(a.email)}">${esc(a.email)}</a></div>
+          ${extra}
+          ${a.note ? `<div class="sub">📝 ${esc(a.note)}</div>` : ''}
+        </td>
+        <td><div class="sub">${esc(a.experience || a.level || '')}</div></td>
+        <td><span class="pill ${a.status==='approved'?'pill-ok':a.status==='rejected'?'pill-err':'pill-warn'}">${esc(a.status||'')}</span>
+          ${a.dashboardToken ? `<br/><a class="mini-btn ok" target="_blank" href="/organizer/${a.dashboardToken}" style="margin-top:4px">🔑 דאשבורד ↗</a>` : ''}
+        </td>
+        <td class="actions">
+          ${isPending ? `<button class="mini-btn ok" data-app-approve="${kindSingular}:${a.id}">✓ אשר</button>
+            <button class="mini-btn err" data-app-reject="${kindSingular}:${a.id}">✗ דחה</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  wrap.querySelectorAll('[data-app-approve]').forEach(b => b.addEventListener('click', () => approveApp(b.dataset.appApprove)));
+  wrap.querySelectorAll('[data-app-reject]').forEach(b => b.addEventListener('click', () => rejectApp(b.dataset.appReject)));
+}
+
+async function approveApp(key) {
+  const [kind, id] = key.split(':');
+  const r = await fetch(`/api/admin/applications/${kind}/${id}/approve`, {
+    method: 'POST', headers: { 'x-admin-token': TOKEN }
+  });
+  const j = await r.json();
+  if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
+  if (j.dashboardUrl) {
+    toast('✓ אושר! קישור דאשבורד: ' + j.dashboardUrl);
+    setTimeout(() => window.open(j.dashboardUrl, '_blank'), 800);
+  } else toast('✓ אושר');
+  loadList();
+}
+async function rejectApp(key) {
+  const note = prompt('סיבת דחייה (לא חובה):') || '';
+  const [kind, id] = key.split(':');
+  const r = await fetch(`/api/admin/applications/${kind}/${id}/reject`, {
+    method: 'POST', headers: { 'x-admin-token': TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note })
+  });
+  const j = await r.json();
+  if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
+  toast('נדחה');
+  loadList();
 }
 
 function renderStats() {
@@ -418,9 +530,15 @@ function closePreview() {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  document.getElementById('viewList').hidden = name !== 'list';
-  document.getElementById('viewPending').hidden = name !== 'pending';
-  document.getElementById('viewTimeline').hidden = name !== 'timeline';
+  const map = ['list','pending','tournaments','apps-organizers','apps-clubs','apps-players','timeline'];
+  map.forEach(n => {
+    const id = n.startsWith('apps-') ? 'viewApps-' + n.replace('apps-','') :
+               n === 'list' ? 'viewList' :
+               n === 'pending' ? 'viewPending' :
+               n === 'tournaments' ? 'viewTournaments' :
+               n === 'timeline' ? 'viewTimeline' : null;
+    if (id) document.getElementById(id).hidden = (name !== n);
+  });
 }
 
 function toast(msg, err) {

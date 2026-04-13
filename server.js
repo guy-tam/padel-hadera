@@ -173,7 +173,25 @@ const upload = multer({
 });
 
 // --- Mailer + WhatsApp notifications ---
+// כתובת "from" — Resend דורש domain מאומת, אחרת מותר רק onboarding@resend.dev.
+function mailFromAddr() {
+  return process.env.MAIL_FROM || process.env.SMTP_USER || 'onboarding@resend.dev';
+}
+// מעטפת אחידה — מחזירה אובייקט עם sendMail(), מעדיף Resend, נופל ל-Gmail SMTP.
 function buildTransport() {
+  if (process.env.RESEND_API_KEY) {
+    const { Resend } = require('resend');
+    const client = new Resend(process.env.RESEND_API_KEY);
+    return {
+      async sendMail({ from, to, subject, html, text, replyTo }) {
+        const payload = { from: from || mailFromAddr(), to, subject, html, text };
+        if (replyTo) payload.reply_to = replyTo;
+        const { data, error } = await client.emails.send(payload);
+        if (error) throw new Error(error.message || 'resend send failed');
+        return { messageId: data && data.id };
+      }
+    };
+  }
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
   return nodemailer.createTransport({
     service: 'gmail',
@@ -544,7 +562,8 @@ app.get('/api/health', (_req, res) => {
     persistence: persistenceMode(),
     serverless: IS_SERVERLESS,
     supabase: USE_SUPABASE,
-    smtp: !!process.env.SMTP_USER,
+    mail: process.env.RESEND_API_KEY ? 'resend' : (process.env.SMTP_USER ? 'smtp' : 'disabled'),
+    mail_from: mailFromAddr(),
     admin_token_set: !!process.env.ADMIN_TOKEN,
     node: process.version,
     ts: new Date().toISOString()
@@ -1984,7 +2003,7 @@ async function sendRegistrationEmails(r, t, baseUrl) {
   // מייל למנהל (כולל הצהרת בריאות כקובץ מצורף)
   if (admin && admin !== 'to_be_provided_by_user') {
     await tr.sendMail({
-      from: `"${t.title}" <${process.env.SMTP_USER}>`,
+      from: `"${t.title}" <${mailFromAddr()}>`,
       to: admin, subject: `הרשמה חדשה · ${r.fullName}`,
       html: `<div dir="rtl" style="font-family:Arial,sans-serif">
         <h2>הרשמה חדשה · ${escapeHtml(t.title)}</h2>
@@ -2022,7 +2041,7 @@ async function sendRegistrationEmails(r, t, baseUrl) {
     <p style="text-align:center;margin:18px 0">${mailBtn(`${base}/my/${r.id}`, '👤 האזור האישי שלי')}</p>`;
 
   await tr.sendMail({
-    from: `"${t.title}" <${process.env.SMTP_USER}>`,
+    from: `"${t.title}" <${mailFromAddr()}>`,
     to: r.email,
     subject: `אישור זהות · ${t.title}`,
     html: mailShell('קיבלנו את ההרשמה שלך 🎾', body)
@@ -2094,7 +2113,7 @@ async function sendStatusUpdateEmail(r, t, prevStatus, note) {
     <p style="text-align:center;margin:16px 0">${mailBtn(`${getBaseUrl()}/my/${r.id}`, '👤 צפייה בסטטוס החי')}</p>`;
 
   await tr.sendMail({
-    from: `"${t.title}" <${process.env.SMTP_USER}>`,
+    from: `"${t.title}" <${mailFromAddr()}>`,
     to: r.email,
     subject: `${m.title} · ${t.title}`,
     html: mailShell(m.title, body)
@@ -2133,7 +2152,7 @@ async function sendTournamentConfirmedEmails(t, paidRegs) {
     if (Array.isArray(r.notifiedStatuses) && r.notifiedStatuses.includes('tournament_confirmed')) continue;
     try {
       await tr.sendMail({
-        from: `"${t.title}" <${process.env.SMTP_USER}>`,
+        from: `"${t.title}" <${mailFromAddr()}>`,
         to: r.email,
         subject,
         html: mailShell('הטורניר יוצא לדרך! 🎾', body(r))
@@ -2170,7 +2189,7 @@ async function sendAllPaidEmails(t, paidRegs) {
     if (Array.isArray(r.notifiedStatuses) && r.notifiedStatuses.includes('all_paid')) continue;
     try {
       await tr.sendMail({
-        from: `"${t.title}" <${process.env.SMTP_USER}>`,
+        from: `"${t.title}" <${mailFromAddr()}>`,
         to: r.email, subject,
         html: mailShell('כולם שילמו · מוכנים לטורניר 🎾', body(r))
       });
@@ -2190,7 +2209,7 @@ async function sendPaymentProofEmail(r, t) {
   const admin = process.env.ADMIN_EMAIL;
   if (!tr || !admin || admin === 'to_be_provided_by_user') return;
   await tr.sendMail({
-    from: `"${t?.title || 'Padel Platform'}" <${process.env.SMTP_USER}>`,
+    from: `"${t?.title || 'Padel Platform'}" <${mailFromAddr()}>`,
     to: admin,
     subject: `אסמכתת תשלום · ${r.fullName} (${r.id})`,
     html: `<div dir="rtl"><p>${escapeHtml(r.fullName)} העלה/תה אסמכתת תשלום.</p><p>מזהה: ${r.id}</p></div>`,

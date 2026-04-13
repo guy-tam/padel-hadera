@@ -144,6 +144,9 @@
     <button class="tab" data-tab="apps-clubs">בקשות מגרשים <span id="badgeClub"></span></button>
     <button class="tab" data-tab="apps-players">שחקנים</button>
     <button class="tab" data-tab="active-clubs">🏟 מועדונים פעילים</button>
+    <button class="tab" data-tab="view-players">👁 דשבורד · שחקנים</button>
+    <button class="tab" data-tab="view-organizers">👁 דשבורד · מארגנים</button>
+    <button class="tab" data-tab="view-clubs">👁 דשבורד · מגרשים</button>
     <button class="tab" data-tab="timeline">פעילות אחרונה</button>
   </div>
 
@@ -154,6 +157,9 @@
   <div id="viewApps-clubs" hidden></div>
   <div id="viewApps-players" hidden></div>
   <div id="viewActive-clubs" hidden></div>
+  <div id="viewView-players" hidden></div>
+  <div id="viewView-organizers" hidden></div>
+  <div id="viewView-clubs" hidden></div>
   <div id="viewTimeline" hidden></div>
 </div>
 
@@ -264,6 +270,9 @@ function render() {
   renderApplications('clubs');
   renderApplications('players');
   renderActiveClubs();
+  renderViewPlayers();
+  renderViewOrganizers();
+  renderViewClubs();
   renderTimeline();
   // badges
   const apps = LAST_DATA.applications || {};
@@ -540,16 +549,87 @@ function closePreview() {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  const map = ['list','pending','tournaments','apps-organizers','apps-clubs','apps-players','active-clubs','timeline'];
+  const map = ['list','pending','tournaments','apps-organizers','apps-clubs','apps-players','active-clubs','view-players','view-organizers','view-clubs','timeline'];
   map.forEach(n => {
     const id = n.startsWith('apps-') ? 'viewApps-' + n.replace('apps-','') :
                n === 'active-clubs' ? 'viewActive-clubs' :
+               n === 'view-players' ? 'viewView-players' :
+               n === 'view-organizers' ? 'viewView-organizers' :
+               n === 'view-clubs' ? 'viewView-clubs' :
                n === 'list' ? 'viewList' :
                n === 'pending' ? 'viewPending' :
                n === 'tournaments' ? 'viewTournaments' :
                n === 'timeline' ? 'viewTimeline' : null;
     if (id) document.getElementById(id).hidden = (name !== n);
   });
+}
+
+// --- 3 תצוגות דשבורד-למשתמש ---
+function renderViewPlayers() {
+  const players = (LAST_DATA.applications?.players || []).filter(p => p.status === 'active' || p.status === 'approved' || p.dashboardToken);
+  const regs = LAST_DATA.registrations || [];
+  const wrap = document.getElementById('viewView-players');
+  if (!players.length) { wrap.innerHTML = '<div class="empty">אין שחקנים רשומים — הדגמה זמינה ב-<a class="mini-btn ok" target="_blank" href="/player/demo">/player/demo ↗</a></div>'; return; }
+  wrap.innerHTML = '<div class="sub" style="margin-bottom:10px">👁 כל שחקן · לחיצה פותחת את הדשבורד שלו כפי שהוא רואה אותו</div>' +
+    '<table><thead><tr><th>שחקן</th><th>עיר · רמה</th><th>הרשמות</th><th>נקודות</th><th>פתיחת דשבורד</th></tr></thead><tbody>' +
+    players.map(p => {
+      const myRegs = regs.filter(r => (r.email && p.email && r.email.toLowerCase() === p.email.toLowerCase()) ||
+                                      (r.phone && p.phone && r.phone.replace(/\D/g,'') === p.phone.replace(/\D/g,'')));
+      const points = p.stats?.points || 0;
+      return `<tr>
+        <td><b class="name">${esc(p.name)}</b><div class="sub">${esc(p.email||'')} · ${esc(p.phone||'')}</div></td>
+        <td class="sub">${esc(p.city||'—')} · רמה ${esc(p.level||'—')}</td>
+        <td>${myRegs.length}</td>
+        <td>${points}</td>
+        <td class="actions">${p.dashboardToken
+          ? `<a class="mini-btn ok" target="_blank" href="/player/${p.dashboardToken}">👁 פתח ↗</a>
+             <button class="mini-btn" onclick="navigator.clipboard.writeText(location.origin + '/player/${p.dashboardToken}'); toast('הועתק')">📋</button>`
+          : '<span class="sub">ללא טוקן</span>'}</td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function renderViewOrganizers() {
+  const orgs = LAST_DATA.organizers || [];
+  const tournaments = LAST_DATA.tournaments || [];
+  const wrap = document.getElementById('viewView-organizers');
+  if (!orgs.length) { wrap.innerHTML = '<div class="empty">אין מארגנים פעילים — הדגמה זמינה ב-<a class="mini-btn ok" target="_blank" href="/organizer/demo">/organizer/demo ↗</a></div>'; return; }
+  wrap.innerHTML = '<div class="sub" style="margin-bottom:10px">👁 כל מארגן · לחיצה פותחת את הדשבורד שלו</div>' +
+    '<table><thead><tr><th>מארגן</th><th>טורנירים</th><th>סטטוס</th><th>פתיחת דשבורד</th></tr></thead><tbody>' +
+    orgs.map(o => {
+      const myT = tournaments.filter(t => t.organizerId === o.id);
+      return `<tr>
+        <td><b class="name">${esc(o.name)}</b><div class="sub">${esc(o.id)}</div></td>
+        <td>${myT.length}</td>
+        <td><span class="pill pill-ok">פעיל</span></td>
+        <td class="actions">${o.hasToken && o.dashboardUrl
+          ? `<a class="mini-btn ok" target="_blank" href="${o.dashboardUrl}">👁 פתח ↗</a>
+             <button class="mini-btn" onclick="navigator.clipboard.writeText(location.origin + '${o.dashboardUrl}'); toast('הועתק')">📋</button>`
+          : '<span class="sub">ללא טוקן</span>'}</td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function renderViewClubs() {
+  const clubs = LAST_DATA.clubs || [];
+  const tournaments = LAST_DATA.tournaments || [];
+  const wrap = document.getElementById('viewView-clubs');
+  if (!clubs.length) { wrap.innerHTML = '<div class="empty">אין מגרשים פעילים — הדגמה זמינה ב-<a class="mini-btn ok" target="_blank" href="/club/demo">/club/demo ↗</a></div>'; return; }
+  wrap.innerHTML = '<div class="sub" style="margin-bottom:10px">👁 כל מגרש/בעלים · לחיצה פותחת את הדשבורד שלו</div>' +
+    '<table><thead><tr><th>מגרש</th><th>עיר</th><th>טורנירים מתארחים</th><th>חלונות זמן</th><th>פתיחת דשבורד</th></tr></thead><tbody>' +
+    clubs.map(c => {
+      const myT = tournaments.filter(t => t.clubId === c.id);
+      return `<tr>
+        <td><b class="name">${esc(c.name)}</b><div class="sub">${esc(c.id)}</div></td>
+        <td class="sub">${esc(c.city||'—')}</td>
+        <td>${myT.length}</td>
+        <td class="sub">${c.slotsCount || 0} פעילים</td>
+        <td class="actions">${c.hasToken && c.dashboardUrl
+          ? `<a class="mini-btn ok" target="_blank" href="${c.dashboardUrl}">👁 פתח ↗</a>
+             <button class="mini-btn" onclick="navigator.clipboard.writeText(location.origin + '${c.dashboardUrl}'); toast('הועתק')">📋</button>`
+          : `<button class="mini-btn ok" onclick="generateClubToken('${c.id}')">+ צור טוקן</button>`}</td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
 }
 async function generateClubToken(clubId) {
   const r = await fetch(`/api/admin/clubs/${clubId}/generate-token`, { method:'POST', headers: { 'x-admin-token': TOKEN } });

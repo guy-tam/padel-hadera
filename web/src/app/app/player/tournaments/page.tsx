@@ -22,7 +22,7 @@ export default async function PlayerTournaments() {
       ) : (
         <div className="card divide-y divide-slate-100">
           {list.map((r) => (
-            <Link href={`/tournaments/${r.tournaments?.slug}`} key={r.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+            <Link href={`/app/player/tournaments/${r.id}`} key={r.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
               <div>
                 <div className="font-semibold">{r.tournaments?.title}</div>
                 <div className="text-xs text-slate-500">

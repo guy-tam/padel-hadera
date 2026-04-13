@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   if (isAppRoute && user) {
     const segments = pathname.split('/').filter(Boolean);
     const targetRole = segments[1]; // app/<role>
-    if (targetRole && ['player', 'organizer', 'club'].includes(targetRole)) {
+    if (targetRole && ['player', 'organizer', 'club', 'admin'].includes(targetRole)) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')

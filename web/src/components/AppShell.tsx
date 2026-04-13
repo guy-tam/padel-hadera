@@ -22,7 +22,10 @@ const NAV: Record<UserRole, { href: string; label: string; icon: string }[]> = {
     { href: '/app/club/profile', label: 'פרופיל מגרש', icon: '⚙️' }
   ],
   admin: [
-    { href: '/app', label: 'סקירה', icon: '📊' }
+    { href: '/app/admin', label: 'סקירת מערכת', icon: '🛡️' },
+    { href: '/app/organizer', label: 'יוזמים', icon: '🏆' },
+    { href: '/app/club', label: 'מגרשים', icon: '🏟️' },
+    { href: '/app/player', label: 'שחקנים', icon: '🎾' }
   ]
 };
 

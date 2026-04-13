@@ -76,10 +76,14 @@
 
   <div class="tabs">
     <button class="tab active" data-tab="list">הטורנירים שלי</button>
-    <button class="tab" data-tab="new">יצירת טורניר</button>
+    <button class="tab" data-tab="crm">🗂️ אנשי קשר (CRM)</button>
+    <button class="tab" data-tab="log">📬 יומן פעילות</button>
+    <button class="tab" data-tab="new">➕ יצירת טורניר</button>
   </div>
 
   <div id="viewList"></div>
+  <div id="viewCrm" hidden></div>
+  <div id="viewLog" hidden></div>
 
   <div id="viewNew" hidden>
     <div class="form-sect">
@@ -133,8 +137,76 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  el('viewList').hidden = name !== 'list';
-  el('viewNew').hidden = name !== 'new';
+  ['list','new','crm','log'].forEach(n => {
+    const e = el('view' + n[0].toUpperCase() + n.slice(1));
+    if (e) e.hidden = name !== n;
+  });
+  if (name === 'crm' || name === 'log') loadCrm();
+}
+
+// ============ CRM ============
+let CRM = null;
+function statusHe(s) { return ({submitted:'נקלטה',awaiting_payment:'ממתין לתשלום',payment_under_review:'תשלום בבדיקה',paid_confirmed:'תשלום אושר',approved:'מאושר',waitlist:'רשימת המתנה',cancelled:'בוטל',refund_pending:'החזר בתהליך',refunded:'הוחזר'}[s]||s); }
+const typeHe = t => ({email_sent:'📧 מייל',wa_sent:'💬 WA',status_change:'🔄 סטטוס',note:'📝 הערה',manual_wa:'💬 WA ידני',manual_email:'📧 מייל ידני',call:'📞 שיחה'}[t]||t);
+function waLink(phone, text) {
+  const p = String(phone||'').replace(/\D/g,'').replace(/^0/, '972');
+  return `https://wa.me/${p}${text?'?text='+encodeURIComponent(text):''}`;
+}
+async function loadCrm() {
+  try {
+    const r = await fetch('/api/organizer/' + TOKEN + '/crm');
+    const j = await r.json();
+    if (!j.ok) return;
+    CRM = j;
+    renderCrm(); renderLog();
+  } catch {}
+}
+function renderCrm() {
+  const wrap = el('viewCrm');
+  if (!CRM || !CRM.contacts.length) { wrap.innerHTML = '<div class="empty" style="text-align:center;color:#b5c9bf;padding:60px">עוד אין אנשי קשר.</div>'; return; }
+  const s = CRM.stats;
+  wrap.innerHTML = `
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="n">${s.totalContacts}</div><div class="lbl">אנשי קשר</div></div>
+      <div class="stat"><div class="n">${s.repeatPlayers}</div><div class="lbl">חוזרים</div></div>
+      <div class="stat"><div class="n">₪${s.totalRevenue}</div><div class="lbl">הכנסה מצטברת</div></div>
+      <div class="stat"><div class="n">${s.activityCount}</div><div class="lbl">אירועי תקשורת</div></div>
+    </div>
+    <table class="reg-table">
+      <thead><tr><th>שחקן/ית</th><th>קשר</th><th>טורנירים</th><th>שילם</th><th>לאחרונה</th><th>פעולות</th></tr></thead>
+      <tbody>${CRM.contacts.map(c => `<tr>
+        <td><b>${escapeHtml(c.name)}</b><div style="font-size:11px;color:#8fa69c">רמה ${escapeHtml(c.level||'')} · ${statusHe(c.lastStatus)}</div></td>
+        <td style="font-size:12px"><a href="tel:${escapeHtml(c.phone)}" style="color:#d4ff3a">${escapeHtml(c.phone)}</a><br><span style="color:#b5c9bf">${escapeHtml(c.email||'')}</span></td>
+        <td><b style="color:#d4ff3a">${c.tournaments}</b></td>
+        <td><b>${c.paid}</b> · ₪${c.revenue}</td>
+        <td style="font-size:12px;color:#b5c9bf">${new Date(c.lastSeen).toLocaleDateString('he-IL')}</td>
+        <td><div class="reg-actions" style="display:flex;gap:6px;flex-wrap:wrap">
+          <a target="_blank" href="${waLink(c.phone, 'היי ' + c.name.split(' ')[0])}" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid rgba(37,211,102,.35);background:rgba(37,211,102,.15);color:#25d366;text-decoration:none">💬 WA</a>
+          <a href="mailto:${escapeHtml(c.email)}" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid rgba(212,255,58,.3);color:#d4ff3a;text-decoration:none">📧</a>
+          <button onclick="openNote('${c.key}', this)" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid rgba(212,255,58,.3);background:transparent;color:#d4ff3a;cursor:pointer">📝 הערה</button>
+        </div></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+async function openNote(key, btn) {
+  const c = CRM.contacts.find(x => x.key === key);
+  const newNote = prompt('הערת CRM:', c?.notes || '');
+  if (newNote === null) return;
+  await fetch('/api/organizer/' + TOKEN + '/contacts/' + encodeURIComponent(key) + '/note', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ notes: newNote })
+  });
+  loadCrm();
+}
+function renderLog() {
+  const wrap = el('viewLog');
+  if (!CRM || !CRM.recentActivity.length) { wrap.innerHTML = '<div class="empty" style="text-align:center;color:#b5c9bf;padding:60px">אין עדיין תקשורת.</div>'; return; }
+  wrap.innerHTML = `<table class="reg-table">
+    <thead><tr><th>מתי</th><th>סוג</th><th>ערוץ</th><th>סיכום</th></tr></thead>
+    <tbody>${CRM.recentActivity.map(a => `<tr>
+      <td style="font-size:11.5px;color:#8fa69c;white-space:nowrap">${new Date(a.at).toLocaleString('he-IL')}</td>
+      <td>${typeHe(a.type)}</td>
+      <td style="font-size:12px;color:#b5c9bf">${escapeHtml(a.channel||'')}</td>
+      <td style="font-size:12.5px">${escapeHtml(a.summary||'')}</td>
+    </tr>`).join('')}</tbody></table>`;
 }
 
 async function load() {

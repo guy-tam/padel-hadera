@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#062318" />
+<meta name="robots" content="noindex, nofollow" />
+<title>דאשבורד מועדון · {{CLUB_NAME}}</title>
+<link rel="stylesheet" href="/platform.css" />
+<link rel="stylesheet" href="/a11y.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/polish.css" />
+<style>
+  .cd-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 120px; }
+  .cd-head { display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px; }
+  .cd-head h1 { margin:0;font-size:26px;color:#fff; }
+  .cd-head .muted { color:#b5c9bf;font-size:14px; }
+  .tabs { display:flex;gap:6px;margin:16px 0 22px;border-bottom:1px solid rgba(212,255,58,.15);overflow-x:auto;scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { padding:10px 16px;background:transparent;border:0;color:#b5c9bf;cursor:pointer;font-family:inherit;font-size:14.5px;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap; }
+  .tab.active { color:var(--lime);border-bottom-color:var(--lime); }
+  .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px; }
+  .stat { background:#0f241c;border:1px solid #223128;border-radius:14px;padding:16px; }
+  .stat .n { font-size:28px;font-weight:900;color:var(--lime);line-height:1; }
+  .stat .lbl { color:#b5c9bf;font-size:12.5px;margin-top:6px; }
+  .slot, .trow { background:#0a2b1e;border:1px solid rgba(212,255,58,0.18);border-radius:14px;padding:16px 18px;margin-bottom:12px; }
+  .slot-head { display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center; }
+  .slot-head h3 { margin:0;font-size:17px;color:#fff; }
+  .slot-meta { color:#b5c8bf;font-size:13px;margin-top:6px;display:flex;gap:14px;flex-wrap:wrap; }
+  .slot-meta span b { color:#d4ff3a; }
+  .progress { height:6px;background:#1a2a23;border-radius:999px;overflow:hidden;margin:10px 0 0; }
+  .progress > div { height:100%;background:linear-gradient(90deg,#d4ff3a,#2bb673);transition:width .4s; }
+  .pill { display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700; }
+  .pill.open { background:rgba(212,255,58,.2);color:#d4ff3a; }
+  .pill.conf { background:rgba(43,182,115,.25);color:#7fe3a8; }
+  .pill.full { background:rgba(43,182,115,.4);color:#062a1c; }
+  .pill.cxl { background:rgba(255,107,107,.2);color:#ff9aa4; }
+  .form-sect { background:#0a2b1e;border:1px solid rgba(212,255,58,0.22);border-radius:16px;padding:22px; }
+  .form-sect h2 { margin:0 0 4px;color:#fff; }
+  .ok-box { background:rgba(212,255,58,0.12);border:1px solid rgba(212,255,58,0.35);color:var(--lime);padding:14px;border-radius:10px;margin-bottom:14px; }
+  .reg-table { width:100%;border-collapse:collapse;background:#12201a;border-radius:12px;overflow:hidden;font-size:13.5px; }
+  .reg-table th, .reg-table td { padding:10px 12px;text-align:right;border-bottom:1px solid #223128;color:#d8e5dd; }
+  .reg-table th { background:#1a2a23;font-size:11.5px;color:#b5c8bf; }
+  .reg-actions { display:flex;gap:6px;flex-wrap:wrap; }
+  .reg-actions button { padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid rgba(212,255,58,.3);background:transparent;color:#d4ff3a;cursor:pointer;font-family:inherit; }
+  .reg-actions button:hover { background:rgba(212,255,58,.12); }
+  .reg-actions button.danger { border-color:rgba(255,107,107,.4);color:#ff9aa4; }
+  .empty { text-align:center;color:#b5c9bf;padding:44px 20px;border:1px dashed rgba(212,255,58,.2);border-radius:14px; }
+  .inline-link { color:#d4ff3a;text-decoration:underline;font-size:13px; }
+  .copy-token { display:inline-flex;gap:6px;align-items:center;background:rgba(212,255,58,.08);padding:6px 10px;border-radius:8px;font-size:12px;color:#b5c8bf;border:1px solid rgba(212,255,58,.2);cursor:pointer; }
+  details.slot-reg { margin-top:10px; }
+  details.slot-reg summary { cursor:pointer;color:#d4ff3a;font-size:13px;padding:6px 0; }
+  @media (max-width:640px) {
+    .reg-table { display:block;overflow-x:auto; }
+    .slot-meta { font-size:12.5px;gap:10px; }
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links" aria-label="ראשי">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/">דף הבית</a>
+    </nav>
+    <span class="pnav-cta">🏟 דשבורד מועדון</span>
+  </div>
+</header>
+
+<main id="main" class="cd-wrap">
+  <div class="cd-head">
+    <div>
+      <h1>{{CLUB_NAME}}</h1>
+      <div class="muted">{{CLUB_CITY}} · דשבורד מועדון</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="copyBtn" onclick="copyLink()">📋 העתק קישור דשבורד</button>
+      <button class="btn btn-primary" onclick="switchTab('new')">+ חלון זמן חדש</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="slots" role="tab">📅 לוח זמנים וטורנירים</button>
+    <button class="tab" data-tab="regs" role="tab">👥 הרשמות חיות</button>
+    <button class="tab" data-tab="crm" role="tab">🗂️ אנשי קשר (CRM)</button>
+    <button class="tab" data-tab="log" role="tab">📬 יומן פעילות</button>
+    <button class="tab" data-tab="new" role="tab">➕ חלון זמן חדש</button>
+  </div>
+
+  <section id="viewSlots" role="tabpanel"></section>
+  <section id="viewRegs" role="tabpanel" hidden></section>
+  <section id="viewCrm" role="tabpanel" hidden></section>
+  <section id="viewLog" role="tabpanel" hidden></section>
+
+  <section id="viewNew" role="tabpanel" hidden>
+    <div class="form-sect">
+      <h2>הקצאת חלון זמן חדש</h2>
+      <p class="lead" style="font-size:14px;color:#b5c9bf;margin:6px 0 18px">
+        בחר/י תאריך, שעות, כמה מגרשים פנויים ורמת משחק — הטורניר ייפתח באופן אוטומטי, יעלה לאוויר מיד ויתחיל לקבל הרשמות.
+      </p>
+      <form id="slotForm" novalidate>
+        <div class="grid-2">
+          <label class="field"><span data-required>תאריך</span><input type="date" name="date" required /></label>
+          <label class="field"><span>שם הטורניר (אופציונלי)</span><input name="title" maxlength="100" placeholder="אוטומטי: שם מועדון + תאריך" /></label>
+          <label class="field"><span data-required>שעת התחלה</span><input type="time" name="startTime" required /></label>
+          <label class="field"><span data-required>שעת סיום</span><input type="time" name="endTime" required /></label>
+          <label class="field"><span data-required>מספר מגרשים פנויים</span><input type="number" name="courts" min="1" max="16" value="4" required /></label>
+          <label class="field"><span data-required>רמת משחק</span>
+            <select name="level" required>
+              <option value="2.5">רמה א</option>
+              <option value="3">רמה א+</option>
+              <option value="both">מעורב (א + א+)</option>
+            </select>
+          </label>
+          <label class="field"><span data-required>מחיר לזוג (₪)</span><input type="number" name="pricePair" min="0" value="500" required /></label>
+          <label class="field"><span data-required>מספר bit לתשלום</span><input type="tel" name="bitRecipientPhone" placeholder="05X-XXXXXXX" required /></label>
+          <label class="field"><span>שם נמען bit</span><input name="bitRecipientName" maxlength="100" placeholder="ברירת-מחדל: שם המועדון" /></label>
+          <label class="field"><span>קישור קבוצת bit</span><input type="url" name="bitGroupLink" placeholder="אופציונלי" /></label>
+        </div>
+        <label class="field"><span>תיאור נוסף (אופציונלי)</span><textarea name="description" rows="3" placeholder="טקסט חופשי שיופיע בדף הטורניר"></textarea></label>
+        <label class="check" style="display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-size:14px;color:#b5c8bf">
+          <input type="checkbox" name="requireHealthDeclaration" checked style="margin-top:4px" />
+          <span>דרוש הצהרת בריאות חתומה מכל משתתף</span>
+        </label>
+        <div id="slotErr" class="form-errors" hidden></div>
+        <div id="slotOk" class="ok-box" hidden></div>
+        <button type="submit" class="btn btn-primary" style="width:100%">🚀 פתח את הטורניר</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner"><div><b>🎾 padel.platform</b></div><div><a href="/">בית</a><a href="/accessibility">נגישות</a></div></div>
+</footer>
+
+<script>
+const TOKEN = "{{TOKEN}}";
+let DATA = { club: {}, slots: [], tournaments: [] };
+
+const el = id => document.getElementById(id);
+const qs = s => document.querySelector(s);
+
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function statusHe(s) { return ({submitted:'נקלטה',awaiting_payment:'ממתין לתשלום',payment_under_review:'תשלום בבדיקה',paid_confirmed:'תשלום אושר',approved:'מאושר',waitlist:'רשימת המתנה',cancelled:'בוטל',refund_pending:'החזר בתהליך',refunded:'הוחזר'})[s]||s; }
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  ['slots','regs','crm','log','new'].forEach(n => {
+    const e = el('view' + n[0].toUpperCase() + n.slice(1));
+    if (e) e.hidden = name !== n;
+  });
+  if (name === 'crm' || name === 'log') loadCrm();
+}
+
+function copyLink() {
+  const url = location.href;
+  navigator.clipboard?.writeText(url).then(() => {
+    const b = el('copyBtn'); const t0 = b.textContent;
+    b.textContent = '✓ הועתק'; setTimeout(()=> b.textContent = t0, 1500);
+  });
+}
+
+async function load() {
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/me`);
+    const j = await r.json();
+    if (!r.ok || !j.ok) { document.body.innerHTML = '<p style="color:#fff;padding:60px;text-align:center;font-size:18px">🔒 אין הרשאה לדשבורד זה</p>'; return; }
+    DATA = j;
+    renderStats();
+    renderSlots();
+    renderRegs();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderStats() {
+  const ts = DATA.tournaments;
+  const activeSlots = (DATA.slots || []).filter(s => s.status !== 'cancelled').length;
+  const totalRegs = ts.reduce((s,t) => s + t.capacity.total, 0);
+  const totalPaid = ts.reduce((s,t) => s + t.capacity.paid, 0);
+  const confirmed = ts.filter(t => t.confirmed).length;
+  el('stats').innerHTML = [
+    `<div class="stat"><div class="n">${activeSlots}</div><div class="lbl">חלונות זמן פעילים</div></div>`,
+    `<div class="stat"><div class="n">${ts.length}</div><div class="lbl">סה"כ טורנירים</div></div>`,
+    `<div class="stat"><div class="n">${confirmed}</div><div class="lbl">אושרו (יצאו לדרך)</div></div>`,
+    `<div class="stat"><div class="n">${totalRegs}</div><div class="lbl">הרשמות כולל</div></div>`,
+    `<div class="stat"><div class="n">${totalPaid}</div><div class="lbl">שילמו</div></div>`
+  ].join('');
+}
+
+function pillFor(t) {
+  if (t.allPaidAt) return '<span class="pill full">✓ כולם שילמו</span>';
+  if (t.confirmed) return '<span class="pill conf">🎉 אושר</span>';
+  if (t.visibility === 'public') return '<span class="pill open">פתוח להרשמה</span>';
+  return '<span class="pill cxl">סגור</span>';
+}
+
+function renderSlots() {
+  const wrap = el('viewSlots');
+  const ts = DATA.tournaments.slice().sort((a,b) => (b.id).localeCompare(a.id));
+  if (!ts.length) {
+    wrap.innerHTML = `<div class="empty">
+      אין עדיין חלונות זמן.<br><br>
+      <a class="inline-link" onclick="switchTab('new')">פתח/י את הטורניר הראשון שלך ←</a>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = ts.map(t => {
+    const pct = Math.min(100, Math.round((t.capacity.paid / t.capacity.max) * 100));
+    const pctReserved = Math.min(100, Math.round((t.capacity.reserved / t.capacity.max) * 100));
+    const slot = (DATA.slots || []).find(s => s.tournamentId === t.id);
+    const regs = t.registrations || [];
+    return `<div class="slot">
+      <div class="slot-head">
+        <div>
+          <h3>${esc(t.title)} ${pillFor(t)}</h3>
+          <div class="slot-meta">
+            ${t.date ? `<span>📅 <b>${esc(t.date)}</b></span>` : ''}
+            ${slot ? `<span>⏰ <b>${esc(slot.startTime)}–${esc(slot.endTime)}</b></span>` : ''}
+            ${slot ? `<span>🏟 <b>${slot.courts}</b> מגרשים</span>` : ''}
+            <span>👥 <b>${t.capacity.paid}/${t.capacity.max}</b> שילמו · <b>${t.capacity.reserved}</b> משוריינים</span>
+          </div>
+          <div class="progress" title="${pct}% שילמו"><div style="width:${pct}%"></div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-ghost" href="/tournaments/${t.slug}" target="_blank" style="padding:8px 14px;font-size:13px">דף ציבורי ↗</a>
+          <a class="btn btn-ghost" href="/api/tournaments/${t.slug}/calendar.ics" style="padding:8px 14px;font-size:13px">📅 ICS</a>
+          ${slot && regs.length === 0 ? `<button class="btn btn-ghost" onclick="cancelSlot('${slot.id}')" style="padding:8px 14px;font-size:13px;border-color:rgba(255,107,107,.4);color:#ff9aa4">בטל חלון</button>` : ''}
+        </div>
+      </div>
+      ${regs.length ? `<details class="slot-reg"><summary>הרשמות (${regs.length})</summary>${renderRegTable(regs, t.id)}</details>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderRegs() {
+  const wrap = el('viewRegs');
+  const all = [];
+  DATA.tournaments.forEach(t => {
+    (t.registrations || []).forEach(r => all.push({ ...r, tournamentTitle: t.title, tournamentId: t.id }));
+  });
+  if (!all.length) { wrap.innerHTML = '<div class="empty">עוד אין הרשמות.</div>'; return; }
+  all.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  wrap.innerHTML = `<table class="reg-table">
+    <thead><tr><th>תאריך</th><th>שם</th><th>טורניר</th><th>רמה</th><th>שותף/ה</th><th>מייל</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+    <tbody>
+    ${all.map(r => `<tr>
+      <td style="white-space:nowrap;color:#8fa69c;font-size:12px">${new Date(r.createdAt).toLocaleDateString('he-IL')}</td>
+      <td><b>${esc(r.fullName)}</b><br><span style="font-size:11px;color:#8fa69c">${esc(r.phone)}</span></td>
+      <td style="font-size:12px;color:#b5c9bf">${esc(r.tournamentTitle)}</td>
+      <td>${esc(r.level)}</td>
+      <td style="font-size:12px">${r.partnerName ? esc(r.partnerName) : '—'}</td>
+      <td style="font-size:11.5px">${esc(r.email)}<br>${r.emailVerified ? '<span style="color:#7fe3a8">✓ אומת</span>' : '<span style="color:#ffd968">ממתין</span>'}</td>
+      <td><b style="color:#d4ff3a">${statusHe(r.status)}</b></td>
+      <td>${renderActions(r)}</td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function renderRegTable(regs, tid) {
+  return `<table class="reg-table" style="margin-top:10px">
+    <thead><tr><th>שם</th><th>מייל</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+    <tbody>${regs.map(r => `<tr>
+      <td><b>${esc(r.fullName)}</b><br><span style="font-size:11px;color:#8fa69c">${esc(r.phone)}</span></td>
+      <td style="font-size:12px">${esc(r.email)}</td>
+      <td>${esc(r.level)}</td>
+      <td><b style="color:#d4ff3a">${statusHe(r.status)}</b></td>
+      <td>${renderActions(r)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function renderActions(r) {
+  const opts = [];
+  if (r.status === 'awaiting_payment') opts.push(['approved','אשר ידנית']);
+  if (r.status === 'payment_under_review') opts.push(['paid_confirmed','אשר תשלום']);
+  if (r.status === 'waitlist') opts.push(['awaiting_payment','העבר מרשימת המתנה']);
+  if (!['cancelled','refunded'].includes(r.status)) opts.push(['cancelled','בטל','danger']);
+  return `<div class="reg-actions">${opts.map(o => `<button class="${o[2]||''}" onclick="setStatus('${r.id}','${o[0]}')">${o[1]}</button>`).join('')}</div>`;
+}
+
+async function setStatus(id, status) {
+  const note = status === 'cancelled' ? (prompt('סיבת ביטול (אופציונלי):') || '') : '';
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/registrations/${id}/status`, {
+      method: 'POST', headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ status, note })
+    });
+    const j = await r.json();
+    if (!j.ok) return alert(j.error || 'שגיאה');
+    await load();
+  } catch { alert('שגיאת רשת'); }
+}
+
+async function cancelSlot(slotId) {
+  if (!confirm('לבטל את חלון הזמן הזה? (אפשרי רק ללא הרשמות פעילות)')) return;
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/slots/${slotId}`, { method: 'DELETE' });
+    const j = await r.json();
+    if (!j.ok) return alert(j.error || 'שגיאה');
+    await load();
+  } catch { alert('שגיאת רשת'); }
+}
+
+el('slotForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  el('slotErr').hidden = true; el('slotOk').hidden = true;
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  data.requireHealthDeclaration = e.target.requireHealthDeclaration.checked;
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/slots`, {
+      method: 'POST', headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      el('slotErr').innerHTML = '<ul>' + (j.errors || [j.error || 'שגיאה']).map(x => '<li>'+esc(x)+'</li>').join('') + '</ul>';
+      el('slotErr').hidden = false; return;
+    }
+    el('slotOk').innerHTML = `✅ הטורניר נפתח בהצלחה! <a class="inline-link" href="/tournaments/${j.tournament.slug}" target="_blank">דף הטורניר ↗</a>`;
+    el('slotOk').hidden = false;
+    e.target.reset();
+    await load();
+    setTimeout(() => switchTab('slots'), 1600);
+  } catch {
+    el('slotErr').textContent = 'שגיאת רשת.'; el('slotErr').hidden = false;
+  }
+});
+
+// ============ CRM ============
+let CRM = null;
+async function loadCrm() {
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/crm`);
+    const j = await r.json();
+    if (!j.ok) return;
+    CRM = j;
+    renderCrm();
+    renderLog();
+  } catch {}
+}
+
+const typeHe = t => ({email_sent:'📧 מייל נשלח',wa_sent:'💬 WhatsApp',status_change:'🔄 סטטוס',note:'📝 הערה',manual_wa:'💬 WA ידני',manual_email:'📧 מייל ידני',call:'📞 שיחה'}[t]||t);
+
+function waLink(phone, text) {
+  const p = String(phone||'').replace(/\D/g,'').replace(/^0/, '972');
+  const q = encodeURIComponent(text || '');
+  return `https://wa.me/${p}${q?'?text='+q:''}`;
+}
+
+function renderCrm() {
+  const wrap = el('viewCrm');
+  if (!CRM || !CRM.contacts.length) { wrap.innerHTML = '<div class="empty">עוד אין אנשי קשר — יופיעו כאן עם ההרשמות הראשונות.</div>'; return; }
+  const s = CRM.stats;
+  wrap.innerHTML = `
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="n">${s.totalContacts}</div><div class="lbl">אנשי קשר</div></div>
+      <div class="stat"><div class="n">${s.repeatPlayers}</div><div class="lbl">חוזרים (2+)</div></div>
+      <div class="stat"><div class="n">₪${s.totalRevenue}</div><div class="lbl">הכנסה מצטברת</div></div>
+      <div class="stat"><div class="n">${s.activityCount}</div><div class="lbl">אירועי תקשורת</div></div>
+    </div>
+    <table class="reg-table">
+      <thead><tr><th>שחקן/ית</th><th>קשר</th><th>טורנירים</th><th>שילם</th><th>לאחרונה</th><th>שותפים</th><th>פעולות</th></tr></thead>
+      <tbody>
+      ${CRM.contacts.map(c => `<tr id="c-${c.key}">
+        <td><b>${esc(c.name)}</b><div style="font-size:11px;color:#8fa69c">רמה ${esc(c.level||'')} · ${statusHe(c.lastStatus)}</div></td>
+        <td style="font-size:12px"><a href="tel:${esc(c.phone)}" style="color:#d4ff3a">${esc(c.phone)}</a><br><span style="color:#b5c9bf">${esc(c.email||'')}</span></td>
+        <td><b style="color:#d4ff3a">${c.tournaments}</b></td>
+        <td><b>${c.paid}</b> · ₪${c.revenue}</td>
+        <td style="font-size:12px;color:#b5c9bf">${new Date(c.lastSeen).toLocaleDateString('he-IL')}</td>
+        <td style="font-size:11px;color:#b5c9bf">${c.partners.slice(0,3).map(p=>esc(p)).join(', ')||'—'}</td>
+        <td>
+          <div class="reg-actions">
+            <a href="${waLink(c.phone, 'היי ' + c.name.split(' ')[0] + ', מ' + esc(CRM.club.name))}" target="_blank" style="background:rgba(37,211,102,.15);color:#25d366;border-color:rgba(37,211,102,.35)">💬 WA</a>
+            <a href="mailto:${esc(c.email)}?subject=${encodeURIComponent('הודעה מ-' + CRM.club.name)}">📧 מייל</a>
+            <button onclick="toggleContact('${c.key}')">⚙️ פרטים</button>
+          </div>
+        </td>
+      </tr>
+      <tr id="d-${c.key}" hidden><td colspan="7" style="background:#0a2b1e">${renderContactDetails(c)}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderContactDetails(c) {
+  return `<div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <div>
+      <b style="color:#d4ff3a">הערות CRM</b>
+      <textarea id="n-${c.key}" rows="4" style="width:100%;margin-top:6px;background:#12201a;color:#fff;border:1px solid #223128;border-radius:10px;padding:10px;font-family:inherit;font-size:13px">${esc(c.notes || '')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="saveNote('${c.key}')">💾 שמירה</button>
+        <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="logManual('${c.key}','call')">📞 תיעוד שיחה</button>
+        <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="logManual('${c.key}','whatsapp')">💬 תיעוד WA</button>
+      </div>
+      <div style="margin-top:14px">
+        <b style="color:#d4ff3a;font-size:13px">היסטוריית הרשמות (${c.regs.length})</b>
+        ${c.regs.slice(0,6).map(r => `<div style="font-size:12.5px;color:#b5c9bf;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06)">
+          ${new Date(r.createdAt).toLocaleDateString('he-IL')} · ${esc(r.tournamentTitle)} · <b style="color:#d4ff3a">${statusHe(r.status)}</b>${r.partnerName?' · 🤝 '+esc(r.partnerName):''}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div>
+      <b style="color:#d4ff3a">יומן פעילות</b>
+      <div style="max-height:260px;overflow-y:auto;margin-top:6px;border:1px solid #223128;border-radius:10px;padding:10px;background:#12201a">
+        ${c.activity.length ? c.activity.map(a => `<div style="font-size:12px;color:#b5c9bf;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06)">
+          <div style="color:#8fa69c;font-size:11px">${new Date(a.at).toLocaleString('he-IL')}</div>
+          ${typeHe(a.type)} · ${esc(a.summary||'')}
+        </div>`).join('') : '<div style="color:#8fa69c;font-size:12px;padding:10px;text-align:center">אין עדיין תקשורת</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleContact(key) {
+  const e = document.getElementById('d-'+key);
+  if (e) e.hidden = !e.hidden;
+}
+async function saveNote(key) {
+  const notes = document.getElementById('n-'+key).value;
+  try {
+    const r = await fetch(`/api/club/${TOKEN}/contacts/${encodeURIComponent(key)}/note`, {
+      method: 'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ notes })
+    });
+    const j = await r.json();
+    if (!j.ok) return alert(j.error || 'שגיאה');
+    alert('✓ נשמר');
+    await loadCrm();
+  } catch { alert('שגיאת רשת'); }
+}
+async function logManual(key, channel) {
+  const summary = prompt(channel === 'call' ? 'מה נאמר בשיחה?' : 'מה נשלח ב-WhatsApp?');
+  if (!summary) return;
+  try {
+    await fetch(`/api/club/${TOKEN}/contacts/${encodeURIComponent(key)}/activity`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ channel, summary })
+    });
+    await loadCrm();
+  } catch {}
+}
+
+function renderLog() {
+  const wrap = el('viewLog');
+  if (!CRM || !CRM.recentActivity.length) { wrap.innerHTML = '<div class="empty">עוד אין תקשורת מתועדת.</div>'; return; }
+  wrap.innerHTML = `<table class="reg-table">
+    <thead><tr><th>מתי</th><th>סוג</th><th>ערוץ</th><th>סיכום</th><th>יצר/ה</th></tr></thead>
+    <tbody>${CRM.recentActivity.map(a => `<tr>
+      <td style="font-size:11.5px;color:#8fa69c;white-space:nowrap">${new Date(a.at).toLocaleString('he-IL')}</td>
+      <td>${typeHe(a.type)}</td>
+      <td style="font-size:12px;color:#b5c9bf">${esc(a.channel)}</td>
+      <td style="font-size:12.5px">${esc(a.summary)}</td>
+      <td style="font-size:12px;color:#b5c9bf">${esc(a.by)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// רענון אוטומטי כל 30 שניות — סנכרון חי
+setInterval(() => { load(); if (CRM) loadCrm(); }, 30000);
+load();
+</script>
+<link rel="stylesheet" href="/magic.css"><script src="/magic.js" defer></script>
+</body>
+</html>

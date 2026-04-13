@@ -194,7 +194,7 @@ async function load() {
 function render() {
   const p = DATA.player;
   const s = p.stats;
-  const lv = p.level === '2.5' ? 'מתחילים · 2.5' : p.level === '3' ? 'בינוניים · 3' : 'לא מוגדרת';
+  const lv = p.level === '2.5' ? 'רמה א' : p.level === '3' ? 'רמה א+' : 'לא מוגדרת';
   document.getElementById('pdMeta').innerHTML =
     `<span class="level-chip">${lv}</span> &nbsp;·&nbsp; ${esc(p.city)} &nbsp;·&nbsp; חבר/ה מ-${new Date(p.memberSince).toLocaleDateString('he-IL',{year:'numeric',month:'long'})}`;
 

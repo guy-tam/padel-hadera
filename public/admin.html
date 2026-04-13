@@ -143,6 +143,7 @@
     <button class="tab" data-tab="apps-organizers">בקשות יזמים <span id="badgeOrg"></span></button>
     <button class="tab" data-tab="apps-clubs">בקשות מגרשים <span id="badgeClub"></span></button>
     <button class="tab" data-tab="apps-players">שחקנים</button>
+    <button class="tab" data-tab="active-clubs">🏟 מועדונים פעילים</button>
     <button class="tab" data-tab="timeline">פעילות אחרונה</button>
   </div>
 
@@ -152,6 +153,7 @@
   <div id="viewApps-organizers" hidden></div>
   <div id="viewApps-clubs" hidden></div>
   <div id="viewApps-players" hidden></div>
+  <div id="viewActive-clubs" hidden></div>
   <div id="viewTimeline" hidden></div>
 </div>
 
@@ -261,6 +263,7 @@ function render() {
   renderApplications('organizers');
   renderApplications('clubs');
   renderApplications('players');
+  renderActiveClubs();
   renderTimeline();
   // badges
   const apps = LAST_DATA.applications || {};
@@ -326,7 +329,7 @@ function renderApplications(kind) {
         </td>
         <td><div class="sub">${esc(a.experience || a.level || '')}</div></td>
         <td><span class="pill ${a.status==='approved'?'pill-ok':a.status==='rejected'?'pill-err':'pill-warn'}">${esc(a.status||'')}</span>
-          ${a.dashboardToken ? `<br/><a class="mini-btn ok" target="_blank" href="/organizer/${a.dashboardToken}" style="margin-top:4px">🔑 דאשבורד ↗</a>` : ''}
+          ${a.dashboardToken ? `<br/><a class="mini-btn ok" target="_blank" href="/${kind === 'clubs' ? 'club' : 'organizer'}/${a.dashboardToken}" style="margin-top:4px">🔑 דאשבורד ↗</a>` : ''}
         </td>
         <td class="actions">
           ${isPending ? `<button class="mini-btn ok" data-app-approve="${kindSingular}:${a.id}">✓ אשר</button>
@@ -537,15 +540,42 @@ function closePreview() {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  const map = ['list','pending','tournaments','apps-organizers','apps-clubs','apps-players','timeline'];
+  const map = ['list','pending','tournaments','apps-organizers','apps-clubs','apps-players','active-clubs','timeline'];
   map.forEach(n => {
     const id = n.startsWith('apps-') ? 'viewApps-' + n.replace('apps-','') :
+               n === 'active-clubs' ? 'viewActive-clubs' :
                n === 'list' ? 'viewList' :
                n === 'pending' ? 'viewPending' :
                n === 'tournaments' ? 'viewTournaments' :
                n === 'timeline' ? 'viewTimeline' : null;
     if (id) document.getElementById(id).hidden = (name !== n);
   });
+}
+async function generateClubToken(clubId) {
+  const r = await fetch(`/api/admin/clubs/${clubId}/generate-token`, { method:'POST', headers: { 'x-admin-token': TOKEN } });
+  const j = await r.json();
+  if (!r.ok || !j.ok) return toast(j.error || 'שגיאה', true);
+  toast('✓ נוצר קישור דשבורד');
+  window.open(j.dashboardUrl, '_blank');
+  loadList();
+}
+function renderActiveClubs() {
+  const clubs = LAST_DATA.clubs || [];
+  const wrap = document.getElementById('viewActive-clubs');
+  if (!clubs.length) { wrap.innerHTML = '<div class="empty">אין מועדונים פעילים</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>מועדון</th><th>עיר</th><th>חלונות זמן</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>' +
+    clubs.map(c => `<tr>
+      <td><b class="name">${esc(c.name)}</b><div class="sub">${esc(c.id)}</div></td>
+      <td class="sub">${esc(c.city || '')}</td>
+      <td class="sub">${c.slotsCount} פעילים</td>
+      <td><span class="pill ${c.status==='active'?'pill-ok':'pill-muted'}">${esc(c.status)}</span></td>
+      <td class="actions">
+        ${c.hasToken
+          ? `<a class="mini-btn ok" href="${c.dashboardUrl}" target="_blank">🔑 דשבורד ↗</a>
+             <button class="mini-btn" onclick="navigator.clipboard.writeText(location.origin + '${c.dashboardUrl}'); toast('הועתק')">📋 העתק</button>`
+          : `<button class="mini-btn ok" onclick="generateClubToken('${c.id}')">+ צור קישור דשבורד</button>`}
+      </td>
+    </tr>`).join('') + '</tbody></table>';
 }
 
 function toast(msg, err) {

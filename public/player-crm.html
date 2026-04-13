@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#062318" />
+<meta name="robots" content="noindex, nofollow" />
+<title>האזור האישי שלי · {{PLAYER_NAME}}</title>
+<link rel="stylesheet" href="/platform.css" />
+<link rel="stylesheet" href="/a11y.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/polish.css" />
+<style>
+  .pc { max-width: 840px; margin: 0 auto; padding: 24px 18px 120px; }
+  .pc-head { display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px; }
+  .pc-head h1 { margin:0;font-size:26px;color:#fff; }
+  .pc-head .muted { color:#b5c9bf;font-size:13px; }
+  .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px; }
+  .stat { background:#0f241c;border:1px solid #223128;border-radius:12px;padding:14px; }
+  .stat .n { font-size:26px;font-weight:900;color:var(--lime);line-height:1; }
+  .stat .lbl { color:#b5c9bf;font-size:12.5px;margin-top:4px; }
+  .tabs { display:flex;gap:6px;border-bottom:1px solid rgba(212,255,58,.15);margin:10px 0 18px;overflow-x:auto;scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { padding:10px 14px;background:transparent;border:0;color:#b5c9bf;cursor:pointer;font-family:inherit;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;font-size:14px; }
+  .tab.active { color:var(--lime);border-bottom-color:var(--lime); }
+  .reg { background:#0a2b1e;border:1px solid rgba(212,255,58,0.18);border-radius:14px;padding:16px 18px;margin-bottom:12px; }
+  .reg-head { display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap; }
+  .reg-head h3 { margin:0;font-size:17px;color:#fff; }
+  .reg-meta { color:#b5c8bf;font-size:13px;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap; }
+  .pill { display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700; }
+  .pill.ok { background:rgba(43,182,115,.25);color:#7fe3a8; }
+  .pill.wait { background:rgba(255,200,50,.2);color:#ffd968; }
+  .pill.conf { background:rgba(212,255,58,.3);color:#d4ff3a; }
+  .pill.done { background:rgba(43,182,115,.4);color:#062a1c; }
+  .pill.cxl { background:rgba(255,107,107,.2);color:#ff9aa4; }
+  .activity { margin-top:10px;border-top:1px solid rgba(212,255,58,.1);padding-top:10px; }
+  .activity summary { cursor:pointer;color:#d4ff3a;font-size:13px;padding:4px 0; }
+  .activity .a-item { font-size:12.5px;color:#b5c9bf;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.05);display:flex;gap:8px; }
+  .activity .a-item time { color:#8fa69c;flex-shrink:0;min-width:110px; }
+  .partner { display:inline-block;padding:5px 10px;background:rgba(212,255,58,.08);border:1px solid rgba(212,255,58,.2);border-radius:999px;color:#e9fbc4;font-size:13px;margin:3px; }
+  .empty { text-align:center;color:#b5c9bf;padding:40px 20px;border:1px dashed rgba(212,255,58,.2);border-radius:14px; }
+  .cta-row { display:flex;gap:8px;flex-wrap:wrap;margin-top:10px; }
+  .cta-row a, .cta-row button { padding:8px 14px;font-size:13px;border-radius:999px;border:1px solid rgba(212,255,58,.3);background:transparent;color:#d4ff3a;text-decoration:none;cursor:pointer;font-family:inherit; }
+  .cta-row a.prim { background:var(--lime);color:#062a1c;border-color:var(--lime);font-weight:700; }
+</style>
+</head>
+<body>
+<header class="pnav"><div class="pnav-inner">
+  <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+  <nav class="pnav-links"><a href="/tournaments">טורנירים</a><a href="/clubs">מועדונים</a><a href="/">בית</a></nav>
+  <span class="pnav-cta">👤 האזור שלי</span>
+</div></header>
+
+<main class="pc">
+  <div class="pc-head">
+    <div>
+      <h1 id="playerName">טוען…</h1>
+      <div class="muted" id="playerMeta"></div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="regs">🎾 ההרשמות שלי</button>
+    <button class="tab" data-tab="upcoming">📅 הבאים בתור</button>
+    <button class="tab" data-tab="partners">🤝 שותפים</button>
+    <button class="tab" data-tab="activity">📬 תקשורת</button>
+  </div>
+
+  <section id="viewRegs"></section>
+  <section id="viewUpcoming" hidden></section>
+  <section id="viewPartners" hidden></section>
+  <section id="viewActivity" hidden></section>
+</main>
+
+<footer class="pfooter"><div class="wrap pfooter-inner"><div><b>🎾 padel.platform</b></div><div><a href="/">בית</a><a href="/accessibility">נגישות</a></div></div></footer>
+
+<script>
+const REG_ID = "{{REG_ID}}";
+let DATA = null;
+const el = id => document.getElementById(id);
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const statusHe = s => ({submitted:'נקלטה',awaiting_payment:'ממתין לתשלום',payment_under_review:'תשלום בבדיקה',paid_confirmed:'תשלום אושר',approved:'מאושר',waitlist:'רשימת המתנה',cancelled:'בוטל',refund_pending:'החזר בתהליך',refunded:'הוחזר'}[s]||s);
+const typeHe = t => ({email_sent:'📧 מייל נשלח',wa_sent:'💬 WhatsApp',status_change:'🔄 שינוי סטטוס',note:'📝 הערה',manual_wa:'💬 WhatsApp',manual_email:'📧 מייל ידני',call:'📞 שיחה'}[t]||t);
+
+function pillFor(r) {
+  if (r.tournament?.allPaidAt) return '<span class="pill done">✓ כולם שילמו</span>';
+  if (r.tournament?.confirmed) return '<span class="pill conf">🎉 אושר</span>';
+  if (['paid_confirmed','approved'].includes(r.status)) return '<span class="pill ok">שילמת</span>';
+  if (r.status === 'waitlist') return '<span class="pill wait">רשימת המתנה</span>';
+  if (r.status === 'cancelled') return '<span class="pill cxl">בוטל</span>';
+  return '<span class="pill wait">' + statusHe(r.status) + '</span>';
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  ['regs','upcoming','partners','activity'].forEach(n => {
+    el('view' + n[0].toUpperCase() + n.slice(1)).hidden = name !== n;
+  });
+}
+
+async function load() {
+  try {
+    const r = await fetch(`/api/player/crm/${REG_ID}`);
+    const j = await r.json();
+    if (!j.ok) throw new Error();
+    DATA = j;
+    render();
+  } catch {
+    document.querySelector('main').innerHTML = '<div class="empty">לא הצלחנו לטעון — נסה/י רענון.</div>';
+  }
+}
+
+function render() {
+  el('playerName').textContent = 'שלום ' + (DATA.me.name || '').split(' ')[0];
+  el('playerMeta').textContent = `${DATA.me.level ? 'רמה ' + DATA.me.level + ' · ' : ''}${DATA.me.email}`;
+  el('stats').innerHTML = [
+    ['ההרשמות שלך', DATA.stats.total],
+    ['שילמת', DATA.stats.paid],
+    ['הבאים בתור', DATA.stats.upcoming],
+    ['שותפים ייחודיים', DATA.partners.length]
+  ].map(([l,n]) => `<div class="stat"><div class="n">${n}</div><div class="lbl">${l}</div></div>`).join('');
+  renderRegs();
+  renderUpcoming();
+  renderPartners();
+  renderActivity();
+}
+
+function regHtml(r) {
+  const t = r.tournament || {};
+  const icsUrl = t.slug ? `/api/tournaments/${t.slug}/calendar.ics` : null;
+  return `<div class="reg">
+    <div class="reg-head">
+      <div>
+        <h3>${esc(t.title || '—')} ${pillFor(r)}</h3>
+        <div class="reg-meta">
+          ${t.date ? `<span>📅 ${esc(t.date)}</span>` : ''}
+          ${t.location ? `<span>📍 ${esc(t.location)}</span>` : ''}
+          <span>🆔 <b style="color:#d4ff3a">${r.id}</b></span>
+          ${r.level ? `<span>רמה ${esc(r.level)}</span>` : ''}
+          ${r.partnerName ? `<span>🤝 ${esc(r.partnerName)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="cta-row">
+      ${t.slug ? `<a class="prim" href="/tournaments/${t.slug}">לדף הטורניר ↗</a>` : ''}
+      ${icsUrl ? `<a href="${icsUrl}" download>📅 הוסף ליומן</a>` : ''}
+      ${!r.emailVerified ? `<span style="color:#ffd968;font-size:12px;align-self:center">⚠️ המייל לא אומת — בדוק/י את תיבת הדואר</span>` : ''}
+    </div>
+    ${r.activity?.length ? `<details class="activity">
+      <summary>יומן תקשורת (${r.activity.length})</summary>
+      ${r.activity.map(a => `<div class="a-item"><time>${new Date(a.at).toLocaleString('he-IL')}</time><span>${typeHe(a.type)} · ${esc(a.summary || '')}</span></div>`).join('')}
+    </details>` : ''}
+  </div>`;
+}
+
+function renderRegs() {
+  if (!DATA.registrations.length) { el('viewRegs').innerHTML = '<div class="empty">אין עדיין הרשמות.</div>'; return; }
+  el('viewRegs').innerHTML = DATA.registrations.map(regHtml).join('');
+}
+function renderUpcoming() {
+  const up = DATA.registrations.filter(r => r.tournament?.confirmed && !r.tournament?.allPaidAt && !['cancelled','refunded'].includes(r.status));
+  el('viewUpcoming').innerHTML = up.length
+    ? up.map(regHtml).join('')
+    : '<div class="empty">אין טורנירים מאושרים בדרך.<br><br><a style="color:#d4ff3a" href="/tournaments">לצפייה בטורנירים פתוחים ←</a></div>';
+}
+function renderPartners() {
+  if (!DATA.partners.length) { el('viewPartners').innerHTML = '<div class="empty">עוד לא שיחקת עם שותפים.</div>'; return; }
+  el('viewPartners').innerHTML = '<div>' + DATA.partners.map(p =>
+    `<span class="partner">🤝 ${esc(p.name)}${p.times>1?` · ${p.times}×`:''}${p.phone?` · <a href="https://wa.me/972${String(p.phone).replace(/\\D/g,'').replace(/^0/,'')}" style="color:#d4ff3a;text-decoration:none" target="_blank">WA</a>`:''}</span>`
+  ).join('') + '</div>';
+}
+function renderActivity() {
+  const all = [];
+  DATA.registrations.forEach(r => (r.activity || []).forEach(a => all.push({ ...a, regId: r.id, title: r.tournament?.title })));
+  all.sort((a,b) => b.at.localeCompare(a.at));
+  if (!all.length) { el('viewActivity').innerHTML = '<div class="empty">אין עדיין תקשורת מתועדת.</div>'; return; }
+  el('viewActivity').innerHTML = `<div class="reg">
+    ${all.map(a => `<div class="a-item"><time>${new Date(a.at).toLocaleString('he-IL')}</time><span>${typeHe(a.type)} · <b>${esc(a.title||'')}</b> · ${esc(a.summary||'')}</span></div>`).join('')}
+  </div>`;
+}
+
+setInterval(load, 45000);
+load();
+</script>
+<link rel="stylesheet" href="/magic.css"><script src="/magic.js" defer></script>
+</body>
+</html>

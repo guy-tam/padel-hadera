@@ -446,3 +446,420 @@ html { font-size: 100%; }
 /* Landmark visibility — ודא main מוגדר כהלכה */
 main:focus { outline: none; }
 main:focus-visible { outline: 3px dashed #d4ff3a; outline-offset: 4px; }
+
+/* ============================================================
+   שכבת מובייל מתקדמת — כל הסמארטפונים
+   נקודות שבירה: 380 / 480 / 640 / 720 / 900
+   יצירת היררכיה, קצב, התמצאות וזרימה חלקה
+   ============================================================ */
+
+/* --- Smooth anchor scrolling כשיש sticky headers --- */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+section[id] { scroll-margin-top: 80px; }
+@media (max-width: 720px) { section[id] { scroll-margin-top: 110px; } }
+
+/* --- סרגל התקדמות עליון דק — מראה מיקום בעמוד --- */
+.scroll-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  height: 2px;
+  width: var(--sp, 0%);
+  background: linear-gradient(90deg, #d4ff3a, #2bb673);
+  z-index: 70;
+  pointer-events: none;
+  transition: width .08s linear;
+  box-shadow: 0 0 8px rgba(212,255,58,.5);
+}
+@media (prefers-reduced-motion: reduce) { .scroll-progress { transition: none; } }
+
+/* --- Chip nav אופקי (לוחמי הסקשנים) — מוזרק אוטומטית במובייל לעמודים ארוכים --- */
+.section-chips {
+  display: none;
+  position: sticky;
+  top: 56px;
+  z-index: 50;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(2,11,7,0.96) 0%, rgba(2,11,7,0.88) 100%);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-block-end: 1px solid rgba(212,255,58,0.14);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.section-chips::-webkit-scrollbar { display: none; }
+.section-chips a {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(212,255,58,0.18);
+  color: #e9fbc4;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  scroll-snap-align: start;
+  transition: background .18s, border-color .18s, color .18s, transform .18s;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+}
+.section-chips a:hover { background: rgba(212,255,58,0.1); }
+.section-chips a.is-active {
+  background: #d4ff3a;
+  color: #062a1c;
+  border-color: #d4ff3a;
+  box-shadow: 0 6px 18px rgba(212,255,58,0.28);
+}
+@media (max-width: 720px) {
+  .section-chips.is-ready { display: flex; }
+  body.has-section-chips main { padding-top: 4px; }
+}
+
+/* --- Floating sticky bottom CTA universal (נוסף אוטומטית בעמודים שיש להם #register או .form-card ראשי) --- */
+.mobile-action-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  inset-inline: 0;
+  z-index: 58;
+  padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(2,11,7,0) 0%, rgba(2,11,7,0.96) 35%);
+  border-block-start: 1px solid rgba(212,255,58,0.18);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+}
+.mobile-action-bar .mab-meta {
+  flex: 1 1 auto;
+  font-size: 12.5px;
+  color: #d7e8df;
+  line-height: 1.25;
+  align-self: center;
+  min-width: 0;
+}
+.mobile-action-bar .mab-meta b { color: #d4ff3a; font-weight: 800; }
+.mobile-action-bar .btn {
+  flex: 0 0 auto;
+  min-width: 140px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 800;
+}
+@media (max-width: 720px) {
+  .mobile-action-bar.is-ready { display: flex; }
+  body.has-mobile-action-bar { padding-bottom: 84px; }
+  body.has-mobile-action-bar.has-section-chips main { padding-bottom: 10px; }
+}
+
+/* --- Hero מובייל: דחיסה חכמה למסכים קטנים/ארוכים --- */
+@media (max-width: 720px) {
+  .phero, .p-hero, .hero { padding: 54px 0 36px !important; min-height: auto !important; }
+  .p-hero-inner, .phero-inner, .hero-inner { gap: 14px !important; }
+  .eyebrow { font-size: 11.5px !important; letter-spacing: .6px; }
+  .hero-meta { gap: 10px !important; flex-wrap: wrap; }
+  .hero-meta li { font-size: 13px !important; }
+  .hero-sub, .p-hero-sub, .phero-sub { font-size: 15.5px !important; line-height: 1.55; }
+}
+@media (max-width: 480px) {
+  .phero, .p-hero, .hero { padding: 46px 0 30px !important; }
+  .phero h1, .p-hero h1, .hero h1, .animated-h1 {
+    font-size: clamp(26px, 8.4vw, 34px) !important;
+    line-height: 1.15 !important;
+  }
+  .hero-sub, .p-hero-sub, .phero-sub { font-size: 14.5px !important; }
+  .eyebrow { padding-inline-end: 10px; }
+  .eyebrow::after { width: 18px; }
+}
+@media (max-width: 380px) {
+  .phero, .p-hero, .hero { padding: 40px 0 24px !important; }
+  .phero h1, .p-hero h1, .hero h1, .animated-h1 { font-size: clamp(24px, 8vw, 30px) !important; }
+}
+
+/* --- כותרות קטעים: היררכיה ברורה במובייל --- */
+@media (max-width: 720px) {
+  section h2 {
+    font-size: clamp(22px, 6.2vw, 28px) !important;
+    line-height: 1.2;
+    margin-block-end: 10px !important;
+  }
+  section h3 { font-size: 17px !important; line-height: 1.3; }
+  .section { padding-block: 44px !important; }
+  .section + .section { border-top-color: rgba(212,255,58,0.1); }
+  .wrap, .container { padding-inline: 18px !important; }
+}
+@media (max-width: 480px) {
+  .section { padding-block: 36px !important; }
+  .wrap, .container { padding-inline: 14px !important; }
+}
+
+/* --- קצב מרווחים עקבי בין בלוקים --- */
+@media (max-width: 720px) {
+  .grid-2, .grid-3, .four, .audiences { gap: 14px !important; }
+  .form-card { margin: 0 !important; padding: 18px !important; border-radius: 16px !important; }
+  .card, .t-card, .club-card, .aud, .four-card { border-radius: 16px !important; }
+}
+
+/* --- כפתורים: שטח מגע נדיב ו-hit-target נכון --- */
+@media (max-width: 720px) {
+  .btn {
+    padding: 14px 22px !important;
+    font-size: 15px !important;
+    min-height: 48px;
+    border-radius: 999px;
+  }
+  .btn-block { width: 100% !important; }
+  .hero-ctas, .p-hero-ctas, .phero-ctas {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .hero-ctas .btn, .p-hero-ctas .btn, .phero-ctas .btn { width: 100%; }
+}
+
+/* --- טפסים: חוויה מוכוונת-מובייל --- */
+@media (max-width: 720px) {
+  .field { margin-block: 12px !important; }
+  .field > span, .field label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-block-end: 6px;
+    display: block;
+  }
+  .field input, .field select, .field textarea {
+    padding: 13px 14px !important;
+    border-radius: 12px !important;
+    border-width: 1.5px !important;
+  }
+  .field textarea { min-height: 110px; }
+  .upload-drop {
+    padding: 18px 14px !important;
+    text-align: center;
+    border-radius: 14px;
+  }
+  .form-errors { font-size: 14px; padding: 12px 14px; border-radius: 12px; }
+  .form-ok { font-size: 14px; padding: 12px 14px; border-radius: 12px; }
+  /* רווח תחתון כשהמקלדת מקפיצה את טופס ההרשמה */
+  #register, .form-card { scroll-margin-top: 100px; }
+}
+
+/* --- Checkbox/radio גדולים ונוחים לאצבע --- */
+@media (pointer: coarse), (max-width: 720px) {
+  input[type="checkbox"], input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #d4ff3a;
+  }
+  .field.check label,
+  .field > label:has(input[type="checkbox"]),
+  .field > label:has(input[type="radio"]) {
+    gap: 10px;
+    padding: 6px 0;
+    line-height: 1.4;
+  }
+}
+
+/* --- Nav: הזזה חלקה ואינדיקציה של פעיל --- */
+@media (max-width: 720px) {
+  .pnav, .nav { padding-block: 8px !important; }
+  .pnav-inner, .nav-inner { gap: 8px !important; }
+  .pnav-logo, .nav-logo { font-size: 15.5px !important; }
+  .pnav-links a, .nav-links a {
+    padding: 9px 12px !important;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .pnav-links a.is-active, .nav-links a.is-active {
+    background: rgba(212,255,58,0.12);
+    border-color: rgba(212,255,58,0.3);
+    color: #e9fbc4;
+  }
+  /* אינדיקטור רך לגלילה אופקית */
+  .pnav-links::after, .nav-links::after {
+    content: "";
+    position: sticky;
+    inset-inline-end: 0;
+    width: 26px;
+    height: 100%;
+    background: linear-gradient(270deg, rgba(2,11,7,0.9), transparent);
+    pointer-events: none;
+    flex: 0 0 auto;
+  }
+}
+
+/* --- כרטיסי טורניר — grid הפיכה לגלילה אופקית במובייל (אופציונלי) --- */
+@media (max-width: 720px) {
+  .t-grid.swipe-mobile, .grid-3.swipe-mobile {
+    display: flex !important;
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 14px !important;
+    padding-block-end: 8px;
+    padding-inline: 14px;
+    margin-inline: -14px;
+    scrollbar-width: none;
+  }
+  .t-grid.swipe-mobile::-webkit-scrollbar,
+  .grid-3.swipe-mobile::-webkit-scrollbar { display: none; }
+  .t-grid.swipe-mobile > *, .grid-3.swipe-mobile > * {
+    flex: 0 0 86%;
+    max-width: 340px;
+    scroll-snap-align: start;
+  }
+}
+
+/* --- תגיות מצב (pill) על כרטיסים: גלויות ונוחות במובייל --- */
+@media (max-width: 720px) {
+  .t-card-badge {
+    font-size: 11.5px !important;
+    padding: 5px 10px !important;
+    inset-block-start: 10px !important;
+    inset-inline-end: 10px !important;
+  }
+}
+
+/* --- Gallery strip — התאמה למובייל --- */
+@media (max-width: 720px) {
+  .gallery-strip { padding-block: 16px !important; }
+  .gallery-strip img, .gallery-strip figure {
+    flex: 0 0 72vw !important;
+    max-width: 320px;
+    height: auto;
+  }
+}
+
+/* --- טיפוגרפיה זורמת למסכים שונים --- */
+@media (max-width: 720px) {
+  body { font-size: 15.5px; line-height: 1.55; }
+  p { margin-block: 10px; }
+  .lead { font-size: 16.5px !important; line-height: 1.55 !important; }
+}
+@media (max-width: 380px) {
+  body { font-size: 15px; }
+}
+
+/* --- מניעת overflow אופקי בכל העמוד --- */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, svg, iframe { max-width: 100%; height: auto; }
+
+/* --- קטעי pay/thankyou נעימים במובייל --- */
+@media (max-width: 720px) {
+  .pay-box { padding: 16px !important; border-radius: 16px !important; }
+  .pay-row { flex-direction: row; gap: 8px; padding-block: 8px; font-size: 14px; }
+  .pay-row b { word-break: break-all; }
+  .thankyou { padding: 18px !important; }
+  .thankyou h2 { font-size: 22px !important; }
+  .ty-id { font-size: 13px; word-break: break-all; }
+  .pay-actions { flex-direction: column; gap: 8px; }
+  .pay-actions .btn { width: 100%; }
+}
+
+/* --- bring grid — פריטים קוראים במובייל --- */
+@media (max-width: 720px) {
+  .bring-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .bring-item { padding: 14px 12px !important; font-size: 13.5px; }
+}
+@media (max-width: 380px) {
+  .bring-grid { grid-template-columns: 1fr !important; }
+}
+
+/* --- section-dark/accent: הבדלה ברורה בין רקעים במובייל --- */
+@media (max-width: 720px) {
+  .section-dark { background: linear-gradient(180deg, #04160e 0%, #062318 100%) !important; }
+  .section-accent { background: linear-gradient(180deg, #062318 0%, #083020 100%) !important; }
+}
+
+/* --- Dashboard cards: סידור במובייל --- */
+@media (max-width: 720px) {
+  .pd-stats, .stats { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .pd-stat, .stat { padding: 14px 12px !important; }
+  .pd-stat .n, .stat .n { font-size: 22px !important; }
+  .pd-stat .l, .stat .l { font-size: 12px !important; }
+}
+@media (max-width: 380px) {
+  .pd-stats, .stats { grid-template-columns: 1fr !important; }
+}
+
+/* --- nav scrolled state ברור יותר במובייל --- */
+@media (max-width: 720px) {
+  .pnav.is-scrolled, .nav.is-scrolled {
+    background: rgba(2,11,7,0.96) !important;
+  }
+}
+
+/* --- back-to-top קטן מיוחד למובייל (מוזרק אוטומטית) --- */
+.to-top {
+  display: none;
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  inset-inline-end: 14px;
+  z-index: 54;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(212,255,58,0.14);
+  border: 1px solid rgba(212,255,58,0.4);
+  color: #d4ff3a;
+  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+.to-top:hover { background: rgba(212,255,58,0.22); transform: translateY(-2px); }
+@media (max-width: 720px) {
+  .to-top.is-visible { display: inline-flex; }
+}
+
+/* --- ביטול אפקטים יקרים במובייל לשיפור ביצועים --- */
+@media (max-width: 720px) {
+  .phero::after, .p-hero::after { opacity: .3; }
+  .btn::before, .pnav-cta::before { display: none; }
+  .t-card, .club-card, .aud, .form-card {
+    transform: none !important;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .t-card:hover, .club-card:hover, .aud:hover { transform: none !important; }
+}
+
+/* --- התאמה לאוריינטציה אופקית על טלפונים קטנים --- */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 480px) {
+  .phero, .p-hero, .hero { padding: 30px 0 20px !important; }
+  .phero h1, .p-hero h1, .hero h1 { font-size: clamp(22px, 5vw, 28px) !important; }
+  .mobile-action-bar { padding-block: 6px; }
+  .mobile-action-bar .btn { padding: 10px 16px; min-height: 40px; }
+  .section-chips { top: 48px; padding-block: 6px; }
+}
+
+/* --- Hero court SVG (לעמוד הטורניר) — החבא במובייל להפחתת עומס ויזואלי --- */
+@media (max-width: 720px) {
+  .hero-court { display: none !important; }
+}
+
+/* --- Capacity badge במובייל: עיצוב פרו-ברור --- */
+@media (max-width: 720px) {
+  .capacity-badge {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    border-radius: 12px;
+  }
+}
+
+/* --- שיפור קריאות של מודעות גישה — aria-live vs sr --- */
+@media (max-width: 720px) {
+  [aria-live] { font-size: 14px; }
+}

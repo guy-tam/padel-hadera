@@ -6,7 +6,9 @@
   if (window.__a11yLoaded) return;
   window.__a11yLoaded = true;
 
-  const STATE_KEY = 'a11y_state_v1';
+  // v2: איפוס חד-פעמי — משתמשים שנתקעו על "גווני אפור" יחזרו למצב רגיל
+  const STATE_KEY = 'a11y_state_v2';
+  try { localStorage.removeItem('a11y_state_v1'); } catch {}
   const DEFAULT = {
     fontSize: 100,    // 100/115/130/150
     contrast: 'none', // none/high/reverse

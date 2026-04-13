@@ -9,3 +9,5 @@ data/*
 .claude/scheduled_tasks.lock
 *.log
 .vercel
+.env*.local
+.admin-token.txt

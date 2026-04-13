@@ -84,8 +84,12 @@ async function upsert(table, rows, onConflict = 'id') {
 async function migrateApplications() {
   const apps = db.applications || {};
   const rows = [];
-  for (const kind of Object.keys(apps)) {
-    const list = Array.isArray(apps[kind]) ? apps[kind] : [];
+  // המפתחות ב-db.json הם ברבים (organizers/clubs/players), אבל ה-check constraint
+  // דורש יחיד (organizer/club/player).
+  const toSingular = { organizers: 'organizer', clubs: 'club', players: 'player' };
+  for (const pluralKey of Object.keys(apps)) {
+    const kind = toSingular[pluralKey] || pluralKey.replace(/s$/, '');
+    const list = Array.isArray(apps[pluralKey]) ? apps[pluralKey] : [];
     for (const a of list) {
       rows.push({
         id: a.id || `${kind}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,

@@ -5,14 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#0a3d2a" />
 <title>{{TOURNAMENT_TITLE}} — Padel Platform</title>
+<meta property="og:type" content="website" />
+<meta property="og:title" content="טורניר פאדל — Padel Platform" />
+<meta property="og:description" content="פרטי טורניר פאדל · רמות, זוגות, תאריכים והרשמה." />
+<meta property="og:locale" content="he_IL" />
+<meta property="og:image" content="/img/padel-hero.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="description" content="{{TOURNAMENT_TITLE}} · {{MAX_PAIRS}} זוגות בלבד · הרשמה אונליין, הצהרת בריאות ותשלום ב-bit." />
 <link rel="stylesheet" href="/styles.css" />
 <link rel="stylesheet" href="/a11y.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/polish.css" />
 </head>
 <body>
+<a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
 
 <header class="nav">
   <div class="nav-inner">
@@ -20,7 +28,7 @@
       <span class="logo-mark">🎾</span>
       <span class="logo-text">{{TOURNAMENT_TITLE}}</span>
     </a>
-    <nav class="nav-links">
+    <nav class="nav-links" aria-label="ראשי">
       <a href="#about">הטורניר</a>
       <a href="#how">איך זה עובד</a>
       <a href="#format">פורמט</a>
@@ -34,12 +42,13 @@
     </nav>
   </div>
 </header>
+<a id="main" tabindex="-1" aria-hidden="true"></a>
 
 <!-- HERO -->
 <section id="top" class="hero">
   <!-- וידאו רקע: משחק פאדל אמיתי (MP4 מקומי) -->
   <div class="hero-video" aria-hidden="true">
-    <video autoplay muted loop playsinline preload="auto" poster="/img/padel-hero.jpg">
+    <video autoplay muted loop playsinline preload="metadata" poster="/img/padel-hero.jpg">
       <source src="/img/padel-league.mp4" type="video/mp4" />
     </video>
   </div>

@@ -1,0 +1,264 @@
+/* ============================================================
+   Padel Platform · Premium Design Polish Layer
+   נטען אחרי platform.css / styles.css ומוסיף ליטוש חוצה-אתר.
+   - Fluid typography refinements
+   - Premium focus rings (accessible)
+   - Custom selection + scrollbar
+   - Button shine + card glow micro-interactions
+   - Smooth page entry
+   - Respects prefers-reduced-motion
+   ============================================================ */
+
+/* --- Selection color --- */
+::selection { background: #d4ff3a; color: #062a1c; }
+::-moz-selection { background: #d4ff3a; color: #062a1c; }
+
+/* --- Custom scrollbar (webkit) --- */
+html { scrollbar-color: #2bb673 #062318; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #020b07; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1a8a5a, #0f5135);
+  border-radius: 10px; border: 2px solid #020b07;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #d4ff3a, #2bb673);
+}
+
+/* --- Premium focus ring — accessible + brand-aligned --- */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #d4ff3a;
+  outline-offset: 3px;
+  border-radius: 8px;
+  transition: outline-offset .12s ease;
+}
+
+/* --- Typography fluid refinement --- */
+body {
+  text-wrap: pretty;
+  -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* --- Button: shine sweep + deeper motion --- */
+.btn,
+.pnav-cta,
+.btn-primary,
+.btn-ghost,
+.btn-dark {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .22s, background .2s;
+  will-change: transform;
+}
+.btn::before,
+.pnav-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform .65s cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+  z-index: 1;
+}
+.btn:hover::before,
+.pnav-cta:hover::before { transform: translateX(120%); }
+.btn:active { transform: translateY(0) scale(.985); }
+
+.btn-primary { box-shadow: 0 10px 30px rgba(212,255,58,0.28), inset 0 0 0 1px rgba(255,255,255,0.06); }
+.btn-primary:hover { box-shadow: 0 16px 40px rgba(212,255,58,0.42); }
+
+/* --- Card glow on hover --- */
+.t-card, .club-card, .aud, .form-card {
+  position: relative;
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), border-color .28s, box-shadow .35s;
+}
+.t-card::after,
+.club-card::after,
+.aud::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(212,255,58,0), rgba(212,255,58,0.5), rgba(43,182,115,0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .35s;
+  pointer-events: none;
+}
+.t-card:hover::after,
+.club-card:hover::after,
+.aud:hover::after { opacity: 1; }
+.t-card:hover, .club-card:hover, .aud:hover {
+  box-shadow: 0 22px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(212,255,58,0.25);
+}
+
+/* --- Image zoom inside cards --- */
+.t-card-img, .club-card-img {
+  transition: transform .7s cubic-bezier(.2,.8,.2,1);
+}
+.t-card:hover .t-card-img,
+.club-card:hover .club-card-img { transform: scale(1.05); }
+
+/* --- Form inputs: ring + subtle lift on focus --- */
+.field input, .field select, .field textarea {
+  transition: border-color .18s, box-shadow .2s, background .2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  box-shadow: 0 0 0 4px rgba(212,255,58,0.18);
+  background: rgba(0,0,0,0.35);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: #8fa69c; opacity: 1; }
+
+/* --- Nav: elevation on scroll --- */
+.pnav, .nav {
+  transition: background .25s, border-color .25s, box-shadow .25s;
+}
+.pnav.is-scrolled, .nav.is-scrolled {
+  background: rgba(2, 11, 7, 0.92);
+  border-bottom-color: rgba(212,255,58,0.28);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* --- Eyebrow: elegant underline --- */
+.eyebrow {
+  position: relative;
+  padding-inline-end: 14px;
+}
+.eyebrow::after {
+  content: "";
+  position: absolute;
+  inset-block: 50%;
+  inset-inline-end: 0;
+  width: 28px; height: 1.5px;
+  background: linear-gradient(90deg, #d4ff3a, transparent);
+  transform: translateY(-50%);
+}
+
+/* --- Badge micro-pulse on "mostly full" state (visual hint) --- */
+@keyframes pulseSoft {
+  0%,100% { box-shadow: 0 0 0 0 rgba(212,255,58,0.35); }
+  50%     { box-shadow: 0 0 0 6px rgba(212,255,58,0); }
+}
+.t-card-badge:not(.full) {
+  animation: pulseSoft 2.6s ease-out infinite;
+}
+
+/* --- Page entry animation --- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+main, .phero-inner, .t-card, .club-card, .aud, .form-card, .section > .wrap > * {
+  animation: fadeUp .55s cubic-bezier(.2,.8,.2,1) both;
+}
+.t-card:nth-child(2),  .club-card:nth-child(2),  .aud:nth-child(2)  { animation-delay: .05s; }
+.t-card:nth-child(3),  .club-card:nth-child(3),  .aud:nth-child(3)  { animation-delay: .1s; }
+.t-card:nth-child(4),  .club-card:nth-child(4)                       { animation-delay: .15s; }
+.t-card:nth-child(n+5),.club-card:nth-child(n+5)                     { animation-delay: .2s; }
+
+/* --- Footer: subtle hover underline --- */
+.pfooter a { position: relative; transition: color .2s; }
+.pfooter a::before {
+  content: "";
+  position: absolute; inset-inline: 0; bottom: -2px; height: 1px;
+  background: currentColor; transform: scaleX(0);
+  transform-origin: right; transition: transform .25s;
+}
+.pfooter a:hover::before { transform: scaleX(1); transform-origin: left; }
+
+/* --- Link reveal for in-body links --- */
+main p a, .wrap p a {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1.5px;
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  transition: background-size .3s, color .2s;
+}
+main p a:hover, .wrap p a:hover {
+  background-size: 100% 1.5px;
+  background-position: left bottom;
+}
+
+/* --- Skeleton shimmer for async loading states (opt-in via .skeleton) --- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 10px;
+  color: transparent !important;
+}
+
+/* --- Empty state polish --- */
+.empty {
+  background: radial-gradient(ellipse at center, rgba(212,255,58,0.05), transparent 70%);
+  border-radius: 20px;
+}
+
+/* --- High-contrast section separators --- */
+.section + .section { border-top: 1px solid rgba(212,255,58,0.06); }
+
+/* --- Improved code/kbd (for accessibility/docs pages) --- */
+kbd, code {
+  background: rgba(212,255,58,0.08);
+  border: 1px solid rgba(212,255,58,0.22);
+  border-radius: 6px; padding: 1px 7px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: .9em; color: #e9fbc4;
+}
+
+/* --- Safe-area for iOS notch/home indicator --- */
+@supports (padding: max(0px)) {
+  .pnav-inner, .nav-inner, .wrap {
+    padding-inline-start: max(20px, env(safe-area-inset-right));
+    padding-inline-end: max(20px, env(safe-area-inset-left));
+  }
+  .pfooter { padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+}
+
+/* --- Dark textures: subtle noise on hero for depth --- */
+.phero::after, .p-hero::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.055 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  opacity: .5; pointer-events: none; mix-blend-mode: overlay; z-index: 1;
+}
+
+/* --- Reduced motion preference --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .t-card:hover, .club-card:hover, .aud:hover { transform: none; }
+}
+
+/* --- Mobile polish --- */
+@media (max-width: 720px) {
+  :where(a, button):focus-visible { outline-offset: 2px; }
+  .btn { padding: 14px 22px; }
+  .t-card:hover, .club-card:hover, .aud:hover { transform: translateY(-2px); }
+}
+
+/* --- Print friendly --- */
+@media print {
+  .pnav, .nav, .pfooter, #a11y-fab, .skip-to-main, video, iframe { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  a { color: #062a1c !important; text-decoration: underline; }
+}

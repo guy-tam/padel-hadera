@@ -5,6 +5,16 @@
   if (window.__magicLoaded) return;
   window.__magicLoaded = true;
 
+  // Nav scroll elevation — עובד גם ב-reduce-motion (לא מפריע)
+  const navEl = document.querySelector('.pnav, .nav');
+  if (navEl) {
+    const onScroll = () => {
+      navEl.classList.toggle('is-scrolled', window.scrollY > 8);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) return;
 

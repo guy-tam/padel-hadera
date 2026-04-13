@@ -281,7 +281,7 @@ h2 {
 .section-dark .lead { color: #b5c8bf; }
 h2 { color: #fff; }
 .section p, .section li { color: #c9d6ce; }
-.micro { color: #9fb1a8; }
+.micro { color: #b5c9bf; }
 
 /* ============ GALLERY STRIP ============ */
 .gallery-strip { background: #020b07; padding: 0; }
@@ -414,7 +414,7 @@ h2 { color: #fff; }
 .price-card .price-big { color: var(--lime); text-shadow: 0 4px 20px rgba(212,255,58,0.4); }
 .price-card .price-sub { color: #d8e5dd; }
 .price-card .price-list li { border-color: rgba(212,255,58,0.15); color: #e8efe9; }
-.price-card .micro { color: #9fb1a8; }
+.price-card .micro { color: #b5c9bf; }
 .price-card::before {
   content: "🎾"; position: absolute;
   font-size: 120px; opacity: 0.06;
@@ -511,7 +511,7 @@ h2 { color: #fff; }
   transition: border-color .2s, background .2s;
 }
 .upload-drop:hover, .upload-drop.drag { border-color: var(--lime); background: rgba(212,255,58,0.08); }
-.upload-drop .drop-text small { color: #9fb1a8; }
+.upload-drop .drop-text small { color: #b5c9bf; }
 .upload-drop input[type="file"] { display: none; }
 .drop-text small { color: var(--muted); }
 .drop-file {
@@ -574,7 +574,7 @@ h2 { color: #fff; }
 .legal-list li { margin-bottom: 8px; }
 
 /* ============ FOOTER ============ */
-.footer { background: #020b07; color: #9fb1a8; padding: 40px 0; font-size: 14px; }
+.footer { background: #020b07; color: #b5c9bf; padding: 40px 0; font-size: 14px; }
 .footer-inner {
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
 }

@@ -2,18 +2,22 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#062318" />
 <title>דאשבורד מארגן — Padel Platform</title>
 <link rel="stylesheet" href="/platform.css" />
 <link rel="stylesheet" href="/a11y.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
   .od-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 80px; }
   .od-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
   .od-head h1 { font-size: 26px; margin: 0; color: #fff; }
-  .od-head .muted { color: #9fb1a8; font-size: 14px; }
+  .od-head .muted { color: #b5c9bf; font-size: 14px; }
   .tabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(212,255,58,.15); padding-bottom: 0; }
-  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #b5c9bf; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
   .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
   .tab:hover { color: #fff; }
   .t-row {
@@ -35,15 +39,17 @@
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 22px; }
   .stat { background: #12201a; border:1px solid #223128; border-radius: 14px; padding: 18px; }
   .stat .n { font-size: 30px; font-weight: 900; color: var(--lime); line-height: 1; }
-  .stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 6px; }
+  .stat .lbl { color: #b5c9bf; font-size: 13px; margin-top: 6px; }
   .form-sect { background: rgba(10,61,42,0.55); border: 1px solid rgba(212,255,58,0.18); border-radius: 16px; padding: 24px; }
   .ok-box { background: rgba(212,255,58,0.12); border: 1px solid rgba(212,255,58,0.35); color: var(--lime); padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 14px; }
   .reg-table { width: 100%; border-collapse: collapse; background: #12201a; border-radius: 12px; overflow: hidden; }
   .reg-table th, .reg-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 13px; color: #d8e5dd; }
   .reg-table th { background: #1a2a23; font-size: 11.5px; color: #b5c8bf; }
 </style>
+<link rel="stylesheet" href="/polish.css" />
 </head>
 <body>
+<a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
 
 <header class="pnav">
   <div class="pnav-inner">
@@ -157,7 +163,7 @@ function renderStats() {
 function renderList() {
   const wrap = el('viewList');
   if (!DATA.tournaments.length) {
-    wrap.innerHTML = '<div class="empty" style="text-align:center;color:#9fb1a8;padding:60px">אין טורנירים עדיין. <a style="color:#d4ff3a;cursor:pointer" onclick="switchTab(\'new\')">צור טורניר ראשון</a>.</div>';
+    wrap.innerHTML = '<div class="empty" style="text-align:center;color:#b5c9bf;padding:60px">אין טורנירים עדיין. <a style="color:#d4ff3a;cursor:pointer" onclick="switchTab(\'new\')">צור טורניר ראשון</a>.</div>';
     return;
   }
   wrap.innerHTML = DATA.tournaments.map(t => {

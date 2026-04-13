@@ -2,10 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#062318" />
 <title>הדאשבורד שלי — Padel Platform</title>
 <link rel="stylesheet" href="/platform.css" />
 <link rel="stylesheet" href="/a11y.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
   .pd-wrap { max-width: 1150px; margin: 0 auto; padding: 24px 18px 80px; }
@@ -42,12 +46,12 @@
     color: var(--lime);
     text-shadow: 0 2px 16px rgba(212,255,58,.25);
   }
-  .pd-stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 8px; font-weight: 600; }
+  .pd-stat .lbl { color: #b5c9bf; font-size: 13px; margin-top: 8px; font-weight: 600; }
   .pd-stat.win .n { color: #ffd968; }
   .pd-stat.points .n { font-size: 44px; }
 
   .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid rgba(212,255,58,.15); }
-  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; border-bottom: 2px solid transparent; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #b5c9bf; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; border-bottom: 2px solid transparent; }
   .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
 
   .match-card {
@@ -77,7 +81,7 @@
   .result-badge.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border-color: #cd7f32; }
   .result-badge .place { font-size: 22px; font-weight: 900; line-height: 1; }
   .result-badge .pts { font-size: 12px; margin-top: 4px; font-weight: 700; }
-  .result-badge .pend { color: #9fb1a8; font-size: 13px; }
+  .result-badge .pend { color: #b5c9bf; font-size: 13px; }
 
   .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
   .status-pill.ok { background: rgba(43,182,115,.25); color: #7fe3a8; }
@@ -91,7 +95,7 @@
     font-weight: 800; font-size: 12px;
   }
 
-  .empty { text-align: center; color: #9fb1a8; padding: 50px 20px; background: rgba(10,61,42,0.3); border-radius: 14px; }
+  .empty { text-align: center; color: #b5c9bf; padding: 50px 20px; background: rgba(10,61,42,0.3); border-radius: 14px; }
   .empty a { color: var(--lime); font-weight: 700; }
 
   .share-box {
@@ -102,13 +106,15 @@
   }
   .share-box b { color: var(--lime); }
 </style>
+<link rel="stylesheet" href="/polish.css" />
 </head>
 <body>
+<a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
 
 <header class="pnav">
   <div class="pnav-inner">
     <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
-    <nav class="pnav-links">
+    <nav class="pnav-links" aria-label="ראשי">
       <a href="/tournaments">טורנירים</a>
       <a href="/clubs">המגרשים</a>
       <a href="/">דף הבית</a>

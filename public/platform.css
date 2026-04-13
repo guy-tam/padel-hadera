@@ -11,7 +11,7 @@
   --ink: #0b1411;
   --bg: #062318;
   --white: #ffffff;
-  --muted: #9fb1a8;
+  --muted: #b5c9bf;
   --radius: 14px;
   --radius-lg: 20px;
   --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
@@ -182,7 +182,7 @@ p.lead { color: #b5c8bf; font-size: 18px; margin: 0 0 34px; max-width: 720px; }
 /* --- Footer --- */
 .pfooter {
   background: #020b07;
-  color: #9fb1a8;
+  color: #b5c9bf;
   padding: 40px 0;
   border-top: 1px solid rgba(212,255,58,0.1);
   margin-top: 40px;

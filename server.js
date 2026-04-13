@@ -16,7 +16,9 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'padel-admin-2026';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (process.env.NODE_ENV === 'production'
+  ? (() => { throw new Error('ADMIN_TOKEN must be set in production'); })()
+  : 'padel-admin-2026');
 
 // --- תיקיות ---
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
@@ -220,6 +222,14 @@ function clean(s, max = 200) {
   return String(s || '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, max);
 }
 function cleanLong(s, max = 2000) { return clean(s, max); }
+// מסנן URL לשימוש בתוך style="background-image:url('...')" — מונע בריחה מתוך ה-quotes
+function safeUrl(s) {
+  const v = String(s || '').trim();
+  if (!v) return '';
+  // מאפשר רק תווים בטוחים: אותיות/ספרות, שורשים יחסיים/מוחלטים ותווי URL רגילים
+  if (!/^[A-Za-z0-9\-._~:/?#\[\]@!$&()*+,;=%]+$/.test(v)) return '';
+  return v;
+}
 function statusHe(s) {
   return ({
     submitted: 'נקלטה', awaiting_payment: 'ממתין לתשלום',
@@ -370,7 +380,7 @@ function tournamentCardHtml(t, db) {
   const isFull = reserved >= t.format.maxPairs;
   return `
     <a class="t-card" href="/tournaments/${t.slug}">
-      <div class="t-card-img" style="background-image:url('${t.heroImage || '/img/padel-hero.jpg'}')">
+      <div class="t-card-img" style="background-image:url('${safeUrl(t.heroImage) || '/img/padel-hero.jpg'}')">
         <span class="t-card-badge ${isFull ? 'full' : ''}">${isFull ? 'מלא · רשימת המתנה' : `${remaining} מקומות פנויים`}</span>
       </div>
       <div class="t-card-body">
@@ -389,7 +399,7 @@ function clubCardHtml(c, db) {
   const count = db.tournaments.filter(t => t.clubId === c.id).length;
   return `
     <a class="club-card" href="/clubs/${c.slug}">
-      <div class="club-card-img" style="background-image:url('${c.image}')"></div>
+      <div class="club-card-img" style="background-image:url('${safeUrl(c.image)}')"></div>
       <div class="club-card-body">
         <h3>${escapeHtml(c.name)}</h3>
         <p>${escapeHtml(c.city)} · ${count} טורנירים</p>
@@ -625,18 +635,24 @@ app.post('/api/applications/player', express.json(), async (req, res) => {
 
 app.post('/api/applications/club', express.json(), (req, res) => {
   const db = loadDB();
-  const { name, city, contactPerson, email, phone, courts, note } = req.body || {};
+  const name = clean(req.body?.name, 120);
+  const city = clean(req.body?.city, 80);
+  const contactPerson = clean(req.body?.contactPerson, 120);
+  const email = clean(req.body?.email, 200);
+  const phone = clean(req.body?.phone, 40);
+  const courts = clean(req.body?.courts, 80);
+  const note = cleanLong(req.body?.note, 1000);
   const errs = [];
-  if (!name || name.trim().length < 2) errs.push('שם המועדון חסר.');
-  if (!city || city.trim().length < 2) errs.push('עיר חסרה.');
+  if (!name || name.length < 2) errs.push('שם המועדון חסר.');
+  if (!city || city.length < 2) errs.push('עיר חסרה.');
   if (!validEmail(email)) errs.push('מייל לא תקין.');
   if (!validPhone(phone)) errs.push('טלפון לא תקין.');
   if (errs.length) return res.status(400).json({ ok: false, errors: errs });
   const entry = {
     id: 'CLUB-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
     createdAt: new Date().toISOString(),
-    name, city, contactPerson: contactPerson || '', email, phone,
-    courts: courts || '', note: note || '', status: 'pending'
+    name, city, contactPerson, email, phone,
+    courts, note, status: 'pending'
   };
   db.applications.clubs.push(entry);
   saveDB(db);
@@ -1203,5 +1219,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`🎾 Padel Platform on :${PORT}`);
-  console.log(`   admin token: ${ADMIN_TOKEN}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`   admin token: ${ADMIN_TOKEN}`);
+  }
 });

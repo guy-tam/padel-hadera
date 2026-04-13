@@ -2,10 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#062318" />
 <title>ניהול · טורניר פאדל חדרה</title>
 <link rel="stylesheet" href="/styles.css" />
 <link rel="stylesheet" href="/a11y.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 <style>
   body { background: #0b1411; color: #e8efe9; }
@@ -23,7 +27,7 @@
   .stat .n.lime { color: var(--lime); }
   .stat .n.warn { color: #ffd968; }
   .stat .n.err  { color: #ffb3b3; }
-  .stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 6px; }
+  .stat .lbl { color: #b5c9bf; font-size: 13px; margin-top: 6px; }
 
   /* שורת קיבולת */
   .capbar { background:#12201a; border:1px solid #223128; border-radius:12px; padding: 14px 18px; margin-bottom: 22px; }
@@ -34,7 +38,7 @@
 
   /* טאבים */
   .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid #223128; padding-bottom: 0; }
-  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #b5c9bf; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
   .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
   .tab:hover { color: #fff; }
 
@@ -44,8 +48,8 @@
   th { background: #1a2a23; font-weight: 700; color: #b5c8bf; font-size: 11.5px; letter-spacing: .3px; text-transform: uppercase; }
   tr:hover td { background: rgba(255,255,255,0.02); }
   .name { font-weight: 700; color: #fff; }
-  .sub { color: #9fb1a8; font-size: 12.5px; }
-  .sub a { color: #9fb1a8; }
+  .sub { color: #b5c9bf; font-size: 12.5px; }
+  .sub a { color: #b5c9bf; }
 
   .pill { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:700; font-size:12px; }
   .pill-ok   { background: rgba(43,182,115,0.2); color: #7fe3a8; }
@@ -73,7 +77,7 @@
   .timeline { background: #12201a; border:1px solid #223128; border-radius: 12px; padding: 18px; }
   .tl-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1a2a23; }
   .tl-item:last-child { border-bottom: 0; }
-  .tl-time { color: #9fb1a8; font-size: 12px; min-width: 120px; font-family: monospace; }
+  .tl-time { color: #b5c9bf; font-size: 12px; min-width: 120px; font-family: monospace; }
   .tl-what { flex: 1; }
   .tl-what b { color: #fff; }
 
@@ -83,7 +87,7 @@
   .preview-box { background: #12201a; border-radius: 14px; max-width: 900px; width: 100%; max-height: 90vh; overflow: auto; padding: 18px; position: relative; }
   .preview-box img, .preview-box embed { max-width: 100%; border-radius: 10px; }
   .preview-close { position: absolute; top: 10px; left: 10px; background: #1c2c25; color: #fff; border: 0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; }
-  .preview-meta { color: #9fb1a8; font-size: 14px; margin-bottom: 10px; }
+  .preview-meta { color: #b5c9bf; font-size: 14px; margin-bottom: 10px; }
 
   /* login */
   .login-card {
@@ -92,8 +96,8 @@
   }
   .login-card input { width: 100%; padding: 12px; background: #0b1411; color:#fff; border:1px solid #2c3f36; border-radius:10px; margin: 12px 0; font-family: inherit; font-size: 15px; }
   .login-card .btn { width: 100%; }
-  .empty { text-align:center; color: #9fb1a8; padding: 40px; }
-  .muted { color: #9fb1a8; font-size: 13px; }
+  .empty { text-align:center; color: #b5c9bf; padding: 40px; }
+  .muted { color: #b5c9bf; font-size: 13px; }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green-800); color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 300; }
   .toast.err { background: #a33; }
 
@@ -102,8 +106,11 @@
     .stats { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
+<link rel="stylesheet" href="/polish.css" />
 </head>
 <body>
+<a href="#main" class="skip-to-main">דלג/י לתוכן המרכזי</a>
+<a id="main" tabindex="-1" aria-hidden="true"></a>
 
 <div id="loginView" class="login-card">
   <h2 style="margin-top:0">🔒 ניהול הטורניר</h2>

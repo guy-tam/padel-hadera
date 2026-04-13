@@ -348,8 +348,17 @@ function wireContactButtons(regId, d) {
 }
 
 function showErrors(box, list) {
-  box.innerHTML = '<b>בדקו את הפרטים הבאים:</b><ul>' +
-    list.map(x => `<li>${x}</li>`).join('') + '</ul>';
+  box.textContent = '';
+  const title = document.createElement('b');
+  title.textContent = 'בדקו את הפרטים הבאים:';
+  const ul = document.createElement('ul');
+  for (const x of list) {
+    const li = document.createElement('li');
+    li.textContent = String(x);
+    ul.appendChild(li);
+  }
+  box.appendChild(title);
+  box.appendChild(ul);
   box.hidden = false;
   box.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }

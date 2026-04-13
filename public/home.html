@@ -44,7 +44,7 @@
     color: #fff;
   }
   .p-hero-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .p-hero-video iframe {
+  .p-hero-video video, .p-hero-video iframe {
     position: absolute; top: 50%; left: 50%;
     width: 177.78vh; height: 100vh;
     min-width: 100%; min-height: 56.25vw;
@@ -177,9 +177,7 @@
 <!-- HERO -->
 <section class="p-hero" aria-label="גיבור">
   <div class="p-hero-video" aria-hidden="true">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/ThHNRDhXfmw?autoplay=1&mute=1&loop=1&playlist=ThHNRDhXfmw&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&start=3"
-      title="רקע: משחק פאדל" loading="eager" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+    <video autoplay muted loop playsinline preload="auto" poster="/img/padel-hero.jpg"><source src="/img/padel-bg.mp4" type="video/mp4" /></video>
   </div>
   <div class="p-hero-overlay" aria-hidden="true"></div>
   <div class="p-balls" aria-hidden="true">

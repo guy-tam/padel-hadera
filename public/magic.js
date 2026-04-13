@@ -19,20 +19,7 @@
     });
   }
 
-  // ============ Cursor glow ============
-  if (matchMedia('(hover: hover)').matches) {
-    const glow = document.createElement('div');
-    glow.id = 'cursor-glow';
-    document.body.appendChild(glow);
-    let tx = innerWidth/2, ty = innerHeight/2, x = tx, y = ty;
-    document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
-    (function tick() {
-      x += (tx - x) * 0.18;
-      y += (ty - y) * 0.18;
-      glow.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-      requestAnimationFrame(tick);
-    })();
-  }
+  // Cursor glow הוסר לפי בקשה
 
   // ============ Magnetic buttons ============
   function magnetize(el, strength = 0.35) {

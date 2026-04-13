@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>הפוך למארגן — Padel Platform</title>
+<link rel="stylesheet" href="/platform.css" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/organizers/apply" class="active">למארגנים</a>
+      <a href="/clubs/join">למועדונים</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">🎯 למארגנים</span>
+    <h2>הפעל טורניר פאדל ברשת הארצית</h2>
+    <p class="lead">
+      אם את/ה מארגנ/ת טורנירי פאדל או חושב/ת להפעיל — הפלטפורמה נותנת לך תשתית מלאה:
+      דף טורניר ציבורי, ניהול הרשמות, תשלומים, רשימת המתנה, קיבולת, ואישור משתתפים —
+      הכל במקום אחד. אנחנו דואגים לשחקנים. אתם מתמקדים במשחקים.
+    </p>
+
+    <div class="grid-3" style="margin:20px 0 40px">
+      <div class="aud">
+        <div class="aud-tag">⚡ מהיר</div>
+        <h3>הקמה בדקות</h3>
+        <p>טורניר חדש עולה לאוויר תוך חצי שעה — עם דף פומבי, הרשמה ותשלום.</p>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">💰 הכנסה</div>
+        <h3>חלוקת רווחים</h3>
+        <p>מודל חלוקה שקוף: מארגן · מועדון · פלטפורמה. אתם רואים כל שקל.</p>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">📊 שליטה</div>
+        <h3>דשבורד תפעולי</h3>
+        <p>רואים כל נרשם, כל תשלום, כל סטטוס — בזמן אמת, בכל מכשיר.</p>
+      </div>
+    </div>
+
+    <form id="orgForm" class="form-card" novalidate>
+      <h2 style="font-size:24px">בקשת הצטרפות כמארגן</h2>
+      <p class="lead" style="font-size:15px; margin-bottom:22px">
+        מלא/י את הפרטים. ניצור איתך קשר תוך 48 שעות לסגירת התשתית שלך על הפלטפורמה.
+      </p>
+      <div class="grid-2">
+        <label class="field"><span>שם מלא *</span><input name="name" required /></label>
+        <label class="field"><span>טלפון *</span><input name="phone" type="tel" placeholder="05X-XXXXXXX" required /></label>
+        <label class="field"><span>מייל *</span><input name="email" type="email" required /></label>
+        <label class="field"><span>עיר / אזור</span><input name="city" /></label>
+      </div>
+      <label class="field"><span>ניסיון בארגון טורנירים</span>
+        <select name="experience">
+          <option value="">-- בחר/י --</option>
+          <option>חדש לתחום</option>
+          <option>הפעלתי 1-3 אירועים</option>
+          <option>הפעלתי עשרות אירועים</option>
+          <option>מארגן/ת מקצועי/ת</option>
+        </select>
+      </label>
+      <label class="field"><span>הערות / מה תרצה להפעיל</span><textarea name="note" rows="3" placeholder="לדוגמה: 2 טורנירים בחודש בקריות, 16 זוגות כל אחד"></textarea></label>
+      <div id="orgErr" class="form-errors" hidden></div>
+      <div id="orgOk" class="form-ok" hidden>
+        ✓ הבקשה התקבלה! ניצור קשר תוך 48 שעות.
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">שליחת בקשה</button>
+    </form>
+  </div>
+</section>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner"><div><b>🎾 padel.platform</b></div><div><a href="/tournaments">טורנירים</a></div></div>
+</footer>
+
+<script>
+const form = document.getElementById('orgForm');
+const errBox = document.getElementById('orgErr');
+const okBox = document.getElementById('orgOk');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  errBox.hidden = true;
+  const data = Object.fromEntries(new FormData(form));
+  try {
+    const r = await fetch('/api/applications/organizer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      errBox.innerHTML = '<ul>' + (j.errors || ['שגיאה']).map(e => '<li>' + e + '</li>').join('') + '</ul>';
+      errBox.hidden = false;
+      return;
+    }
+    form.hidden = true;
+    okBox.hidden = false;
+    okBox.scrollIntoView({behavior:'smooth', block:'center'});
+  } catch {
+    errBox.textContent = 'שגיאת רשת. נסה/י שוב.';
+    errBox.hidden = false;
+  }
+});
+</script>
+</body>
+</html>

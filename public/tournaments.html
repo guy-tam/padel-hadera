@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>טורנירים — Padel Platform</title>
+<link rel="stylesheet" href="/platform.css" />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links">
+      <a href="/tournaments" class="active">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/organizers/apply">למארגנים</a>
+      <a href="/clubs/join">למועדונים</a>
+    </nav>
+    <a href="/organizers/apply" class="pnav-cta">להפעיל טורניר</a>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">🏆 כל הטורנירים</span>
+    <h2>גלה טורניר שמתאים לך</h2>
+    <p class="lead">טורנירי פאדל פעילים בפלטפורמה. לחיצה על כרטיס פותחת את הדף המלא של הטורניר — פורמט, מחיר, מסמכים, הרשמה.</p>
+    <div class="grid-3">
+      {{TOURNAMENT_CARDS}}
+    </div>
+  </div>
+</section>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner">
+    <div><b>🎾 padel.platform</b></div>
+    <div>
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/organizers/apply">למארגנים</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

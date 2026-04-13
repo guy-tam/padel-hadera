@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#062318" />
+<title>Padel Platform — פלטפורמת טורנירי פאדל</title>
+<meta name="description" content="פלטפורמה אחת לטורנירי פאדל: שחקנים מגלים ונרשמים, מארגנים מפעילים, מועדונים מארחים. הכל במקום אחד." />
+<link rel="stylesheet" href="/platform.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<!-- SEO -->
+<link rel="canonical" href="https://padel-platform.co.il/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Padel Platform · פלטפורמת טורנירי פאדל" />
+<meta property="og:description" content="פלטפורמה ארצית לטורנירי פאדל — שחקנים, מארגנים ומועדונים. הרשמה, תשלום, אישור — במקום אחד." />
+<meta property="og:image" content="/img/padel-hero.jpg" />
+<meta property="og:locale" content="he_IL" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="robots" content="index, follow" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Padel Platform",
+  "url": "https://padel-platform.co.il/",
+  "description": "פלטפורמה ארצית לטורנירי פאדל בישראל",
+  "sport": "Padel"
+}
+</script>
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/organizers/apply">למארגנים</a>
+      <a href="/clubs/join">למועדונים</a>
+    </nav>
+    <a href="/tournaments" class="pnav-cta">לגלות טורניר</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="phero">
+  <div class="wrap phero-inner">
+    <span class="eyebrow">◆ מרקטפלייס ארצי · פאדל בלבד ◆</span>
+    <h1>כל טורנירי הפאדל בישראל.<br/><span>במקום אחד.</span></h1>
+    <p class="phero-sub">
+      הרשת הארצית של פאדל. שחקנים מגלים טורנירים לפי רמה ועיר.
+      מארגנים פותחים טורנירים בקליק. מועדונים מארחים ומרוויחים.
+      שלושה צדדים · חוויה אחת · מרקטפלייס פתוח.
+    </p>
+    <div class="phero-ctas">
+      <a href="/tournaments" class="btn btn-primary">גלה טורנירים פעילים</a>
+      <a href="/organizers/apply" class="btn btn-ghost">הצטרף כמארגן</a>
+      <a href="/clubs/join" class="btn btn-ghost">הצטרף כמועדון</a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED TOURNAMENTS -->
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">🏆 טורנירים מומלצים</span>
+    <h2>מה פעיל השבוע</h2>
+    <p class="lead">הטורנירים הפעילים בפלטפורמה. לוחצים, נרשמים, משלמים — המקום נסגר.</p>
+    <div class="grid-3">
+      {{FEATURED_TOURNAMENTS}}
+    </div>
+    <p style="text-align:center;margin-top:30px">
+      <a href="/tournaments" class="btn btn-ghost">כל הטורנירים</a>
+    </p>
+  </div>
+</section>
+
+<!-- AUDIENCES -->
+<section class="section" style="background:linear-gradient(180deg,#062318,#020b07)">
+  <div class="wrap">
+    <span class="eyebrow">▸ מי הפלטפורמה בשבילו</span>
+    <h2>פלטפורמה אחת. שלוש זוויות.</h2>
+    <p class="lead">בין אם אתם משחקים, מארגנים או מפעילים מועדון — יש לכם מסלול ברור.</p>
+
+    <div class="audiences">
+      <div class="aud">
+        <div class="aud-tag">🎾 שחקנים</div>
+        <h3>מוצאים טורניר. נרשמים. משחקים.</h3>
+        <p>גלישה פשוטה בטורנירים פתוחים לפי רמה ועיר. הרשמה, הצהרת בריאות ותשלום — במקום אחד.</p>
+        <a href="/tournaments">לגלות טורנירים →</a>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">🎯 מארגנים</div>
+        <h3>מפעילים טורניר כמו מקצוענים.</h3>
+        <p>ניהול הרשמות, תשלומים, מסמכים ורשימת המתנה במקום אחד. פחות גוגל-דוקס, יותר פוקוס במשחקים.</p>
+        <a href="/organizers/apply">להפוך למארגן →</a>
+      </div>
+      <div class="aud">
+        <div class="aud-tag">🏟 מועדונים</div>
+        <h3>טורנירים מביאים שחקנים.</h3>
+        <p>מועדון שמארח טורנירים דרך הפלטפורמה — מקבל חשיפה, טראפיק קבוע, והשתתפות ברווחים.</p>
+        <a href="/clubs/join">להצטרף כמועדון →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">▸ איך זה עובד</span>
+    <h2>תשתית אמיתית לכל טורניר</h2>
+    <div class="grid-3" style="margin-top:30px">
+      <div class="aud">
+        <h3>1. טורניר מחובר למועדון</h3>
+        <p>כל טורניר רץ תחת מועדון מארח — עם זהות, מיקום, והקשר אמיתי.</p>
+      </div>
+      <div class="aud">
+        <h3>2. מארגן שולט בתהליך</h3>
+        <p>המארגן קובע רמות, פורמט, מחיר וקיבולת. הפלטפורמה דואגת לכל השאר.</p>
+      </div>
+      <div class="aud">
+        <h3>3. שחקנים נרשמים בקליק</h3>
+        <p>טופס אחד, מסמכים אונליין, תשלום ב-bit, אישור אוטומטי. בלי בלגן.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner">
+    <div>
+      <b>🎾 padel.platform</b><br/>
+      <small>תשתית טורנירי פאדל · לשחקנים, מארגנים ומועדונים</small>
+    </div>
+    <div>
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">מועדונים</a>
+      <a href="/organizers/apply">למארגנים</a>
+      <a href="/clubs/join">למועדונים</a>
+      <a href="/admin.html?open=1" style="opacity:.5">ניהול</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>{{CLUB_NAME}} — Padel Platform</title>
+<link rel="stylesheet" href="/platform.css" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  .club-hero {
+    padding: 70px 0 40px;
+    background: linear-gradient(180deg, rgba(6,42,28,0.4), rgba(2,11,7,0.95)),
+                var(--club-bg) center/cover no-repeat;
+    position: relative;
+  }
+  .club-meta { display: flex; gap: 16px; flex-wrap: wrap; color: #b5c8bf; margin-top: 8px; }
+  .club-meta a { color: var(--lime); }
+</style>
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs" class="active">מועדונים</a>
+      <a href="/organizers/apply">למארגנים</a>
+    </nav>
+    <a href="/tournaments" class="pnav-cta">לגלות טורניר</a>
+  </div>
+</header>
+
+<section class="club-hero" style="--club-bg:url('{{CLUB_IMAGE}}')">
+  <div class="wrap">
+    <span class="eyebrow">🏟 מועדון מארח</span>
+    <h1>{{CLUB_NAME}}</h1>
+    <div class="club-meta">
+      <span>📍 {{CLUB_CITY}}</span>
+      <span>📞 <a href="tel:{{CLUB_PHONE}}">{{CLUB_PHONE}}</a></span>
+      <span>✉️ <a href="mailto:{{CLUB_EMAIL}}">{{CLUB_EMAIL}}</a></span>
+    </div>
+    <p class="lead" style="margin-top:22px">{{CLUB_DESCRIPTION}}</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <span class="eyebrow">🏆 טורנירים אצל המועדון</span>
+    <h2>האירועים הפעילים</h2>
+    <div class="grid-3">
+      {{HOSTED_CARDS}}
+    </div>
+  </div>
+</section>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner">
+    <div><b>🎾 padel.platform</b></div>
+    <div><a href="/tournaments">טורנירים</a><a href="/clubs">מועדונים</a></div>
+  </div>
+</footer>
+</body>
+</html>

@@ -101,10 +101,14 @@ for (const id of ['healthFormLink', 'healthFormLink2']) {
   if (el && cfg.HEALTH_FORM_URL) el.href = cfg.HEALTH_FORM_URL;
 }
 
+const SLUG = window.PADEL_TOURNAMENT_SLUG || 'hadera-2026';
+const API_CAPACITY = `/api/tournaments/${SLUG}/capacity`;
+const API_REGISTER = `/api/tournaments/${SLUG}/register`;
+
 // --- מצב קיבולת ---
 (async function loadCapacity() {
   try {
-    const r = await fetch('/api/capacity');
+    const r = await fetch(API_CAPACITY);
     const j = await r.json();
     const badge = document.getElementById('capacityBadge');
     const text = document.getElementById('capacityText');
@@ -182,7 +186,7 @@ form.addEventListener('submit', async (e) => {
   });
 
   try {
-    const res = await fetch('/api/register', { method: 'POST', body: data });
+    const res = await fetch(API_REGISTER, { method: 'POST', body: data });
     const json = await res.json();
     if (!res.ok || !json.ok) {
       showErrors(errorsBox, json.errors || ['שגיאה בשליחה. נסה/י שוב.']);

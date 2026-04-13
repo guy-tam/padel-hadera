@@ -349,6 +349,10 @@ function wireContactButtons(regId, d) {
 
 function showErrors(box, list) {
   box.textContent = '';
+  // הודעה לקוראי מסך — אזור live + role=alert
+  box.setAttribute('role', 'alert');
+  box.setAttribute('aria-live', 'assertive');
+  box.setAttribute('tabindex', '-1');
   const title = document.createElement('b');
   title.textContent = 'בדקו את הפרטים הבאים:';
   const ul = document.createElement('ul');
@@ -361,6 +365,8 @@ function showErrors(box, list) {
   box.appendChild(ul);
   box.hidden = false;
   box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // focus כדי שקורא מסך יקריא מיידית
+  try { box.focus({ preventScroll: true }); } catch {}
 }
 
 function fallbackCopy(text) {

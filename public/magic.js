@@ -15,6 +15,19 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
+  // Keyboard user detection — מוסיף class ל-body כשיש ניווט במקלדת (Tab)
+  function onFirstTab(e) {
+    if (e.key === 'Tab') {
+      document.body.classList.add('user-is-tabbing');
+      window.removeEventListener('keydown', onFirstTab);
+      window.addEventListener('mousedown', () => {
+        document.body.classList.remove('user-is-tabbing');
+        window.addEventListener('keydown', onFirstTab, { once: false });
+      }, { once: true });
+    }
+  }
+  window.addEventListener('keydown', onFirstTab);
+
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) return;
 

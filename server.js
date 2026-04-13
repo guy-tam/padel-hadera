@@ -1397,7 +1397,7 @@ const DEMO_PLAYER = {
   id: 'p-demo', dashboardToken: DEMO_TOKEN, status: 'active',
   name: 'אורן (הדגמה)', email: 'demo-player@padel.platform',
   phone: '0500000000', city: 'תל אביב', level: '3',
-  stats: { points: 420, tournaments: 12, wins: 3, finals: 5, semifinals: 7 },
+  stats: { points: 0, tournaments: 0, wins: 0, finals: 0, semifinals: 0 },
   history: [], createdAt: new Date().toISOString()
 };
 const DEMO_CLUB = {
@@ -1450,10 +1450,13 @@ app.get('/api/player/:token/me', async (req, res) => {
   const p = findPlayerByToken(db, req.params.token);
   if (!p) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
   // מצטרף מידע על הרשמות שלי לטורנירים (by email match)
-  const myRegs = db.registrations.filter(r =>
-    (r.email && r.email.toLowerCase() === p.email.toLowerCase()) ||
-    (r.phone && r.phone.replace(/\D/g,'') === p.phone.replace(/\D/g,''))
-  );
+  // במצב הדגמה — מציגים את כל ההרשמות האמיתיות באתר כדי לראות איך הדשבורד עובד
+  const myRegs = isDemoToken(req.params.token)
+    ? db.registrations.slice().sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 20)
+    : db.registrations.filter(r =>
+        (r.email && r.email.toLowerCase() === p.email.toLowerCase()) ||
+        (r.phone && r.phone.replace(/\D/g,'') === p.phone.replace(/\D/g,''))
+      );
   const enriched = myRegs.map(r => {
     const t = db.tournaments.find(x => x.id === r.tournamentId);
     const club = t ? db.clubs.find(c => c.id === t.clubId) : null;
@@ -1581,7 +1584,9 @@ app.get('/api/organizer/:token/me', async (req, res) => {
   const db = await loadDB();
   const org = findOrganizerByToken(db, req.params.token);
   if (!org) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
-  const tournaments = db.tournaments.filter(t => t.organizerId === org.id)
+  // במצב הדגמה — מציגים את כל הטורנירים האמיתיים באתר
+  const tournaments = db.tournaments
+    .filter(t => isDemoToken(req.params.token) ? true : t.organizerId === org.id)
     .map(t => {
       const regs = db.registrations.filter(r => r.tournamentId === t.id);
       return {
@@ -1608,7 +1613,7 @@ app.get('/api/organizer/:token/tournaments/:tid', async (req, res) => {
   const db = await loadDB();
   const org = findOrganizerByToken(db, req.params.token);
   if (!org) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
-  const t = db.tournaments.find(x => x.id === req.params.tid && x.organizerId === org.id);
+  const t = db.tournaments.find(x => x.id === req.params.tid && (isDemoToken(req.params.token) || x.organizerId === org.id));
   if (!t) return res.status(404).json({ ok: false, error: 'לא נמצא' });
   const regs = db.registrations.filter(r => r.tournamentId === t.id)
     .sort((a,b) => b.createdAt.localeCompare(a.createdAt));
@@ -1749,8 +1754,9 @@ app.get('/api/club/:token/me', async (req, res) => {
   const c = findClubByToken(db, req.params.token);
   if (!c) return res.status(401).json({ ok: false, error: 'אין הרשאה' });
   // כל הטורנירים של המועדון + מצב חי
+  // במצב הדגמה — מציגים את כל הטורנירים האמיתיים באתר
   const tournaments = db.tournaments
-    .filter(t => t.clubId === c.id)
+    .filter(t => isDemoToken(req.params.token) ? true : t.clubId === c.id)
     .map(t => {
       const regs = db.registrations.filter(r => r.tournamentId === t.id);
       return {

@@ -1,0 +1,95 @@
+/* Padel Platform — Magic layer: premium effects */
+
+/* ---- Lenis smooth scroll ---- */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+
+/* ---- Cursor glow ---- */
+#cursor-glow {
+  position: fixed; top: 0; left: 0;
+  width: 360px; height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,255,58,0.18) 0%, rgba(212,255,58,0.05) 35%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  transition: opacity .3s;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+@media (hover: none) { #cursor-glow { display: none; } }
+
+/* ---- Noise grain overlay ---- */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1;
+  opacity: .03;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+/* ---- Tilt feel (extra shadow when tilting) ---- */
+[data-tilt] { transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+[data-tilt]:hover { z-index: 5; }
+
+/* ---- Magnetic button --- */
+.btn-primary, .btn, .pnav-cta { will-change: transform; }
+
+/* ---- Entrance animation helper (used by GSAP) ---- */
+.gsap-fade-up { opacity: 0; transform: translateY(30px); }
+.gsap-fade-in { opacity: 0; }
+.gsap-scale-in { opacity: 0; transform: scale(0.92); }
+
+/* ---- Counter flash ---- */
+.count-flash { text-shadow: 0 0 20px rgba(212,255,58,.7); transition: text-shadow .4s; }
+
+/* ---- Shimmer on hover over cards ---- */
+.four-card, .aud, .t-card, .bring-item, .club-card, .card {
+  position: relative;
+  overflow: hidden;
+}
+.four-card::after, .aud::after, .t-card::after, .card::after {
+  content: ""; position: absolute;
+  top: -50%; left: -200%;
+  width: 80%; height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(212,255,58,.08), transparent);
+  transform: skewX(-20deg);
+  transition: left .8s ease;
+  pointer-events: none;
+}
+.four-card:hover::after, .aud:hover::after, .t-card:hover::after, .card:hover::after {
+  left: 200%;
+}
+
+/* ---- Section reveal (GSAP-enhanced) ---- */
+.section, .phero, .p-hero { position: relative; }
+
+/* ---- Glow pulse ---- */
+.glow-pulse { animation: glowP 2s ease-in-out infinite; }
+@keyframes glowP {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,255,58, .6); }
+  50%      { box-shadow: 0 0 0 16px rgba(212,255,58, 0); }
+}
+
+/* ---- Marquee strip (for live tournament scroll) ---- */
+.marquee-wrap {
+  overflow: hidden; border-top: 1px solid rgba(212,255,58,.15); border-bottom: 1px solid rgba(212,255,58,.15);
+  background: #020b07; padding: 10px 0; position: relative;
+}
+.marquee {
+  display: flex; gap: 60px; white-space: nowrap;
+  animation: marquee 35s linear infinite;
+  width: max-content;
+}
+.marquee span { color: #d4ff3a; font-weight: 700; font-size: 14px; letter-spacing: .3px; }
+.marquee span::before { content: "● "; color: #7fe3a8; }
+@keyframes marquee { to { transform: translateX(100%); } }
+
+/* ---- Accessibility: respect reduce-motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  #cursor-glow, body::after, .four-card::after, .aud::after, .t-card::after, .card::after, .glow-pulse, .marquee { display: none !important; animation: none !important; }
+  .gsap-fade-up, .gsap-fade-in, .gsap-scale-in { opacity: 1 !important; transform: none !important; }
+}

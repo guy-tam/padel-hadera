@@ -152,7 +152,7 @@ app.use(helmet({
       "default-src": ["'self'"],
       "img-src": ["'self'", "data:", "https:", "blob:"],
       "media-src": ["'self'", "https:"],
-      "script-src": ["'self'", "'unsafe-inline'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://s.ytimg.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://s.ytimg.com", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
       "frame-src": ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
@@ -234,7 +234,7 @@ function statusHe(s) {
 // =================================================================
 
 // מגיש HTML עם חיתוך templating פשוט + הזרקת widget נגישות
-const A11Y_INJECT = `<link rel="stylesheet" href="/a11y.css"><script src="/a11y.js" defer></script></body>`;
+const A11Y_INJECT = `<link rel="stylesheet" href="/a11y.css"><link rel="stylesheet" href="/magic.css"><script src="/a11y.js" defer></script><script src="/magic.js" defer></script></body>`;
 function serveTemplate(res, filename, vars) {
   const filePath = path.join(PUBLIC_DIR, filename);
   fs.readFile(filePath, 'utf8', (err, html) => {
@@ -242,7 +242,7 @@ function serveTemplate(res, filename, vars) {
     let rendered = html.replace(/\{\{(\w+)\}\}/g, (_, k) =>
       vars[k] !== undefined ? vars[k] : '');
     // הזרקה רק אם לא קיים כבר
-    if (!rendered.includes('/a11y.css')) {
+    if (!rendered.includes('/magic.css')) {
       rendered = rendered.replace('</body>', A11Y_INJECT);
     }
     res.type('html').send(rendered);

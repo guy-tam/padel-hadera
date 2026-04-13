@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>דאשבורד מארגן — Padel Platform</title>
+<link rel="stylesheet" href="/platform.css" />
+<link rel="stylesheet" href="/a11y.css" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  .od-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 80px; }
+  .od-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .od-head h1 { font-size: 26px; margin: 0; color: #fff; }
+  .od-head .muted { color: #9fb1a8; font-size: 14px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(212,255,58,.15); padding-bottom: 0; }
+  .tab { padding: 10px 18px; background: transparent; border: 0; color: #9fb1a8; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
+  .tab:hover { color: #fff; }
+  .t-row {
+    background: rgba(10,61,42,0.5);
+    border: 1px solid rgba(212,255,58,0.18);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .t-row h3 { margin: 0 0 4px; font-size: 18px; color: #fff; }
+  .t-row .sub { color: #b5c8bf; font-size: 13px; }
+  .t-row a { color: var(--lime); text-decoration: underline; font-size: 13px; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill.pub { background: rgba(43,182,115,.25); color: #7fe3a8; }
+  .pill.pnd { background: rgba(255,200,50,.2); color: #ffd968; }
+  .pill.drf { background: rgba(255,255,255,.1); color: #b5c8bf; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat { background: #12201a; border:1px solid #223128; border-radius: 14px; padding: 18px; }
+  .stat .n { font-size: 30px; font-weight: 900; color: var(--lime); line-height: 1; }
+  .stat .lbl { color: #9fb1a8; font-size: 13px; margin-top: 6px; }
+  .form-sect { background: rgba(10,61,42,0.55); border: 1px solid rgba(212,255,58,0.18); border-radius: 16px; padding: 24px; }
+  .ok-box { background: rgba(212,255,58,0.12); border: 1px solid rgba(212,255,58,0.35); color: var(--lime); padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 14px; }
+  .reg-table { width: 100%; border-collapse: collapse; background: #12201a; border-radius: 12px; overflow: hidden; }
+  .reg-table th, .reg-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #223128; font-size: 13px; color: #d8e5dd; }
+  .reg-table th { background: #1a2a23; font-size: 11.5px; color: #b5c8bf; }
+</style>
+</head>
+<body>
+
+<header class="pnav">
+  <div class="pnav-inner">
+    <a href="/" class="pnav-logo">🎾 padel<span class="dot">.</span>platform</a>
+    <nav class="pnav-links" aria-label="תפריט ראשי">
+      <a href="/tournaments">טורנירים</a>
+      <a href="/clubs">המגרשים</a>
+      <a href="/">דף הבית</a>
+    </nav>
+    <span class="pnav-cta">🎯 דאשבורד מארגן</span>
+  </div>
+</header>
+
+<main id="main" class="od-wrap">
+  <div class="od-head">
+    <div>
+      <h1>שלום, {{ORG_NAME}} 🎾</h1>
+      <div class="muted">דאשבורד מארגן · {{ORG_ID}}</div>
+    </div>
+    <button class="btn btn-primary" id="newTBtn">+ טורניר חדש</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="list">הטורנירים שלי</button>
+    <button class="tab" data-tab="new">יצירת טורניר</button>
+  </div>
+
+  <div id="viewList"></div>
+
+  <div id="viewNew" hidden>
+    <div class="form-sect">
+      <h2 style="margin-top:0">יצירת טורניר חדש</h2>
+      <p class="lead" style="font-size:14px">הטורניר יעבור אישור מנהל הפלטפורמה לפני שיעלה לאוויר. לרוב תוך 24 שעות.</p>
+      <form id="newTForm" novalidate>
+        <div class="grid-2">
+          <label class="field"><span>שם הטורניר *</span><input name="title" required maxlength="100" /></label>
+          <label class="field"><span>כותרת משנה</span><input name="subtitle" maxlength="120" placeholder="לדוגמה: חדרה עולה על המגרש" /></label>
+          <label class="field"><span>מגרש מארח *</span>
+            <select name="clubId" id="clubSel" required>
+              <option value="">-- טוען... --</option>
+            </select>
+          </label>
+          <label class="field"><span>תאריך האירוע</span><input name="date" placeholder="לדוגמה: 15 ביוני 2026, שבת" /></label>
+          <label class="field"><span>מיקום</span><input name="location" placeholder="אם ריק - ייוצג 'המיקום יישלח לנרשמים'" /></label>
+          <label class="field"><span>מספר זוגות (קיבולת) *</span><input name="maxPairs" type="number" min="2" max="64" value="8" required /></label>
+          <label class="field"><span>מחיר לזוג (₪) *</span><input name="pricePair" type="number" min="0" value="500" required /></label>
+          <label class="field"><span>מחיר לאדם (₪)</span><input name="pricePerson" type="number" min="0" value="250" /></label>
+          <label class="field"><span>נמען bit (שם) *</span><input name="bitRecipientName" maxlength="100" /></label>
+          <label class="field"><span>מספר bit *</span><input name="bitRecipientPhone" type="tel" placeholder="05X-XXXXXXX" required /></label>
+          <label class="field"><span>קישור קבוצת bit</span><input name="bitGroupLink" type="url" placeholder="אופציונלי" /></label>
+          <label class="field"><span>חוקי משחק</span><input name="matchRules" placeholder="מערכה אחת עד 6 משחקונים · מקס 20 דקות" /></label>
+        </div>
+        <label class="field"><span>תיאור הטורניר *</span><textarea name="description" rows="4" required></textarea></label>
+        <label class="field"><span>מדיניות החזר</span><textarea name="refundPolicy" rows="2" placeholder="החזר (ככל שיאושר) יבוצע עד 7 ימים לאחר סיום הטורניר"></textarea></label>
+        <label class="check" style="display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-size:14px;color:#b5c8bf">
+          <input type="checkbox" name="requireHealthDeclaration" checked style="margin-top:4px" />
+          <span>דרוש הצהרת בריאות חתומה מכל משתתף</span>
+        </label>
+        <div id="newTErr" class="form-errors" hidden></div>
+        <div id="newTOk" class="ok-box" hidden></div>
+        <button type="submit" class="btn btn-primary" style="width:100%">שלח ליצירה ואישור</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="pfooter">
+  <div class="wrap pfooter-inner"><div><b>🎾 padel.platform</b></div><div><a href="/">בית</a><a href="/accessibility">נגישות</a></div></div>
+</footer>
+
+<script>
+const TOKEN = "{{TOKEN}}";
+let DATA = { tournaments: [], clubs: [], organizer: {} };
+
+function el(id) { return document.getElementById(id); }
+
+el('newTBtn').addEventListener('click', () => switchTab('new'));
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  el('viewList').hidden = name !== 'list';
+  el('viewNew').hidden = name !== 'new';
+}
+
+async function load() {
+  const r = await fetch('/api/organizer/' + TOKEN + '/me');
+  const j = await r.json();
+  if (!r.ok || !j.ok) { document.body.innerHTML = '<p style="color:#fff;padding:40px;text-align:center">אין הרשאה.</p>'; return; }
+  DATA = j;
+  renderStats();
+  renderList();
+  renderClubs();
+}
+function renderStats() {
+  const total = DATA.tournaments.length;
+  const published = DATA.tournaments.filter(t => t.visibility === 'public').length;
+  const pending = DATA.tournaments.filter(t => t.status === 'pending_review').length;
+  const regs = DATA.tournaments.reduce((s,t) => s + (t.capacity?.total || 0), 0);
+  const approved = DATA.tournaments.reduce((s,t) => s + (t.capacity?.approved || 0), 0);
+  el('stats').innerHTML = [
+    `<div class="stat"><div class="n">${total}</div><div class="lbl">סה"כ טורנירים</div></div>`,
+    `<div class="stat"><div class="n">${published}</div><div class="lbl">פעילים ציבורית</div></div>`,
+    `<div class="stat"><div class="n">${pending}</div><div class="lbl">ממתין לאישור</div></div>`,
+    `<div class="stat"><div class="n">${regs}</div><div class="lbl">הרשמות</div></div>`,
+    `<div class="stat"><div class="n">${approved}</div><div class="lbl">מאושרים</div></div>`
+  ].join('');
+}
+function renderList() {
+  const wrap = el('viewList');
+  if (!DATA.tournaments.length) {
+    wrap.innerHTML = '<div class="empty" style="text-align:center;color:#9fb1a8;padding:60px">אין טורנירים עדיין. <a style="color:#d4ff3a;cursor:pointer" onclick="switchTab(\'new\')">צור טורניר ראשון</a>.</div>';
+    return;
+  }
+  wrap.innerHTML = DATA.tournaments.map(t => {
+    const pill = t.visibility === 'public' ? '<span class="pill pub">פעיל</span>'
+      : t.status === 'pending_review' ? '<span class="pill pnd">ממתין לאישור</span>'
+      : '<span class="pill drf">טיוטה</span>';
+    const pubLink = t.visibility === 'public'
+      ? `<a href="/tournaments/${t.slug}" target="_blank">דף ציבורי ↗</a>` : '';
+    return `<div class="t-row">
+      <div>
+        <h3>${escapeHtml(t.title)} ${pill}</h3>
+        <div class="sub">${t.capacity.reserved}/${t.capacity.max} זוגות · ${t.capacity.approved} מאושרים · ${t.capacity.total} הרשמות · ${pubLink}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderClubs() {
+  const sel = el('clubSel');
+  sel.innerHTML = '<option value="">-- בחר/י מגרש --</option>' +
+    DATA.clubs.map(c => `<option value="${c.id}">${escapeHtml(c.name)} · ${escapeHtml(c.city)}</option>`).join('');
+  if (!DATA.clubs.length) sel.innerHTML = '<option value="">אין מגרשים פעילים במערכת — פנה/י לאדמין</option>';
+  // מילוי אוטומטי של נמען bit אם יש
+  const bitRecName = document.querySelector('[name=bitRecipientName]');
+  if (DATA.organizer.name && !bitRecName.value) bitRecName.value = DATA.organizer.name;
+  const bitRecPhone = document.querySelector('[name=bitRecipientPhone]');
+  if (DATA.organizer.business?.bitPhone && !bitRecPhone.value) bitRecPhone.value = DATA.organizer.business.bitPhone;
+}
+
+el('newTForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  el('newTErr').hidden = true;
+  el('newTOk').hidden = true;
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  data.requireHealthDeclaration = e.target.requireHealthDeclaration.checked;
+  try {
+    const r = await fetch('/api/organizer/' + TOKEN + '/tournaments', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      el('newTErr').innerHTML = '<ul>' + (j.errors || [j.error || 'שגיאה']).map(e => '<li>' + e + '</li>').join('') + '</ul>';
+      el('newTErr').hidden = false;
+      return;
+    }
+    el('newTOk').innerHTML = `✓ הטורניר נוצר! מזהה: <b>${j.id}</b>. ממתין לאישור מנהל הפלטפורמה.`;
+    el('newTOk').hidden = false;
+    e.target.reset();
+    await load();
+    setTimeout(() => switchTab('list'), 2000);
+  } catch {
+    el('newTErr').textContent = 'שגיאת רשת.';
+    el('newTErr').hidden = false;
+  }
+});
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+load();
+</script>
+<script src="/a11y.js" defer></script>
+</body>
+</html>
